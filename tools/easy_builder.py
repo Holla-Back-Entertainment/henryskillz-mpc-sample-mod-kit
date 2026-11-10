@@ -132,17 +132,15 @@ def main() -> int:
     parser.add_argument("source", nargs="?", type=Path, help="official OS ZIP or extracted package")
     parser.add_argument("--output", type=Path, help="output autorun folder")
     parser.add_argument("--splash", type=Path, help="optional 320x240 BGRX raw splash")
-    parser.add_argument("--keep-original-splash", action="store_true", help="do not apply the included splash")
     args = parser.parse_args()
     source = args.source or choose_source()
     if source is None:
         print("No package selected.")
         return 1
     output = args.output or source.expanduser().resolve().parent / "HenrySkillz-Card" / "autorun"
-    bundled_splash = Path(__file__).resolve().parents[1] / "starter-card" / "autorun" / "henryskillz-splash.raw"
-    splash = None if args.keep_original_splash else (args.splash or bundled_splash)
+    splash = args.splash  # the OS keeps its own splash unless you pass one
     try:
-        result = build(source, output, splash, require_splash=args.splash is not None)
+        result = build(source, output, splash, require_splash=True)
     except (BuildError, OSError, zipfile.BadZipFile) as error:
         print(f"BUILD FAILED: {error}", file=sys.stderr)
         return 1

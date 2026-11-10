@@ -11,3 +11,7 @@ SampQOL OS is copyright © 2026 Snare Bes and is distributed under its own licen
 Thanks to **puckcv / orrpunk-art** and the MPC-Forums community for publicly documenting the MPC Sample autorun mechanism and temporary USB SSH work. Their reference project is [mpc-sample-root-ssh](https://github.com/orrpunk-art/mpc-sample-root-ssh).
 
 The firmware-check implementation here is independently written from the published formula and verified against Henry's own device experiments. No private keys, Akai binaries or third-party repository files are included.
+
+## LADSPA
+
+`src/fx/ladspa.h` is the LADSPA plugin API header (LGPL-2.1, Richard W.E. Furse, Paul Barton-Davis, Stefan Westerfeld).

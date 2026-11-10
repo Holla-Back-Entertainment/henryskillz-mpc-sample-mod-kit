@@ -1,86 +1,84 @@
 # HenrySkillz MPC Sample Mod Kit
 
-Beginner-friendly, no-AI tools for personalising an **Akai MPC Sample** from an SD card.
+Studio effects for the **Akai MPC Sample**, made by Henry Skillz in Melbourne.
+They run on top of [SampQOL OS](https://github.com/snarebes/SampQOL-OS) by Snare Bes.
 
-Built from the hands-on experiments documented by Henry Skillz. Nothing here flashes the MPC or replaces its internal firmware. Remove the SD card and the MPC starts normally.
+**No coding, no terminal, no AI tools, nothing to install.** You need a web browser and an SD card.
 
-> Tested on one MPC Sample running firmware **1.3.0 / 1.3.0.12**. Back up your projects first. This is unofficial community software, not affiliated with or supported by Akai Professional or inMusic Brands.
+> Unofficial. Not made, endorsed or supported by Akai Professional, inMusic or the SampQOL author.
+> Everything runs from the SD card. Take the card out and the MPC starts as stock.
 
-## Pick the easy path
+**Status: beta.** The installer is tested against real SampQOL packages on a computer, and the effects have run on Henry's own MPC Sample.
+This exact v0.2.0 build has not had its first boot on hardware yet. Back up before you try it.
 
-### A. HenrySkillz Starter — copy it and boot
+## What you get
 
-Use this if you want the simplest possible test.
+| Effect | Where | What it does |
+|---|---|---|
+| HS Saturator | Harmonic | Saturation for drums and bass |
+| HS Air Exciter | Harmonic | Adds brightness to the top end |
+| HS Channel Strip | Harmonic | Console-style channel: filters, 4-band EQ, compressor, gate |
+| HS Drive Sat | Harmonic | Saturation with drive and shape controls |
+| HS Bus Compressor | Dynamics | Bus compressor with a sidechain high-pass |
+| HS Para EQ | EQ / Filter | Parametric EQ with a response-curve display |
 
-1. Download `henryskillz-mpc-sample-starter-v0.1.0.zip` from [Releases](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/releases/latest).
-2. Unzip it.
-3. Put an **exFAT** SD card in your computer.
-4. Back up any existing folder named `autorun` on that card.
-5. Copy the included `autorun` folder to the top level of the SD card.
-6. Safely eject the card, put it in the MPC Sample and power on.
+You also get live displays for the stock effects, a dB/Hz grid on the EQ page, and a HenrySkillz screen at start-up (after SampQOL's own).
 
-You should briefly see the HenrySkillz screen, then the normal MPC software. To return to stock, switch off normally and remove the card (or rename `autorun` to `autorun-off`).
+## Before you start
 
-The card should look exactly like this:
+- An **MPC Sample** on firmware **1.3.0** (1.3.0.12).
+- An **exFAT SD card**.
+- A computer with a web browser (Mac or Windows).
+- **A backup.** Copy everything on the SD card to your computer first. See [docs/RECOVERY.md](docs/RECOVERY.md).
 
-```text
-SD card/
-└── autorun/
-    ├── autorun.check
-    ├── autorun.json
-    ├── autorun.sh
-    └── henryskillz-splash.raw
-```
+## Install (5 steps)
 
-### B. Bring your own SampQOL (or another autorun OS)
+1. **Get SampQOL 0.2.0.** Download `SampQOL-OS-v0.2.0.zip` from the [official SampQOL page](https://github.com/snarebes/SampQOL-OS/releases).
+   The installer only accepts that exact version.
+2. **Get the installer.** Download `henryskillz-mpc-sample-installer.html` from [Releases](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/releases/latest).
+3. **Open the installer** by double-clicking it (it opens in your browser). Drop the SampQOL zip onto the page.
+   If your Mac already unzipped the download, click **Choose folder** and pick the `SampQOL-OS-v0.2.0` folder.
+4. **Save `autorun-hs.zip`** when the page offers it, then unzip it. You now have a folder called `autorun`.
+5. **Copy that `autorun` folder to the top level of the SD card**, replacing any old one. Eject the card safely, put it in the MPC and switch it on.
+   When it asks *Start SampQOL OS?*, press **B1**.
 
-This repository does **not** redistribute SampQOL OS. Its license says to download it from the official source and share the link, not the files.
+The new effects show up wherever you pick an insert effect. Their names start with **HS**.
 
-1. Download the official OS ZIP yourself. For SampQOL, use [the official SampQOL releases](https://github.com/snarebes/SampQOL-OS/releases).
-2. Download this repository and unzip it.
-3. Double-click `BUILD-MAC.command` on macOS or `BUILD-WINDOWS.cmd` on Windows.
-4. Choose the official OS ZIP when asked.
-5. The tool creates `HenrySkillz-Card/autorun` beside the ZIP.
-6. Copy that new `autorun` folder to the top level of your exFAT SD card.
+**Why it works this way:** SampQOL's license says its files can't be shared, so this kit doesn't include them.
+You download SampQOL yourself, and the installer adds the HenrySkillz files to your copy, inside your browser. Nothing is uploaded.
 
-The builder runs entirely on your computer. It does not need Claude, Codex, a GitHub account or an internet connection after you have downloaded the two ZIP files. It never edits the original OS ZIP. For SampQOL it applies the included HenrySkillz splash automatically; advanced users can pass `--keep-original-splash` instead.
+## Optional: boot test first
 
-If the OS contains a file named `qol-splash.raw`, the builder can replace it with a 320×240 BGRX `.raw` splash and updates its SHA-256 pin. For other/future autorun packages it preserves the package and regenerates the MPC firmware check. Package-specific changes may still need a new adapter—open an issue with the package name and public download link.
+Not sure your card and MPC are set up right? The `henryskillz-mpc-sample-starter` zip on the Releases page is a tiny test card.
+**It only shows the HenrySkillz screen for two seconds, then starts the normal MPC. It does not include the effects.**
+Copy its `autorun` folder to the card, boot, and if you see the screen, your card works. Then do the install above.
 
-## Make your own splash
+## If something goes wrong
 
-The MPC Sample splash format is exactly **320×240, BGRX, 307,200 bytes**. If Python and Pillow are installed:
+- **MPC boots to stock:** the card's `autorun` folder didn't pass its check. Run the installer again on a fresh SampQOL download.
+- **The app restarts twice and comes back stock:** that's SampQOL's safety net. Delete the `autorun` folder from the card and [open an issue](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
+- **Anything else:** switch off and take the SD card out. The MPC is stock without it. Full steps: [docs/RECOVERY.md](docs/RECOVERY.md) and [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
-```sh
-python3 -m pip install Pillow
-python3 tools/make_splash.py your-image.png your-splash.raw
-python3 tools/easy_builder.py path/to/official-os.zip --splash your-splash.raw
-```
+Don't contact Akai or inMusic support about this mod.
 
-The image is fitted inside the screen without stretching and padded with black.
+## Crate Source
 
-## If it does not boot
-
-1. Hold the power button until the unit switches off.
-2. Remove the SD card.
-3. Boot normally and confirm the stock MPC still works.
-4. Check the firmware version, folder layout and that the card is exFAT.
-5. Do not merge two different `autorun` folders.
-
-See [Troubleshooting](docs/TROUBLESHOOTING.md) before opening an issue.
-
-## What is and is not included
-
-- Included: HenrySkillz starter scripts/art, a local card builder, signature/check tooling, tests and plain-English instructions.
-- Not included: Akai firmware, SampQOL binaries, Crate Source code, private SSH keys, device backups or paid/proprietary material.
-- Crate Source may be shown in tutorials as part of Henry's workflow, but this kit does not teach, bundle or expose its internals.
+Digging for samples? **[Crate Source](https://crate-source.app)** is Henry's crate-digging app: find a record, chop it, and load it onto your MPC.
+This kit doesn't include it or teach how it's built.
 
 ## Support the work
 
-If this saved you time, visit [HenrySkillz](https://www.henryskillz.com/) or support the wider project by shopping [Spacely](https://www.spacely.clothing/). Direct-donation options can be added when a public payment link is ready.
+If this saved you time, support it by shopping [Spacely](https://www.spacely.clothing/) or visiting [HenrySkillz](https://www.henryskillz.com/).
+The kit is free and always will be. Support is optional.
 
-## Credits and attribution
+## For builders
 
-The packaging, beginner workflow, starter splash and tooling in this repository are by **Henry Skillz**. Community research made this possible. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for clear credit and links.
+How it works, how to build it and how to add a new SampQOL version: [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md).
+The `tools/` folder has command-line helpers for signing an `autorun` folder and making your own splash.
 
-Released under the [MIT License](LICENSE). Third-party software keeps its own license.
+## Credits
+
+The effects, displays, installer and tooling are by **Henry Skillz**. This kit only exists because of SampQOL OS by Snare Bes.
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Released under the [MIT License](LICENSE). SampQOL OS has its own license and is not part of this repository.

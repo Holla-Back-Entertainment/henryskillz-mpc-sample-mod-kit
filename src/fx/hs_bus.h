@@ -1,0 +1,6 @@
+#ifndef HS_BUS_H
+#define HS_BUS_H
+enum { HS_BUS_ID = 0x485306 };
+enum { BUS_THRESHOLD, BUS_RATIO, BUS_MAKEUP, BUS_ATTACK, BUS_RELEASE, BUS_HPF,
+       BUS_MIX, BUS_BYPASS, BUS_COUNT };
+#endif

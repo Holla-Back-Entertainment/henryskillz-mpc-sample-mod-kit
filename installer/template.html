@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HenrySkillz MPC Sample Installer</title>
+<style>
+  :root { --bg:#0d0f12; --panel:#171a1f; --text:#eef0f2; --dim:#9aa3ad; --red:#c8061c; --ok:#4cb8e7; --bad:#ff6b6b; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width:640px; margin:0 auto; padding:32px 16px 64px; }
+  h1 { font-size:24px; margin:0 0 4px; }
+  .bar { height:4px; background:var(--red); width:64px; margin:0 0 24px; }
+  ol { padding-left:20px; } li { margin:0 0 10px; }
+  a { color:var(--ok); }
+  .drop { border:2px dashed #3a414b; border-radius:10px; padding:28px 16px; text-align:center; background:var(--panel); margin:20px 0; }
+  .drop.hot { border-color:var(--ok); }
+  .drop p { margin:0 0 12px; }
+  label.btn, button { display:inline-block; background:#2a3038; color:var(--text); border:0; border-radius:8px; padding:10px 16px; margin:4px; font:inherit; cursor:pointer; }
+  button.go { background:var(--red); font-weight:600; }
+  input[type=file] { display:none; }
+  #log { white-space:pre-wrap; font:13px/1.5 ui-monospace, Menlo, monospace; background:var(--panel); border-radius:8px; padding:12px; min-height:3em; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); }
+  .small { color:var(--dim); font-size:14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>HenrySkillz MPC Sample Installer</h1>
+  <div class="bar"></div>
+  <p>Adds the HenrySkillz FX rack, EQ display and splash to <b>SampQOL OS __SAMPQOL_VERSION__</b> on an <b>MPC Sample (firmware 1.3.0)</b>.
+     Everything happens in this page. Nothing is uploaded anywhere.</p>
+  <ol>
+    <li>Download <b>SampQOL-OS-v__SAMPQOL_VERSION__.zip</b> from the official page:
+      <a href="https://github.com/snarebes/SampQOL-OS/releases" target="_blank" rel="noopener">github.com/snarebes/SampQOL-OS/releases</a></li>
+    <li>Drop that zip here (or, if your Mac already unzipped it, choose the <b>SampQOL-OS-v__SAMPQOL_VERSION__</b> folder).</li>
+    <li>Save the <b>autorun-hs.zip</b> this page gives you, unzip it, and copy the <b>autorun</b> folder to the top of your SD card.</li>
+  </ol>
+  <div class="drop" id="drop">
+    <p>Drop the SampQOL zip here</p>
+    <label class="btn">Choose zip<input type="file" id="zip" accept=".zip"></label>
+    <label class="btn">Choose folder<input type="file" id="dir" webkitdirectory></label>
+  </div>
+  <div id="log">Waiting for SampQOL…</div>
+  <p class="small">Unofficial mod. Not made, endorsed or supported by Akai Professional, inMusic or the SampQOL author.
+     Back up your projects first. To undo: take the SD card out, or delete the <b>autorun</b> folder from it.</p>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script id="core">
+// ---- pure core (also run by installer/test_installer.mjs) ----
+const SAMPQOL = __SAMPQOL_HASHES__;            // sha256 of mpcqol.so -> version this build supports
+// MPC Sample 1.3.0 firmware salt for autorun.check. Public: github.com/orrpunk-art/mpc-sample-root-ssh
+const SALT = "f7bed1c9-7e90-4731-9194-c996666b4331";
+const ADDON = __ADDON_FILES__;                 // "hs/<file>" -> base64
+const enc = new TextEncoder(), dec = new TextDecoder("utf-8", { fatal: true });
+
+async function sha256hex(bytes) {
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+  return Array.from(d, b => b.toString(16).padStart(2, "0")).join("");
+}
+function b64(s) { const r = atob(s), u = new Uint8Array(r.length); for (let i = 0; i < r.length; i++) u[i] = r.charCodeAt(i); return u; }
+function replaceOnce(text, from, to, what) {
+  const n = text.split(from).length - 1;
+  if (n !== 1) throw new Error(`${what}: expected the line once, found it ${n} times. This SampQOL build is not supported.`);
+  return text.replace(from, () => to);
+}
+
+// files: Map of path (relative to the autorun folder) -> Uint8Array. Returns a new Map with the add-ons installed.
+async function patch(files) {
+  const need = ["mpcqol.so", "qol-run.sh", "autorun.sh", "autorun.json", "autorun.check"];
+  for (const f of need) if (!files.has(f)) throw new Error(`${f} is missing. Choose the SampQOL zip or its autorun folder.`);
+  if (files.has("hs/hs-addons.sh")) throw new Error("These add-ons are already installed in this folder. Start again from a fresh SampQOL download.");
+  const version = SAMPQOL[await sha256hex(files.get("mpcqol.so"))];
+  if (!version) throw new Error(`This is not SampQOL ${Object.values(SAMPQOL).join(" / ")}. Download that exact version from the official page.`);
+
+  let autorun = dec.decode(files.get("autorun.sh"));
+  const pins = [...autorun.matchAll(/([0-9a-f]{64})  ([^\n"]+)/g)];
+  for (const [, hash, name] of pins) {
+    if (!files.has(name)) continue;                       // SampQOL pins some files that ship elsewhere
+    if (await sha256hex(files.get(name)) !== hash) throw new Error(`${name} was changed. Start again from a fresh SampQOL download.`);
+  }
+
+  let run = dec.decode(files.get("qol-run.sh"));
+  run = replaceOnce(run, "SO=/tmp/mpcqol.so\n", 'SO=/tmp/mpcqol.so\n. "$DIR/hs/hs-addons.sh"  # Henry Skillz add-ons (HS_PRELOAD)\n', "qol-run.sh");
+  run = replaceOnce(run, 'export LD_PRELOAD="$SO"', 'export LD_PRELOAD="$HS_PRELOAD$SO"', "qol-run.sh");
+  // HenrySkillz splash as a second frame: SampQOL's own splash still shows first.
+  run = replaceOnce(run, '        cat "$DIR/qol-splash.raw" > /dev/fb0\n',
+    '        cat "$DIR/qol-splash.raw" > /dev/fb0\n        [ -f "$DIR/hs/hs-splash.raw" ] && { sleep 2; cat "$DIR/hs/hs-splash.raw" > /dev/fb0; }\n', "qol-run.sh");
+  const runBytes = enc.encode(run);
+
+  const oldPin = pins.find(([, , name]) => name === "qol-run.sh");
+  if (!oldPin) throw new Error("autorun.sh does not pin qol-run.sh. This SampQOL build is not supported.");
+  autorun = replaceOnce(autorun, `${oldPin[1]}  qol-run.sh`, `${await sha256hex(runBytes)}  qol-run.sh`, "autorun.sh");
+  const autorunBytes = enc.encode(autorun);
+
+  const json = files.get("autorun.json");
+  const signed = new Uint8Array([...json, ...autorunBytes, ...enc.encode(SALT)]);
+  const out = new Map(files);
+  out.set("qol-run.sh", runBytes);
+  out.set("autorun.sh", autorunBytes);
+  out.set("autorun.check", enc.encode(await sha256hex(signed)));
+  for (const [path, data] of Object.entries(ADDON)) out.set(path, b64(data));
+  return { out, version };
+}
+</script>
+<script>
+const log = document.getElementById("log");
+function say(msg, cls) { const d = document.createElement("div"); d.textContent = msg; if (cls) d.className = cls; log.append(d); }
+
+// Finds the folder that holds mpcqol.so and returns its files relative to it.
+function rootAt(entries) {
+  const hit = entries.find(([p]) => p.split("/").pop() === "mpcqol.so" && !p.includes("__MACOSX"));
+  if (!hit) throw new Error("No mpcqol.so found. Choose the SampQOL zip or its folder.");
+  const base = hit[0].slice(0, -"mpcqol.so".length);
+  return new Map(entries.filter(([p]) => p.startsWith(base) && !p.includes("__MACOSX") && !p.split("/").pop().startsWith("."))
+                        .map(([p, d]) => [p.slice(base.length), d]));
+}
+
+async function run(getEntries) {
+  log.textContent = "";
+  try {
+    const files = rootAt(await getEntries());
+    say(`Found SampQOL (${files.size} files).`);
+    const { out, version } = await patch(files);
+    say(`SampQOL ${version} checked. Add-ons installed, autorun signed.`, "ok");
+    const zip = new JSZip();
+    for (const [p, d] of out) zip.file("autorun/" + p, d, { unixPermissions: p.endsWith(".sh") ? 0o755 : 0o644 });
+    const blob = await zip.generateAsync({ type: "blob", platform: "UNIX" });
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "autorun-hs.zip" });
+    a.textContent = "Download autorun-hs.zip";
+    a.className = "btn";
+    const p = document.createElement("p"); p.append(a); log.append(p);
+    say("Next: unzip it, then copy the autorun folder to the top of the SD card (replace any old one). Put the card in the MPC and switch it on.");
+  } catch (e) { say(e.message, "bad"); }
+}
+
+const fromZip = file => async () => {
+  const z = await JSZip.loadAsync(file);
+  const list = Object.values(z.files).filter(f => !f.dir);
+  return Promise.all(list.map(async f => [f.name, await f.async("uint8array")]));
+};
+const fromDir = fileList => async () =>
+  Promise.all([...fileList].map(async f => [f.webkitRelativePath || f.name, new Uint8Array(await f.arrayBuffer())]));
+
+document.getElementById("zip").onchange = e => e.target.files[0] && run(fromZip(e.target.files[0]));
+document.getElementById("dir").onchange = e => e.target.files.length && run(fromDir(e.target.files));
+const drop = document.getElementById("drop");
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("hot"); };
+drop.ondragleave = () => drop.classList.remove("hot");
+drop.ondrop = e => {
+  e.preventDefault(); drop.classList.remove("hot");
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.toLowerCase().endsWith(".zip")) run(fromZip(f));
+  else say("Drop the .zip file, or use Choose folder for an unzipped folder.", "bad");
+};
+</script>
+</body>
+</html>
