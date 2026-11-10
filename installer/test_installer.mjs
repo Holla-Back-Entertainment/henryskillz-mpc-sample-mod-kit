@@ -20,9 +20,14 @@ if (src) {
   files.set("autorun.sh", new Uint8Array(Buffer.from(`PINS="${sha(files.get("qol-run.sh"))}  qol-run.sh\n${sha(so)}  mpcqol.so"\n`)));
 }
 
-let core = fs.readFileSync(new URL("./template.html", import.meta.url), "utf8").match(/<script id="core">([\s\S]*?)<\/script>/)[1];
-core = core.replace("__SAMPQOL_HASHES__", JSON.stringify({ [sha(files.get("mpcqol.so"))]: "test" }))
+// Synthetic mode: the template with a placeholder add-on (no build needed, runs in CI).
+// Real mode: the BUILT page (run ./build.sh first), so the output carries the real add-ons and can boot.
+const page = src ? "../docs/install/index.html" : "./template.html";
+let core = fs.readFileSync(new URL(page, import.meta.url), "utf8").match(/<script id="core">([\s\S]*?)<\/script>/)[1];
+core = core.replace("__SAMPQOL_HASHES__", "{}")
            .replace("__ADDON_FILES__", JSON.stringify({ "hs/hs-addons.sh": Buffer.from("HS_PRELOAD=\n").toString("base64") }));
+// Also accept the given SampQOL build, so older downloads can exercise the patch path (official 0.2.0 is already listed).
+core += `\nSAMPQOL[${JSON.stringify(sha(files.get("mpcqol.so")))}] ??= "test";`;
 const patch = new Function(core + "; return patch;")();
 
 const { out } = await patch(files);
@@ -40,6 +45,8 @@ const bad = new Map(files); bad.set("qol-run.sh", new Uint8Array([1]));
 await assert.rejects(patch(bad), /changed/);
 const wrong = new Map(files); wrong.set("mpcqol.so", new Uint8Array([2]));
 await assert.rejects(patch(wrong), /not SampQOL/);
+if (src) for (const f of ["hs-addons.sh", "hs-splash.raw", "hs-flavor.so", "hs-eq.so", "hs-fx.so", "hs-pro-fx-ladspa.so"])
+  assert.ok(out.get("hs/" + f)?.length > 100, `real mode must carry the built hs/${f}`);
 
 if (outDir) for (const [p, d] of out) { fs.mkdirSync(path.dirname(path.join(outDir, p)), { recursive: true }); fs.writeFileSync(path.join(outDir, p), d); }
 console.log(`installer ok (${src ? "real" : "synthetic"} SampQOL, ${out.size} files)`);

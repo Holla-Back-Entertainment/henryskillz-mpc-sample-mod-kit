@@ -38,7 +38,7 @@ Needs Docker (on Apple Silicon the `gcc:12` image runs natively, and it's the sa
 
     ./build.sh                                  # builds addon/hs/*.so, then dist/henryskillz-mpc-sample-installer.html
     node installer/test_installer.mjs            # self-check on a synthetic SampQOL folder (runs in CI)
-    node installer/test_installer.mjs <SampQOL autorun folder> <out folder>   # check against a real download
+    node installer/test_installer.mjs <SampQOL autorun folder> <out folder>   # real download, real add-ons (bootable; run ./build.sh first)
 
 The FX self-checks (`src/fx/check-*.c`, `bench-*.c`) build on the same image.
 
