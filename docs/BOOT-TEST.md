@@ -8,7 +8,7 @@ Use a **spare exFAT SD card**. Do not use your main card for this first test.
 - [ ] Back up the spare SD card to the computer.
 - [ ] Confirm the MPC Sample is running firmware **1.3.0 / 1.3.0.12**.
 - [ ] Download **SampQOL OS 0.2.0** from [Snare Bes's official release page](https://github.com/snarebes/SampQOL-OS/releases).
-- [ ] Open the [HenrySkillz online installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/), give it the official SampQOL ZIP and download `autorun-hs.zip`.
+- [ ] Open the [HenrySkillz online installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/), click **Choose zip**, give it the official SampQOL ZIP and download `autorun-hs.zip`. The file chooser is verified in Chrome and Safari; drag-and-drop is not yet certified.
 - [ ] Unzip `autorun-hs.zip` and copy its `autorun` folder to the top level of the spare SD card.
 - [ ] Safely eject the SD card from the computer.
 

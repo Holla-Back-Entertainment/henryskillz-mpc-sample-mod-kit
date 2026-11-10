@@ -30,6 +30,16 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 
 Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, and the HenrySkillz start screen (after SampQOL's own).
 
+These are real 320×240 captures from the MPC Sample emulator running the public installer output:
+
+![Insert effects list showing the HS effects](assets/screens/hs-effects-list.png)
+
+| HS Channel Strip | HS Para EQ | HS Bus Compressor |
+|---|---|---|
+| ![HS Channel Strip controls](assets/screens/hs-channel-strip.png) | ![HS Para EQ response display](assets/screens/hs-para-eq.png) | ![HS Bus Compressor controls](assets/screens/hs-bus-compressor.png) |
+
+![MPC EQ page with the dB and frequency grid](assets/screens/eq-page-grid.png)
+
 ## What you need
 
 - An **Akai MPC Sample** on firmware **1.3.0** (1.3.0.12)

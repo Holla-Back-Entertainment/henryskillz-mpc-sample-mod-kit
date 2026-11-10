@@ -120,7 +120,7 @@ Wait until it says it's safe, then take the card out.
 3. When it asks **Start SampQOL OS?**, press **B1** (Start).
 4. You'll see SampQOL's start screen, then the HenrySkillz screen, then the MPC.
 
-![HenrySkillz start screen](../assets/henryskillz-splash-preview.png)
+![HenrySkillz start screen captured during an emulator boot](../assets/screens/henryskillz-splash.png)
 
 ## Step 11. Find the effects
 
@@ -130,7 +130,28 @@ Wherever you choose an insert effect (for example a pad's insert slots in the **
 - **Dynamics:** HS Bus Compressor
 - **EQ / Filter:** HS Para EQ
 
-Done. Make something.
+![Insert effects list showing the four HS Harmonic effects](../assets/screens/hs-effects-list.png)
+
+### Use the FX rack
+
+1. Press **PAD FX** to open the insert rack.
+2. Turn the **data wheel** to an empty insert slot and press the wheel.
+3. Choose a category, turn to the HS effect you want, then press the wheel again to load it.
+4. Turn **K1, K2 and K3** to change the three parameters named along the bottom of the screen.
+5. On Channel Strip, Para EQ and Bus Compressor, press the **middle screen button** to move through their pages. Hold **SHIFT** and press it to move backwards.
+6. On HS Para EQ, turn the **data wheel** to choose a band. The selected band and response curve are shown on screen.
+7. Use **Bypass** to compare the processed and original sound. Keep the output level sensible while auditioning drive or compression.
+8. Press the **left screen button** under **Back** to return to the insert rack.
+
+| HS Channel Strip | HS Para EQ | HS Bus Compressor |
+|---|---|---|
+| ![HS Channel Strip input, drive and output page](../assets/screens/hs-channel-strip.png) | ![HS Para EQ band controls and response curve](../assets/screens/hs-para-eq.png) | ![HS Bus Compressor threshold, ratio and makeup page](../assets/screens/hs-bus-compressor.png) |
+
+The normal EQ page also gets a dB and frequency grid:
+
+![EQ page with the HenrySkillz dB and frequency grid](../assets/screens/eq-page-grid.png)
+
+Start with one effect in one slot, make a small change, then bypass it to hear what changed. Done—make something.
 
 ---
 
