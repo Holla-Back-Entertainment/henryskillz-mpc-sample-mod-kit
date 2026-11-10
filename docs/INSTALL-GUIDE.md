@@ -151,7 +151,7 @@ The normal EQ page also gets a dB and frequency grid:
 
 ![EQ page with the HenrySkillz dB and frequency grid](../assets/screens/eq-page-grid.png)
 
-Start with one effect in one slot, make a small change, then bypass it to hear what changed. Done—make something.
+Start with one effect in one slot, make a small change, then bypass it to hear what changed. Done. Make something.
 
 ---
 

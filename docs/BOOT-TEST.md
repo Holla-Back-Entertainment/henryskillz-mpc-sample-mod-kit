@@ -32,6 +32,7 @@ Open the insert effects list and test each effect with audio playing. Load one e
 - [ ] **HS Channel Strip** loads and passes audio.
 - [ ] **HS Drive Sat** loads and passes audio.
 - [ ] **HS Bus Compressor** loads and passes audio.
+- [ ] On HS Bus Compressor, the **Ratio** box shows a number (e.g. 4:1), not just "x". In the emulator it showed only "x".
 - [ ] **HS Para EQ** loads and passes audio.
 - [ ] The EQ page shows the dB/Hz grid.
 - [ ] The controls respond without a crash, freeze or unexpected silence.
@@ -49,8 +50,8 @@ Open the insert effects list and test each effect with audio playing. Load one e
 
 **Kit version/commit:** ____________________  **SampQOL version:** ____________________
 
-- [ ] PASS — every check above passed.
-- [ ] FAIL — stop testing and record the first failed step below.
+- [ ] PASS: every check above passed.
+- [ ] FAIL: stop testing and record the first failed step below.
 
 **First failed step / what appeared on screen:**
 
