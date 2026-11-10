@@ -55,6 +55,14 @@ int main(void)
     reset(); ctl[HE_CIRCUIT] = 0; ctl[HE_DRIVE] = 0; tone(.25f, 1000); go();
     assert(fabsf(level_db(N/2)) < .5f && thd(1000) < .5f);
 
+    /* EQ low lifts the lows and EQ high the highs (they were swapped before 12 Nov 2026) */
+    float eq[2][2]; const float ehz[2] = {50, 10000};
+    for (int b = 0; b < 2; ++b) for (int k = 0; k < 2; ++k) {
+        reset(); ctl[HE_CIRCUIT] = 0; ctl[HE_DRIVE] = 0; ctl[b ? HE_EQ_HI : HE_EQ_LO] = 63; tone(.01f, ehz[k]); go(); eq[b][k] = level_db(N/2);
+    }
+    printf("EQ low +63: 50 Hz %+.1f, 10 kHz %+.1f; EQ high +63: 50 Hz %+.1f, 10 kHz %+.1f dB\n", eq[0][0], eq[0][1], eq[1][0], eq[1][1]);
+    assert(eq[0][0] > 8 && eq[0][1] < 2 && eq[1][1] > 6 && eq[1][0] < 2);
+
     /* LP2 at freq 40 (~ 175 Hz) cuts 5 kHz; HP2 at the same setting passes it */
     reset(); ctl[HE_CIRCUIT] = 0; ctl[HE_DRIVE] = 0; ctl[HE_FTYPE] = 1; ctl[HE_FREQ] = 40; tone(.1f, 5000); go();
     float lp = level_db(N/2);

@@ -89,7 +89,7 @@ static void design(struct biquad *b, int type, float hz, float gain_db, float q,
         float al = s/(2*q);
         b0 = 1+al*A; b1 = -2*c; b2 = 1-al*A; a0 = 1+al/A; a1 = -2*c; a2 = 1-al/A;
     } else {
-        float al = s*.70710678f, sq = 2*sqrtf(A)*al, sign = type == 0 ? -1 : 1;
+        float al = s*.70710678f, sq = 2*sqrtf(A)*al, sign = type == 0 ? 1 : -1;   /* RBJ: low shelf takes +(A-1)cos in b0 */
         b0 = A*((A+1)-sign*(A-1)*c+sq); b1 = 2*sign*A*((A-1)-sign*(A+1)*c); b2 = A*((A+1)-sign*(A-1)*c-sq);
         a0 = (A+1)+sign*(A-1)*c+sq; a1 = -2*sign*((A-1)+sign*(A+1)*c); a2 = (A+1)+sign*(A-1)*c-sq;
     }
