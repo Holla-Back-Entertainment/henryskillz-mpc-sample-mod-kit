@@ -16,7 +16,8 @@ html = (ROOT / "installer/template.html").read_text()
 html = (html.replace("__SAMPQOL_HASHES__", json.dumps(SAMPQOL))
             .replace("__SAMPQOL_VERSION__", "/".join(SAMPQOL.values()))
             .replace("__ADDON_FILES__", json.dumps(files)))
-out = ROOT / "dist/henryskillz-mpc-sample-installer.html"
-out.parent.mkdir(exist_ok=True)
-out.write_text(html)
-print(f"{out.relative_to(ROOT)}  {out.stat().st_size // 1024} KB, {len(files)} add-on files")
+# dist/ = the release download; docs/install/ = the online installer (GitHub Pages)
+for out in (ROOT / "dist/henryskillz-mpc-sample-installer.html", ROOT / "docs/install/index.html"):
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(html)
+    print(f"{out.relative_to(ROOT)}  {out.stat().st_size // 1024} KB, {len(files)} add-on files")

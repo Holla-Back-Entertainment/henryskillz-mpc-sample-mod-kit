@@ -9,3 +9,4 @@ HenrySkillz-Card/
 id_*
 addon/hs/*.so
 dist/
+.claude/

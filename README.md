@@ -1,84 +1,113 @@
 # HenrySkillz MPC Sample Mod Kit
 
-Studio effects for the **Akai MPC Sample**, made by Henry Skillz in Melbourne.
-They run on top of [SampQOL OS](https://github.com/snarebes/SampQOL-OS) by Snare Bes.
+**Six studio effects for the Akai MPC Sample, installed from a web page in about 15 minutes.**
+No coding, no terminal, no apps to install, no AI tools. Free.
 
-**No coding, no terminal, no AI tools, nothing to install.** You need a web browser and an SD card.
+Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top of [SampQOL OS](https://github.com/snarebes/SampQOL-OS) by **Snare Bes**.
 
-> Unofficial. Not made, endorsed or supported by Akai Professional, inMusic or the SampQOL author.
-> Everything runs from the SD card. Take the card out and the MPC starts as stock.
+### [Open the installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) · [Step-by-step guide](docs/INSTALL-GUIDE.md) · [FAQ](docs/FAQ.md) · [Undo it](docs/RECOVERY.md)
 
-**Status: beta.** The installer is tested against real SampQOL packages on a computer, and the effects have run on Henry's own MPC Sample.
-This exact v0.2.0 build has not had its first boot on hardware yet. Back up before you try it.
+<img src="assets/henryskillz-splash-preview.png" width="320" alt="HenrySkillz start screen on the MPC Sample: DRUMS SAMPLE BASS">
+
+> **Unofficial.** Not made, endorsed or supported by Akai Professional, inMusic or the SampQOL author.
+> Everything runs from the SD card. Switch off and take the card out, and the MPC is stock again.
+
+> **Beta.** The installer is tested on a real SampQOL download in a browser, and the effects have run on Henry's own MPC Sample.
+> This exact build hasn't had its first boot on hardware yet. Back up your card first.
+
+---
 
 ## What you get
 
-| Effect | Where | What it does |
+| Effect | Category | What it does |
 |---|---|---|
-| HS Saturator | Harmonic | Saturation for drums and bass |
-| HS Air Exciter | Harmonic | Adds brightness to the top end |
-| HS Channel Strip | Harmonic | Console-style channel: filters, 4-band EQ, compressor, gate |
-| HS Drive Sat | Harmonic | Saturation with drive and shape controls |
-| HS Bus Compressor | Dynamics | Bus compressor with a sidechain high-pass |
-| HS Para EQ | EQ / Filter | Parametric EQ with a response-curve display |
+| **HS Saturator** | Harmonic | Saturation for drums and bass |
+| **HS Air Exciter** | Harmonic | Adds brightness to the top end |
+| **HS Channel Strip** | Harmonic | Console-style channel: filters, 4-band EQ, compressor, gate |
+| **HS Drive Sat** | Harmonic | Saturation with drive and shape controls |
+| **HS Bus Compressor** | Dynamics | Bus compressor with a sidechain high-pass |
+| **HS Para EQ** | EQ / Filter | Parametric EQ with a response-curve display |
 
-You also get live displays for the stock effects, a dB/Hz grid on the EQ page, and a HenrySkillz screen at start-up (after SampQOL's own).
+Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, and the HenrySkillz start screen (after SampQOL's own).
 
-## Before you start
+## What you need
 
-- An **MPC Sample** on firmware **1.3.0** (1.3.0.12).
-- An **exFAT SD card**.
-- A computer with a web browser (Mac or Windows).
-- **A backup.** Copy everything on the SD card to your computer first. See [docs/RECOVERY.md](docs/RECOVERY.md).
+- An **Akai MPC Sample** on firmware **1.3.0** (1.3.0.12)
+- An **exFAT SD card**
+- A **Mac or Windows** computer with a web browser
+- **SampQOL OS 0.2.0**, downloaded free from [Snare Bes's official page](https://github.com/snarebes/SampQOL-OS/releases)
 
-## Install (5 steps)
+## Install in 5 steps
 
-1. **Get SampQOL 0.2.0.** Download `SampQOL-OS-v0.2.0.zip` from the [official SampQOL page](https://github.com/snarebes/SampQOL-OS/releases).
-   The installer only accepts that exact version.
-2. **Get the installer.** Download `henryskillz-mpc-sample-installer.html` from [Releases](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/releases/latest).
-3. **Open the installer** by double-clicking it (it opens in your browser). Drop the SampQOL zip onto the page.
-   If your Mac already unzipped the download, click **Choose folder** and pick the `SampQOL-OS-v0.2.0` folder.
-4. **Save `autorun-hs.zip`** when the page offers it, then unzip it. You now have a folder called `autorun`.
-5. **Copy that `autorun` folder to the top level of the SD card**, replacing any old one. Eject the card safely, put it in the MPC and switch it on.
-   When it asks *Start SampQOL OS?*, press **B1**.
+1. **Back up** everything on your SD card to your computer.
+2. **Download** `SampQOL-OS-v0.2.0.zip` from the [official SampQOL page](https://github.com/snarebes/SampQOL-OS/releases).
+3. **Open** the [installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) and drop the zip on it. Click **Download autorun-hs.zip**.
+4. **Unzip** it and copy the `autorun` folder to the top level of your SD card.
+5. **Eject** the card, put it in the MPC, switch on and press **B1** to start.
 
-The new effects show up wherever you pick an insert effect. Their names start with **HS**.
+The HS effects are in the insert effects list. **New to this? Follow the [step-by-step guide](docs/INSTALL-GUIDE.md).** It covers formatting, Mac and Windows, and what to do if anything looks wrong.
 
-**Why it works this way:** SampQOL's license says its files can't be shared, so this kit doesn't include them.
-You download SampQOL yourself, and the installer adds the HenrySkillz files to your copy, inside your browser. Nothing is uploaded.
+<img src="assets/installer-page.png" width="480" alt="The installer page">
 
-## Optional: boot test first
+The installer runs entirely in your browser. Your files are never uploaded.
+Prefer offline? Download `henryskillz-mpc-sample-installer.html` from [Releases](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/releases/latest) and double-click it.
 
-Not sure your card and MPC are set up right? The `henryskillz-mpc-sample-starter` zip on the Releases page is a tiny test card.
-**It only shows the HenrySkillz screen for two seconds, then starts the normal MPC. It does not include the effects.**
-Copy its `autorun` folder to the card, boot, and if you see the screen, your card works. Then do the install above.
+## Undo it
 
-## If something goes wrong
+Switch off and take the SD card out. That's it. More options in [RECOVERY.md](docs/RECOVERY.md).
 
-- **MPC boots to stock:** the card's `autorun` folder didn't pass its check. Run the installer again on a fresh SampQOL download.
-- **The app restarts twice and comes back stock:** that's SampQOL's safety net. Delete the `autorun` folder from the card and [open an issue](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
-- **Anything else:** switch off and take the SD card out. The MPC is stock without it. Full steps: [docs/RECOVERY.md](docs/RECOVERY.md) and [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+## Help
 
-Don't contact Akai or inMusic support about this mod.
+- **[FAQ](docs/FAQ.md)**: errors, versions, warranty, "it booted stock".
+- **[Report a problem](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues)**: include your firmware version, what you did and what you saw.
+- Questions about the **HS effects or this installer go here**, not to the SampQOL author or Akai.
 
-## Crate Source
+## About SampQOL OS, and why you download it yourself
 
-Digging for samples? **[Crate Source](https://crate-source.app)** is Henry's crate-digging app: find a record, chop it, and load it onto your MPC.
-This kit doesn't include it or teach how it's built.
+SampQOL OS is **Snare Bes's** work and the foundation this kit runs on. His license says SampQOL is only shared from his official download, never re-uploaded, and never presented as someone else's work.
+So this kit:
+- **never contains SampQOL**: you get it from him, so you always have his genuine, current release;
+- changes **your own copy**, on **your own computer**, which his license allows for personal use;
+- keeps **his license, his name and his start screen** in your copy;
+- contains only HenrySkillz's own code (the effects, displays, installer and splash).
+
+If you like SampQOL, star [his repository](https://github.com/snarebes/SampQOL-OS) and read his manual. It does far more than this kit.
+If the SampQOL author ever asks for anything here to change or come down, it will.
+
+## Build your own
+
+Want to write your own add-ons or your own MPC Sample OS? **[BUILD-YOUR-OWN.md](docs/BUILD-YOUR-OWN.md)** explains how it works, how to make your own start screen, and Snare Bes's rules in plain English.
+Technical details: [HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md).
+
+There's also a **starter card** on the [Releases](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/releases/latest) page: the smallest possible mod. It shows the HenrySkillz screen, then starts the normal MPC.
+**It has no effects.** It's a boot test and a template for building your own.
+
+## Henry Skillz
+
+DJ, producer and creative from Melbourne. Ableton Live and an Akai MPC.
+
+- Web: [henryskillz.com](https://www.henryskillz.com)
+- Instagram: [@henryskillz](https://www.instagram.com/henryskillz/)
+- YouTube: [@henryskillz](https://www.youtube.com/@henryskillz)
+- TikTok: [@henryskillzau](https://www.tiktok.com/@henryskillzau)
+- Spotify: [Henry Skillz](https://open.spotify.com/artist/1zC2DSxilYhhqyojCBerYl)
+- Mixcloud: [DJ sets](https://www.mixcloud.com/incredibleskillz/)
+- Email: [henryskillz@spacely.clothing](mailto:henryskillz@spacely.clothing)
+
+**Digging for samples?** [Crate Source](https://crate-source.app) is Henry's crate-digging app: find a record, chop it, load it onto your MPC.
 
 ## Support the work
 
-If this saved you time, support it by shopping [Spacely](https://www.spacely.clothing/) or visiting [HenrySkillz](https://www.henryskillz.com/).
-The kit is free and always will be. Support is optional.
+This kit is free and always will be. If it helped you, support it by shopping **[Spacely](https://www.spacely.clothing)**
+([Instagram](https://www.instagram.com/spacelyclothing/) · [TikTok](https://www.tiktok.com/@spacely.co)), or follow along on the links above.
+Support is optional and unlocks nothing.
 
-## For builders
+## Credits and license
 
-How it works, how to build it and how to add a new SampQOL version: [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md).
-The `tools/` folder has command-line helpers for signing an `autorun` folder and making your own splash.
+- **[SampQOL OS](https://github.com/snarebes/SampQOL-OS)** by Snare Bes: the mod this kit is built on. Not included; get it from him.
+- **[mpc-sample-root-ssh](https://github.com/orrpunk-art/mpc-sample-root-ssh)** by orrpunk-art: published how the MPC Sample's `autorun.check` is made.
+- The MPC-Forums community, for the shared findings.
 
-## Credits
+Full notices: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). HenrySkillz code is under the [MIT License](LICENSE). SampQOL OS has its own license and is not part of this repository.
 
-The effects, displays, installer and tooling are by **Henry Skillz**. This kit only exists because of SampQOL OS by Snare Bes.
-See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-
-Released under the [MIT License](LICENSE). SampQOL OS has its own license and is not part of this repository.
+Akai Professional, MPC and MPC Sample are trademarks of inMusic Brands, Inc. This project is not affiliated with them.
