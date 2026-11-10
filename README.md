@@ -12,8 +12,8 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 > **Unofficial.** Not made, endorsed or supported by Akai Professional, inMusic or the SampQOL author.
 > Everything runs from the SD card. Switch off and take the card out, and the MPC is stock again.
 
-> **Beta.** The installer is tested on a real SampQOL download in a browser, and the effects have run on Henry's own MPC Sample.
-> This exact build hasn't had its first boot on hardware yet. Back up your card first.
+> **Tested:** the installer on the official SampQOL 0.2.0 download (Chrome and Safari), and this exact build booted end to end in an MPC Sample emulator.
+> The HS effects have run on Henry's own MPC Sample. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
 
 ---
 
