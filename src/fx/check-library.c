@@ -97,6 +97,36 @@ int main(int argc, char **argv)
     assert(load_descriptor(5)->UniqueID == HS_EQ2_ID);
     assert(load_descriptor(5) == load_descriptor(HS_EQ2_ID));
     assert(load_descriptor(5)->PortCount == EQ_COUNT + 4);
+    const LADSPA_Descriptor *eq = load_descriptor(5);
+    const LADSPA_PortRangeHint *eq_input = &eq->PortRangeHints[4 + EQ_INPUT];
+    const LADSPA_PortRangeHint *eq_output = &eq->PortRangeHints[4 + EQ_OUTPUT];
+    assert(LADSPA_IS_HINT_DEFAULT_HIGH(eq_input->HintDescriptor));
+    assert(LADSPA_IS_HINT_DEFAULT_HIGH(eq_output->HintDescriptor));
+    assert(fabsf(.25f * eq_input->LowerBound + .75f * eq_input->UpperBound) < 1e-6f);
+    assert(fabsf(.25f * eq_output->LowerBound + .75f * eq_output->UpperBound) < 1e-6f);
+
+    /* A newly inserted Para EQ must be a true unity stage. SampQOL uses the
+       range-derived defaults checked above; all bands begin switched off. */
+    LADSPA_Handle eq_handle = eq->instantiate(eq, RATE);
+    assert(eq_handle);
+    float eq_controls[EQ_COUNT] = {0};
+    float eq_in[2][BLOCK], eq_out[2][BLOCK];
+    for (int i = 0; i < BLOCK; ++i) {
+        eq_in[0][i] = .25f * sinf(i * .17f);
+        eq_in[1][i] = .17f * cosf(i * .11f);
+    }
+    for (int i = 0; i < 2; ++i) {
+        eq->connect_port(eq_handle, i, eq_in[i]);
+        eq->connect_port(eq_handle, i + 2, eq_out[i]);
+    }
+    eq_controls[EQ_INPUT] = .25f * eq_input->LowerBound + .75f * eq_input->UpperBound;
+    eq_controls[EQ_OUTPUT] = .25f * eq_output->LowerBound + .75f * eq_output->UpperBound;
+    for (int i = 0; i < EQ_COUNT; ++i)
+        eq->connect_port(eq_handle, i + 4, &eq_controls[i]);
+    eq->activate(eq_handle);
+    eq->run(eq_handle, BLOCK);
+    assert(!memcmp(eq_in, eq_out, sizeof eq_in));
+    eq->cleanup(eq_handle);
     assert(!load_descriptor(6));
     f.handle = f.plugin->instantiate(f.plugin, RATE);
     assert(f.handle);

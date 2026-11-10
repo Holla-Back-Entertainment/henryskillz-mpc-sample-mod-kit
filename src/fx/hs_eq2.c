@@ -28,17 +28,22 @@ struct eq {
 #define BAND_LIST(X) X(1) X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12)                      X(13) X(14) X(15) X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24)
 #define B (LADSPA_HINT_BOUNDED_BELOW|LADSPA_HINT_BOUNDED_ABOVE)
 #define D0 (B|LADSPA_HINT_DEFAULT_0)
+#define DGAIN (B|LADSPA_HINT_DEFAULT_HIGH)
 #define INT0 (D0|LADSPA_HINT_INTEGER)
 #define INTMAX (B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_MAXIMUM)
 #define TOGGLE (D0|LADSPA_HINT_TOGGLED)
 #define BAND_HINTS(i)     {B|LADSPA_HINT_LOGARITHMIC|LADSPA_HINT_DEFAULT_MIDDLE,20,20000},     {D0,-20,20}, {B|LADSPA_HINT_DEFAULT_1,.3,10.3}, {INTMAX,0,4},     {TOGGLE,0,1}, {TOGGLE,0,1}, {INT0,0,8}, {INT0,0,5}, {INT0,0,8}, {INTMAX,0,2},
 static const LADSPA_PortRangeHint hints[PORTS] = {
-    {0}, {0}, {0}, {0}, {D0,-36,12}, {D0,-36,12}, {TOGGLE,0,1}, {TOGGLE,0,1}, {TOGGLE,0,1},
+    /* SampQOL initialises the first LADSPA control from its normalised default.
+       DEFAULT_0 becomes the lower bound there. For -36..+12, DEFAULT_HIGH is
+       exactly 0 dB: .25 * -36 + .75 * 12. */
+    {0}, {0}, {0}, {0}, {DGAIN,-36,12}, {DGAIN,-36,12}, {TOGGLE,0,1}, {TOGGLE,0,1}, {TOGGLE,0,1},
     BAND_LIST(BAND_HINTS)
 };
 #undef BAND_HINTS
 #undef B
 #undef D0
+#undef DGAIN
 #undef INT0
 #undef INTMAX
 #undef TOGGLE
