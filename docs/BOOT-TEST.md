@@ -34,6 +34,9 @@ Open the insert effects list and test each effect with audio playing. Load one e
 - [ ] **HS Bus Compressor** loads and passes audio.
 - [ ] On HS Bus Compressor, turning **K2** steps the Ratio through 1.5:1, 2:1, 3:1, 4:1, 10:1, 20:1 and X (X = limiting). Note what Ratio and Threshold show when it first loads: the emulator showed X and 20 dB, but the intended default ratio is 2:1.
 - [ ] **HS Para EQ** loads and passes audio.
+- [ ] **HS Pump** loads and passes audio. On its first page, turning **K2** lights the ratio lamps from 1 to 20.
+- [ ] **HS Heat** loads and passes audio. On its first page, turning **K1** moves the amber lamp across the 8 circuits; on its second page, **K1** moves the lamp across the 7 filter shapes.
+- [ ] On HS Pump and HS Heat, the **middle screen button** moves through their pages (3 on Pump, 6 on Heat).
 - [ ] The EQ page shows the dB/Hz grid.
 - [ ] The controls respond without a crash, freeze or unexpected silence.
 

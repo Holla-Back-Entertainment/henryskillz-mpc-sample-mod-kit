@@ -1,6 +1,6 @@
 # HenrySkillz MPC Sample Mod Kit
 
-**Six studio effects for the Akai MPC Sample, installed from a web page in about 15 minutes.**
+**Eight studio effects for the Akai MPC Sample, installed from a web page in about 15 minutes.**
 No coding, no terminal, no apps to install, no AI tools. Free.
 
 Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top of [SampQOL OS](https://github.com/snarebes/SampQOL-OS) by **Snare Bes**.
@@ -26,6 +26,8 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 | **HS Channel Strip** | Harmonic | Console-style channel: filters, 4-band EQ, compressor, gate |
 | **HS Drive Sat** | Harmonic | Saturation with drive and shape controls |
 | **HS Bus Compressor** | Dynamics | Bus compressor with a sidechain high-pass |
+| **HS Pump** | Dynamics | Stepped feedback compressor, 1:1 to 20:1, with an Opto release, attack modifier and output saturation |
+| **HS Heat** | Harmonic | Eight drive circuits into a multimode filter, with dirt, a 2-band EQ, an envelope follower and an LFO |
 | **HS Para EQ** | EQ / Filter | Parametric EQ with a response-curve display |
 
 Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, and the HenrySkillz start screen (after SampQOL's own).
@@ -37,6 +39,12 @@ These are real 320×240 captures from the MPC Sample emulator running the public
 | HS Channel Strip | HS Para EQ | HS Bus Compressor |
 |---|---|---|
 | ![HS Channel Strip controls](assets/screens/hs-channel-strip.png) | ![HS Para EQ response display](assets/screens/hs-para-eq.png) | ![HS Bus Compressor controls](assets/screens/hs-bus-compressor.png) |
+
+| HS Pump | HS Heat | HS Heat, filter page |
+|---|---|---|
+| ![HS Pump compress page: ratio lamps, input, ratio and output knobs](assets/screens/hs-pump.png) | ![HS Heat character page: circuit lamps, circuit, drive and wet knobs](assets/screens/hs-heat.png) | ![HS Heat filter page: filter type lamps, type, frequency and resonance knobs](assets/screens/hs-heat-filter.png) |
+
+The HS Pump and HS Heat panels above are rendered at 3× from the panel drawing code in `src/fx/`, not captured from the emulator yet.
 
 ![MPC EQ page with the dB and frequency grid](assets/screens/eq-page-grid.png)
 

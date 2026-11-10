@@ -61,5 +61,7 @@ struct Category {
 #include "hs_xsat.h"
 #include "hs_bus.h"
 #include "hs_eq2.h"
+#include "hs_pump.h"
+#include "hs_heat.h"
 #include "insert.inc"
 #include "banks.inc"

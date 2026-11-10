@@ -72,7 +72,9 @@ static const struct faceplate faceplates[] = {
     [HS_CHANNEL] = {0x30363b, 0x929da2, "CHANNEL STRIP"},
     [HS_XSAT] = {0x302b27, 0xd3a164, "SATURATION"},
     [HS_BUS] = {0x283039, 0x9baac0, "BUS COMPRESSOR"},
-    [HS_EQ2] = {0x252e36, 0x77bcb0, "PARA EQ"}
+    [HS_EQ2] = {0x252e36, 0x77bcb0, "PARA EQ"},
+    [HS_PUMP] = {0x060708, 0x2fa8e8, "PUMP"},
+    [HS_HEAT] = {0x0c0c0d, 0xe8e6e0, "HEAT"}
 };
 
 static void fx_line(uint32_t *p, int x, int y, int ex, int ey, uint32_t color)
@@ -300,6 +302,225 @@ static void bus_panel(uint32_t *p)
     }
 }
 
+static int pump_section(const char **name)
+{
+    typedef const char *(*bank_fn)(int *);
+    static bank_fn active_bank;
+    if (!active_bank) active_bank = (bank_fn)dlsym(RTLD_DEFAULT, "hs_pump_bank");
+    int section = 0;
+    const char *title = active_bank ? active_bank(&section) : NULL;
+    if (name) *name = title ? title : "COMPRESS";
+    return section >= 0 && section < 3 ? section : 0;
+}
+
+/* Panel styled after the hardware's look: black face, blue print, black knobs with white
+   pointers, the ratio LED column (laid flat) and the Det/Sat lamps. Ratio, Det and Sat are
+   only visible on their own page, so the last values seen are remembered for the lamps. */
+static const uint32_t pump_blue = 0x2fa8e8;
+static int pump_ratio = 3, pump_det, pump_sat;
+
+static void pump_note(int knob, int value)
+{
+    int section = pump_section(NULL);
+    if (value < 0) return;
+    if (section == 0 && knob == 1) pump_ratio = (value*8+36)/73;
+    if (section == 2 && knob == 0) pump_sat = value >= 37;
+    if (section == 2 && knob == 1) pump_det = value >= 37;
+}
+
+static const char *pump_marking(int knob, int value)
+{
+    static const char *const ratio[] = {"1:1","2:1","3:1","4:1","6:1","8:1","10:1","12:1","20:1"};
+    static const char *const attack[] = {"0.2 MS","1 MS","3 MS","6 MS","10 MS","20 MS","30 MS","40 MS"};
+    static const char *const release[] = {"50 MS","0.1 S","0.15 S","0.2 S","0.25 S","0.3 S","0.5 S","OPTO"};
+    if (value < 0) return NULL;
+    int section = pump_section(NULL);
+    if (section == 0 && knob == 1) return ratio[(value*8+36)/73];
+    if (section == 1 && knob == 0) return attack[(value*7+36)/73];
+    if (section == 1 && knob == 1) return release[(value*7+36)/73];
+    if (section == 1 && knob == 2 && value == 0) return "OFF";
+    if (section == 2 && knob < 2) return value >= 37 ? "ON" : "OFF";
+    return NULL;
+}
+
+static void pump_led(uint32_t *p, int x, int y, uint32_t color, int lit)
+{
+    uint32_t dim = ((color >> 2) & 0x3f3f3f);
+    fx_disc(p, x, y, 4, 0x050506);
+    fx_disc(p, x, y, 3, lit ? color : dim);
+    if (lit) rect(p, x-1, y-2, 2, 1, 0xffffff);
+}
+
+static void pump_knob(uint32_t *p, int x, int y, int value, int bypass)
+{
+    fx_disc(p, x, y+1, 18, 0x000000);
+    fx_disc(p, x, y, 16, 0x2b2d31);
+    fx_disc(p, x, y, 14, 0x141518);
+    for (int i = 0; i < 24; ++i) {   /* knurled edge */
+        float a = i * .2617994f;
+        rect(p, x + (int)lroundf(sinf(a)*15), y - (int)lroundf(cosf(a)*15), 1, 1, 0x3a3d42);
+    }
+    fx_disc(p, x, y, 10, 0x1c1d20);
+    for (int i = 0; i < 11; ++i) {   /* white scale ticks, 0..10 */
+        float a = -2.3561945f + i * .4712389f;
+        rect(p, x + (int)lroundf(sinf(a)*20), y - (int)lroundf(cosf(a)*20), 1, 1, 0xe8e8e8);
+    }
+    if (value >= 0) {
+        float a = -2.3561945f + value * (4.712389f / 73);
+        float dx = sinf(a), dy = cosf(a);
+        uint32_t c = bypass ? 0x7a7f84 : 0xf4f4f0;
+        fx_line(p, x+(int)lroundf(dx*3), y-(int)lroundf(dy*3), x+(int)lroundf(dx*14), y-(int)lroundf(dy*14), c);
+        fx_line(p, x+(int)lroundf(dx*3)+1, y-(int)lroundf(dy*3), x+(int)lroundf(dx*14)+1, y-(int)lroundf(dy*14), c);
+    }
+}
+
+static void pump_panel(uint32_t *p, const int *values)
+{
+    for (int i = 0; i < 3; ++i) pump_note(i, values[i]);
+    static const char *const tabs[] = {"COMP", "TIME", "COLOUR"};
+    static const char *const ratios[] = {"1","2","3","4","6","8","10","12","20"};
+    static const uint32_t colors[] = {0x46c84a,0x46c84a,0x46c84a,0x46c84a,0xe2d23a,0xe2d23a,0xf08a2c,0xf08a2c,0xe8382c};
+    const char *name;
+    int section = pump_section(&name);
+    rect(p, 8, 34, 304, 42, 0x08090b);
+    frame(p, 8, 34, 304, 42, pump_blue);
+    text(p, 15, 39, "HS PUMP", 7, pump_blue);
+    rect(p, 15, 46, 27, 1, pump_blue);
+    text(p, 51, 39, name, 19, 0xf0f0ec);
+    /* ratio LEDs, as on the hardware's left column, laid flat */
+    text(p, 15, 52, "RATIO", 5, 0xf0f0ec);
+    for (int i = 0; i < 9; ++i) {
+        int x = 46 + i*17;
+        pump_led(p, x, 55, colors[i], i == pump_ratio);
+        text(p, x - 2*(int)strlen(ratios[i]) + 1, 63, ratios[i], 2, 0xd0d0cc);
+    }
+    rect(p, 15, 70, 180, 1, pump_blue);
+    /* Det / Sat lamps */
+    text(p, 206, 52, "DET", 3, 0xf0f0ec);
+    pump_led(p, 225, 55, 0x46c84a, pump_det);
+    text(p, 236, 52, "SAT", 3, 0xf0f0ec);
+    pump_led(p, 255, 55, 0xe8382c, pump_sat);
+    /* page lamps (pad 13 flips pages) */
+    for (int i = 0; i < 3; ++i) {
+        int x = 206 + i*35, active = i == section;
+        rect(p, x, 63, 32, 9, active ? pump_blue : 0x101317);
+        frame(p, x, 63, 32, 9, active ? 0xbfe6fa : 0x2a5f7e);
+        text(p, x + (32 - 4*(int)strlen(tabs[i]))/2 + 1, 65, tabs[i], 6, active ? 0x050608 : 0xb8d8ea);
+    }
+    text(p, 282, 39, "2 PAGE", 6, 0x9fc6dc);
+}
+
+/* HS Heat: black face, light grey knobs with white dots, amber lamps for the 8 circuits and
+   the 7 filter types, and a yellow-green screen for the page name, as on the hardware it is
+   styled after. Circuit and filter type are remembered for the lamps when off their page. */
+static const uint32_t heat_lcd = 0xd8f040, heat_amber = 0xf2a23a;
+static int heat_circuit = 1, heat_filter;
+
+static int heat_section(const char **name)
+{
+    typedef const char *(*bank_fn)(int *);
+    static bank_fn active_bank;
+    if (!active_bank) active_bank = (bank_fn)dlsym(RTLD_DEFAULT, "hs_heat_bank");
+    int section = 0;
+    const char *title = active_bank ? active_bank(&section) : NULL;
+    if (name) *name = title ? title : "CHARACTER";
+    return section >= 0 && section < 6 ? section : 0;
+}
+
+static void heat_note(int knob, int value)
+{
+    if (value < 0) return;
+    int section = heat_section(NULL);
+    if (section == 0 && knob == 0) heat_circuit = (value*7+36)/73;
+    if (section == 1 && knob == 0) heat_filter = (value*7+36)/73;
+}
+
+static const char *heat_marking(int knob, int value)
+{
+    static const char *const circuit[] = {"CLEAN BOOST","SATURATION","ENHANCEMENT","MID DRIVE",
+                                          "ROUGH CRUNCH","CLASSIC DIST","ROUND FUZZ","HIGH GAIN"};
+    static const char *const filter[] = {"OFF","LP2 12 DB","LP1 6 DB","BAND PASS","HP1 6 DB",
+                                         "HP2 12 DB","NOTCH","PEAK"};
+    static const char *const wave[] = {"TRI","SINE","SQR","SAW","EXP","RAMP","RND"};
+    if (value < 0) return NULL;
+    int section = heat_section(NULL);
+    if (section == 0 && knob == 0) return circuit[(value*7+36)/73];
+    if (section == 1 && knob == 0) return filter[(value*7+36)/73];
+    if (section == 4 && knob == 2) return wave[(value*6+36)/73];
+    return NULL;
+}
+
+static void heat_knob(uint32_t *p, int x, int y, int value, int bypass)
+{
+    for (int i = 0; i < 11; ++i) {   /* white tick marks */
+        float a = -2.3561945f + i * .4712389f;
+        fx_line(p, x + (int)lroundf(sinf(a)*19), y - (int)lroundf(cosf(a)*19),
+                x + (int)lroundf(sinf(a)*22), y - (int)lroundf(cosf(a)*22), 0xd8d8d4);
+    }
+    fx_disc(p, x, y+2, 16, 0x050505);       /* drop shadow */
+    fx_disc(p, x, y, 15, 0x9d9d99);
+    fx_disc(p, x, y-1, 14, 0xcfcfcb);
+    fx_disc(p, x, y-1, 11, 0xd9d9d5);
+    if (value >= 0) {
+        float a = -2.3561945f + value * (4.712389f / 73);
+        int dx = (int)lroundf(sinf(a)*10), dy = (int)lroundf(cosf(a)*10);
+        fx_disc(p, x+dx, y-1-dy, 3, bypass ? 0x8a8a86 : 0x2a2a2a);
+        fx_disc(p, x+dx, y-1-dy, 2, bypass ? 0xb0b0ac : 0xffffff);
+    }
+}
+
+static void heat_lamp(uint32_t *p, int x, int y, int lit)
+{
+    fx_disc(p, x, y, 3, 0x2a1408);
+    fx_disc(p, x, y, 2, lit ? heat_amber : 0x6a3416);
+    if (lit) rect(p, x-1, y-1, 1, 1, 0xfff0b0);
+}
+
+/* the seven filter-type pictograms from the hardware, 9x5 each */
+static void heat_icon(uint32_t *p, int x, int y, int type, uint32_t c)
+{
+    switch (type) {
+    case 0: fx_line(p,x,y,x+5,y,c); fx_line(p,x+5,y,x+8,y+4,c); break;              /* LP2 */
+    case 1: fx_line(p,x,y,x+3,y,c); fx_line(p,x+3,y,x+8,y+4,c); break;              /* LP1 */
+    case 2: fx_line(p,x,y+4,x+4,y,c); fx_line(p,x+4,y,x+8,y+4,c); break;            /* BP */
+    case 3: fx_line(p,x,y+4,x+5,y,c); fx_line(p,x+5,y,x+8,y,c); break;              /* HP1 */
+    case 4: fx_line(p,x,y+4,x+3,y,c); fx_line(p,x+3,y,x+8,y,c); break;              /* HP2 */
+    case 5: fx_line(p,x,y,x+3,y,c); fx_line(p,x+3,y,x+4,y+4,c); fx_line(p,x+4,y+4,x+5,y,c); fx_line(p,x+5,y,x+8,y,c); break;
+    default: fx_line(p,x,y+3,x+3,y+3,c); fx_line(p,x+3,y+3,x+4,y,c); fx_line(p,x+4,y,x+5,y+3,c); fx_line(p,x+5,y+3,x+8,y+3,c);
+    }
+}
+
+static void heat_panel(uint32_t *p, const int *values)
+{
+    static const char *const short_names[] = {"CLN","SAT","ENH","MID","CRN","DST","FUZ","HG"};
+    for (int i = 0; i < 3; ++i) heat_note(i, values[i]);
+    const char *name;
+    int section = heat_section(&name);
+    rect(p, 8, 34, 304, 42, 0x0c0c0d);
+    frame(p, 8, 34, 304, 42, 0x3c3c3e);
+    text(p, 14, 38, "HS HEAT", 7, 0xf2f2ee);
+    /* yellow-green screen with the page name and position */
+    rect(p, 100, 36, 206, 11, 0x0b0d02);
+    frame(p, 100, 36, 206, 11, 0x5d6a14);
+    char pos[8] = {(char)('1'+section), '/', '6', 0};
+    text(p, 104, 39, name, 19, heat_lcd);
+    text(p, 286, 39, pos, 3, heat_lcd);
+    /* CHARACTER: one lamp per circuit */
+    rect(p, 14, 50, 160, 1, 0x5a5a5c);
+    for (int i = 0; i < 8; ++i) {
+        int x = 22 + i*20;
+        heat_lamp(p, x, 57, i == heat_circuit);
+        text(p, x - 2*(int)strlen(short_names[i]) + 1, 64, short_names[i], 3, 0xd6d6d2);
+    }
+    /* FILTER: pictogram + lamp per type; all dark when the filter is off */
+    rect(p, 184, 50, 122, 1, 0x5a5a5c);
+    for (int i = 0; i < 7; ++i) {
+        int x = 192 + i*17;
+        heat_icon(p, x - 4, 54, i, 0xd6d6d2);
+        heat_lamp(p, x, 66, heat_filter == i + 1);
+    }
+}
+
 static int eq2_position(int *page)
 {
     typedef int (*read_fn)(int *);
@@ -371,7 +592,7 @@ static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
     uint32_t accent = face->accent;
     rect(p,8,34,304,42,0x101719);
     frame(p,8,34,304,42,0x465259);
-    if (kind != TAPE_DELAY && kind != TAPE && kind != AIR_FLAVOR && kind != HS_CHANNEL && kind != HS_XSAT && kind != HS_BUS && kind != HS_EQ2)
+    if (kind != TAPE_DELAY && kind != TAPE && kind != AIR_FLAVOR && kind != HS_CHANNEL && kind != HS_XSAT && kind != HS_BUS && kind != HS_EQ2 && kind != HS_PUMP && kind != HS_HEAT)
         text(p,17,38,face->legend,24,0xaebfc2);
 
     switch (kind) {
@@ -423,6 +644,12 @@ static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
         break;
     case HS_BUS:
         bus_panel(p);
+        break;
+    case HS_PUMP:
+        pump_panel(p, page->values);
+        break;
+    case HS_HEAT:
+        heat_panel(p, page->values);
         break;
     case HS_XSAT:
         xsat_panel(p);

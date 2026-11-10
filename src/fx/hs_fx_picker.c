@@ -13,6 +13,8 @@
 #include "hs_xsat.h"
 #include "hs_bus.h"
 #include "hs_eq2.h"
+#include "hs_pump.h"
+#include "hs_heat.h"
 
 enum {
     HS_SATURATOR = 0x485301,
@@ -39,7 +41,9 @@ static const struct fx_row hs_rows[] = {
     {HS_CHANNEL_ID, -1, HARMONIC, "HS Channel Strip"},
     {HS_XSAT_ID, -1, HARMONIC, "HS Drive Sat"},
     {HS_BUS_ID, -1, DYNAMICS, "HS Bus Compressor"},
-    {HS_EQ2_ID, -1, EQ_FILTER, "HS Para EQ"}
+    {HS_EQ2_ID, -1, EQ_FILTER, "HS Para EQ"},
+    {HS_PUMP_ID, -1, DYNAMICS, "HS Pump"},
+    {HS_HEAT_ID, -1, HARMONIC, "HS Heat"}
 };
 enum { FX_COUNT = sizeof hs_rows / sizeof *hs_rows };
 

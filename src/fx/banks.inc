@@ -56,6 +56,22 @@ static constexpr FlavorBank bus_banks[] = {
     {"PARALLEL", 2, {BUS_MIX, BUS_BYPASS, -1, -1, -1, -1},
         {"Mix %", "Bypass", "", "", "", ""}}
 };
+static constexpr FlavorBank pump_banks[] = {
+    {"COMPRESS", 0, {PU_INPUT, PU_RATIO, PU_OUTPUT, -1, -1, -1},
+        {"Input dB", "Ratio", "Output dB", "", "", ""}},
+    {"TIMING", 1, {PU_ATTACK, PU_RELEASE, PU_ATMOD, -1, -1, -1},
+        {"Attack", "Release", "AtMod", "", "", ""}},
+    {"COLOUR", 2, {PU_SAT, PU_DET_HP, PU_MIX, -1, -1, -1},
+        {"Sat", "Det HP 110", "Mix %", "", "", ""}}
+};
+static constexpr FlavorBank heat_banks[] = {
+    {"CHARACTER", 0, {HE_CIRCUIT, HE_DRIVE, HE_WET, -1, -1, -1}, {"Circuit", "Drive", "Wet dB", "", "", ""}},
+    {"FILTER", 1, {HE_FTYPE, HE_FREQ, HE_RESO, -1, -1, -1}, {"Filter Type", "Frequency", "Resonance", "", "", ""}},
+    {"DIRT + EQ", 2, {HE_DIRT, HE_EQ_LO, HE_EQ_HI, -1, -1, -1}, {"Dirt", "EQ Low", "EQ High", "", "", ""}},
+    {"ENVELOPE", 3, {HE_ENV_DEPTH, HE_ENV_ATK, HE_ENV_REL, -1, -1, -1}, {"Env > Freq", "Attack", "Release", "", "", ""}},
+    {"LFO", 4, {HE_LFO_DEPTH, HE_LFO_SPEED, HE_LFO_WAVE, -1, -1, -1}, {"LFO > Freq", "Speed", "Wave", "", "", ""}},
+    {"OUTPUT", 5, {HE_FREQ_PAN, HE_MIX, HE_VOLUME, -1, -1, -1}, {"Freq Pan", "Mix %", "Volume dB", "", "", ""}}
+};
 static constexpr FlavorBank eq_global[] = {
     {"GLOBAL",0,{EQ_INPUT,EQ_OUTPUT,EQ_MIDSIDE,-1,-1,-1},{"Input dB","Output dB","Mid/Side","","",""}},
     {"ROUTING",1,{EQ_PARALLEL,EQ_BYPASS,-1,-1,-1,-1},{"Parallel","Bypass","","","",""}}
@@ -72,6 +88,12 @@ static int (*next_cc)(int,int);
 
 static constexpr unsigned bus_count = sizeof bus_banks / sizeof *bus_banks;
 static unsigned bus_bank;
+
+static constexpr unsigned heat_count = sizeof heat_banks / sizeof *heat_banks;
+static unsigned heat_bank;
+
+static constexpr unsigned pump_count = sizeof pump_banks / sizeof *pump_banks;
+static unsigned pump_bank;
 
 static constexpr unsigned xsat_count = sizeof xsat_banks / sizeof *xsat_banks;
 static unsigned xsat_bank;
@@ -109,6 +131,22 @@ extern "C" const char *hs_bus_bank(int *section)
 {
     if (insert_open() != HS_BUS_ID) return nullptr;
     const auto &page = bus_banks[__atomic_load_n(&bus_bank, __ATOMIC_RELAXED)];
+    *section = page.module;
+    return page.title;
+}
+
+extern "C" const char *hs_pump_bank(int *section)
+{
+    if (insert_open() != HS_PUMP_ID) return nullptr;
+    const auto &page = pump_banks[__atomic_load_n(&pump_bank, __ATOMIC_RELAXED)];
+    *section = page.module;
+    return page.title;
+}
+
+extern "C" const char *hs_heat_bank(int *section)
+{
+    if (insert_open() != HS_HEAT_ID) return nullptr;
+    const auto &page = heat_banks[__atomic_load_n(&heat_bank, __ATOMIC_RELAXED)];
     *section = page.module;
     return page.title;
 }
@@ -192,9 +230,11 @@ extern "C" int padmix_note(int note, int value, int shift)
         }
         return 1;
     }
-    if (note == 13 && (uid == flavor_uid || uid == HS_CHANNEL_ID || uid == HS_XSAT_ID || uid == HS_BUS_ID) && !question_active()) {
-        unsigned *selection = uid == flavor_uid ? &bank : uid == HS_XSAT_ID ? &xsat_bank : uid == HS_BUS_ID ? &bus_bank : &channel_bank;
-        unsigned count = uid == flavor_uid ? bank_count : uid == HS_XSAT_ID ? xsat_count : uid == HS_BUS_ID ? bus_count : channel_count;
+    if (note == 13 && (uid == flavor_uid || uid == HS_CHANNEL_ID || uid == HS_XSAT_ID || uid == HS_BUS_ID || uid == HS_PUMP_ID || uid == HS_HEAT_ID) && !question_active()) {
+        unsigned *selection = uid == flavor_uid ? &bank : uid == HS_XSAT_ID ? &xsat_bank : uid == HS_BUS_ID ? &bus_bank
+            : uid == HS_PUMP_ID ? &pump_bank : uid == HS_HEAT_ID ? &heat_bank : &channel_bank;
+        unsigned count = uid == flavor_uid ? bank_count : uid == HS_XSAT_ID ? xsat_count : uid == HS_BUS_ID ? bus_count
+            : uid == HS_PUMP_ID ? pump_count : uid == HS_HEAT_ID ? heat_count : channel_count;
         if (value > 0) {
             unsigned previous = __atomic_load_n(selection, __ATOMIC_RELAXED);
             unsigned page = (previous + (shift ? count - 1 : 1)) % count;
@@ -209,7 +249,7 @@ extern "C" int padmix_note(int note, int value, int shift)
 extern "C" int fxmap_get_row(void *context, int id, void *output)
 {
     unsigned uid = insert_open();
-    if (!output || (uid != flavor_uid && uid != HS_CHANNEL_ID && uid != HS_XSAT_ID && uid != HS_BUS_ID && uid != HS_EQ2_ID) || id != -1)
+    if (!output || (uid != flavor_uid && uid != HS_CHANNEL_ID && uid != HS_XSAT_ID && uid != HS_BUS_ID && uid != HS_EQ2_ID && uid != HS_PUMP_ID && uid != HS_HEAT_ID) || id != -1)
         return next_map ? next_map(context, id, output) : 0;
     struct MapRow {
         char name[24];
@@ -236,11 +276,15 @@ extern "C" int fxmap_get_row(void *context, int id, void *output)
         ? banks[__atomic_load_n(&bank, __ATOMIC_RELAXED)]
         : uid == HS_XSAT_ID ? xsat_banks[__atomic_load_n(&xsat_bank, __ATOMIC_RELAXED)]
         : uid == HS_BUS_ID ? bus_banks[__atomic_load_n(&bus_bank, __ATOMIC_RELAXED)]
+        : uid == HS_PUMP_ID ? pump_banks[__atomic_load_n(&pump_bank, __ATOMIC_RELAXED)]
+        : uid == HS_HEAT_ID ? heat_banks[__atomic_load_n(&heat_bank, __ATOMIC_RELAXED)]
         : channel_banks[__atomic_load_n(&channel_bank, __ATOMIC_RELAXED)];
     memset(row, 0, sizeof *row);
     if (uid == flavor_uid) memcpy(row->name, flavor_name, sizeof flavor_name);
     else if (uid == HS_XSAT_ID) memcpy(row->name, "HS Drive Sat", sizeof "HS Drive Sat");
     else if (uid == HS_BUS_ID) memcpy(row->name, "HS Bus Compressor", sizeof "HS Bus Compressor");
+    else if (uid == HS_PUMP_ID) memcpy(row->name, "HS Pump", sizeof "HS Pump");
+    else if (uid == HS_HEAT_ID) memcpy(row->name, "HS Heat", sizeof "HS Heat");
     else memcpy(row->name, "HS Channel Strip", sizeof "HS Channel Strip");
     memcpy(row->parameters, page.parameters, sizeof row->parameters);
     memcpy(row->labels, page.labels, sizeof row->labels);

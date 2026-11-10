@@ -10,6 +10,8 @@
 #include "hs_xsat.h"
 #include "hs_bus.h"
 #include "hs_eq2.h"
+#include "hs_pump.h"
+#include "hs_heat.h"
 static LADSPA_Descriptor_Function load_descriptor;
 
 enum { BLOCK = 128, RATE = 44100, SETTLE = 170, MEASURE = 100 };
@@ -127,7 +129,13 @@ int main(int argc, char **argv)
     eq->run(eq_handle, BLOCK);
     assert(!memcmp(eq_in, eq_out, sizeof eq_in));
     eq->cleanup(eq_handle);
-    assert(!load_descriptor(6));
+    assert(load_descriptor(6)->UniqueID == HS_PUMP_ID);
+    assert(load_descriptor(6) == load_descriptor(HS_PUMP_ID));
+    assert(load_descriptor(6)->PortCount == PU_COUNT + 4);
+    assert(load_descriptor(7)->UniqueID == HS_HEAT_ID);
+    assert(load_descriptor(7) == load_descriptor(HS_HEAT_ID));
+    assert(load_descriptor(7)->PortCount == HE_COUNT + 4);
+    assert(!load_descriptor(8));
     f.handle = f.plugin->instantiate(f.plugin, RATE);
     assert(f.handle);
     for (int i = 0; i < 2; ++i) {

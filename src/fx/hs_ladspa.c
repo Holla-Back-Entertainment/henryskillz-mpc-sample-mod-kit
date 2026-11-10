@@ -8,8 +8,10 @@
 #include "hs_xsat.h"
 #include "hs_bus.h"
 #include "hs_eq2.h"
+#include "hs_pump.h"
+#include "hs_heat.h"
 
-extern const LADSPA_Descriptor hs_channel_descriptor, hs_xsat_descriptor, hs_bus_descriptor, hs_eq2_descriptor;
+extern const LADSPA_Descriptor hs_channel_descriptor, hs_xsat_descriptor, hs_bus_descriptor, hs_eq2_descriptor, hs_pump_descriptor, hs_heat_descriptor;
 #include "hs_saturator.h"
 
 enum { INPUT_L, INPUT_R, OUTPUT_L, OUTPUT_R, CONTROL_1, CONTROL_2, CONTROL_3, PORT_COUNT };
@@ -138,6 +140,8 @@ static const LADSPA_Descriptor effects[] = {
     }
 };
 
+/* Every new effect also needs a row in hs_fx_picker.c hs_rows, in this order: the picker
+   drops the whole HS Effects menu when the counts or names differ. */
 const LADSPA_Descriptor *ladspa_descriptor(unsigned long index)
 {
 #ifdef HS_MPC_LADSPA_RECALL
@@ -148,10 +152,14 @@ const LADSPA_Descriptor *ladspa_descriptor(unsigned long index)
     if (index == HS_XSAT_ID) return &hs_xsat_descriptor;
     if (index == HS_BUS_ID) return &hs_bus_descriptor;
     if (index == HS_EQ2_ID) return &hs_eq2_descriptor;
+    if (index == HS_PUMP_ID) return &hs_pump_descriptor;
+    if (index == HS_HEAT_ID) return &hs_heat_descriptor;
 #endif
     if (index == sizeof effects / sizeof *effects) return &hs_channel_descriptor;
     if (index == sizeof effects / sizeof *effects + 1) return &hs_xsat_descriptor;
     if (index == sizeof effects / sizeof *effects + 2) return &hs_bus_descriptor;
     if (index == sizeof effects / sizeof *effects + 3) return &hs_eq2_descriptor;
+    if (index == sizeof effects / sizeof *effects + 4) return &hs_pump_descriptor;
+    if (index == sizeof effects / sizeof *effects + 5) return &hs_heat_descriptor;
     return index < sizeof effects / sizeof *effects ? &effects[index] : NULL;
 }
