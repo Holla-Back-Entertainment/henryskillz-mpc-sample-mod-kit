@@ -32,7 +32,7 @@ Open the insert effects list and test each effect with audio playing. Load one e
 - [ ] **HS Channel Strip** loads and passes audio.
 - [ ] **HS Drive Sat** loads and passes audio.
 - [ ] **HS Bus Compressor** loads and passes audio.
-- [ ] On HS Bus Compressor, the **Ratio** box shows a number (e.g. 4:1), not just "x". In the emulator it showed only "x".
+- [ ] On HS Bus Compressor, turning **K2** steps the Ratio through 1.5:1, 2:1, 3:1, 4:1, 10:1, 20:1 and X (X = limiting). Note what Ratio and Threshold show when it first loads: the emulator showed X and 20 dB, but the intended default ratio is 2:1.
 - [ ] **HS Para EQ** loads and passes audio.
 - [ ] The EQ page shows the dB/Hz grid.
 - [ ] The controls respond without a crash, freeze or unexpected silence.
