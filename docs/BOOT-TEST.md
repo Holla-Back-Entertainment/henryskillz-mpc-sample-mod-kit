@@ -50,12 +50,18 @@ Open the insert effects list and test each effect with audio playing. Load one e
 - [ ] With a sequence playing, the **VU needle and output LEDs move with the music** without pressing anything.
 - [ ] Leave the SEQ page playing for **3 minutes**: the MPC does not freeze or restart.
 - [ ] On the SEQ page, **B2** shows the meters page with LUFS M, S and I and PEAK, and they move with the music.
-- [ ] Rename an empty track **VOX**: Channel Strip, Bus Compressor and Air Exciter load on its inserts. One **UNDO** takes back the name and the chain.
-- [ ] Rename a track that already has inserts **DRUMS**: its inserts stay as they were.
-- [ ] Rename a dialled-in track **TEST#**: `MPC-Sample/Chains/TEST.xfx` appears on the card, and a new track named TEST loads that chain.
+- [ ] Rename an empty track **VOX**: Channel Strip, Bus Compressor and Air Exciter load on its inserts, and a **Chain loaded / VOX** box shows on top of the track page for about 1.5 s, then clears. One **UNDO** takes back the name and the chain.
+- [ ] Rename a track that already has inserts **DRUMS**: its inserts stay as they were, and the box says **Chain not loaded / Track already has effects**.
+- [ ] Rename a dialled-in track **TEST#**: the box says **Chain saved / TEST: N effects**, the track is named **TEST** again (no #), `MPC-Sample/Chains/TEST.xfx` appears on the card, and a new track named TEST loads that chain. One **UNDO** goes back to the old name without a crash.
 - [ ] In the browser, preview a WAV and an MP3: the highlighted row shows a key and BPM tag, and scrolling away hides it.
 - [ ] (Card made with **Add Stems**) Preview a WAV, hold **SHIFT** and hold **B1** for 1.5 s: the Stems chooser opens. **Go** writes the stems into a "NAME Stems" folder next to the file. A quick SHIFT + B1 still does its stock job.
-- [ ] (Add Stems) On the Sample screen, hold **SHIFT** and hold **B3** for 1.5 s on a pad with a sample: the stems land in `MPC-Sample/Samples/Stems`.
+- [ ] (Add Stems) On the Sample screen, hold **SHIFT** and hold **B3** for 1.5 s on a pad with a sample, on a track whose bank has empty pads: the stems land in `MPC-Sample/Samples/Stems`, load onto the next empty pads of that bank, and the box says where ("On pads A02-A05"). Each pad plays its stem.
+- [ ] (Add Stems) Press **UNDO** once per stem: each press shows **Load Sample** and takes one stem off its pad.
+- [ ] (Add Stems) Open the chooser again, turn the wheel a few steps, then **Cancel**. Press **UNDO** once: note whether it shows **Set Start** (the emulator still shows one per wheel turn; the fix needs a hardware read to confirm).
+- [ ] (Add Stems) On a track whose bank is full, a pad split keeps the files on the card and the box says **Bank full: not on pads**.
+- [ ] Save the project, switch off and on, reopen it: the stem pads still play (no "Sample not found").
+- [ ] SampQOL's list screens (PAD FX insert pages, the effect list) show a red bar at the top, a dark blue palette and a cyan edge on the selected row. Text stays readable.
+- [ ] **PAD FX**, then **B2**: the Ch. Mixer shows as console strips (pan, M and S, fader, meter, output). **B2** again: the Pad Mixer in the same style. Faders and meters move with the music, M and S light when pressed.
 - [ ] The controls respond without a crash, freeze or unexpected silence.
 
 ## Return to stock
