@@ -5,19 +5,20 @@ No coding, no terminal, no apps to install, no AI tools. Free.
 
 Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top of [SampQOL OS](https://github.com/snarebes/SampQOL-OS) by **Snare Bes**.
 
-### [Open the installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) · [Step-by-step guide](docs/INSTALL-GUIDE.md) · [Update just the effects](docs/UPDATE-EFFECTS.md) · [FAQ](docs/FAQ.md) · [Undo it](docs/RECOVERY.md)
+### [Open the installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) · [How to use it](docs/USER-GUIDE.md) · [Step-by-step guide](docs/INSTALL-GUIDE.md) · [Update just the effects](docs/UPDATE-EFFECTS.md) · [FAQ](docs/FAQ.md) · [Undo it](docs/RECOVERY.md)
 
 <img src="assets/henryskillz-splash-preview.png" width="320" alt="HenrySkillz start screen on the MPC Sample: DRUMS SAMPLE BASS">
 
 > **Unofficial.** Not made, endorsed or supported by Akai Professional, inMusic or the SampQOL author.
 > Everything runs from the SD card. Switch off and take the card out, and the MPC is stock again.
 
-> **Tested:** the installer on the official SampQOL 0.2.0 download (Chrome and Safari), and this exact build booted end to end in an MPC Sample emulator.
-> The HS effects have run on Henry's own MPC Sample. **HS Crush, HS Bass Focus and HS Tube Strip are new:** they pass the emulator boot test but have not been boot-tested on hardware yet. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
+> **Tested:** the installer on the official SampQOL 0.2.0 download (Chrome and Safari). The v0.5 build passed a hardware boot test on Henry's own MPC Sample. Anything new in v0.6 (Stems onto pads, the chain boxes, the SampQOL screen styling and the graphic mixer) has passed the MPC Sample emulator and stays emulator-tested until Henry's v0.6 hardware boot test passes. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
 
 ---
 
 ## What you get
+
+For how to use every feature, button by button, see the [user guide](docs/USER-GUIDE.md).
 
 | Effect | Category | What it does |
 |---|---|---|
@@ -35,7 +36,7 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 
 Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, and the HenrySkillz start screen (after SampQOL's own).
 
-**SEQ page as a mixing desk.** The SEQ page (tempo, bars, Rec Quant) is redrawn as a desk panel with a VU meter and output LEDs that move with what the MPC is playing. **B2** switches to stereo meters, and the **K1 BPM** label stays clear. Every stock control works as before.
+**SEQ page as a mixing desk.** The SEQ page (tempo, bars, Rec Quant) is redrawn as a desk panel with a VU meter and output LEDs that move with what the MPC is playing, and the **K1 BPM** label stays clear. Every stock control works as before. **B2** switches to the **METERS** page: left and right VU meters, loudness Momentary, Short-term and Integrated (EBU R128) and a peak hold. Integrated and peak restart after 2 seconds of silence. **B2** again goes back to the desk.
 
 **De-esser.** HS Channel Strip has a **DESS** page: Freq, Thresh, Range and Mode (split, wide, or listen to hear just what it removes).
 
@@ -43,19 +44,29 @@ Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid 
 
 **One Bypass.** Every HS effect uses the Bypass button above the screen. The old Bypass knobs on Drive Sat, Bus Compressor and Para EQ are gone (projects that used them still open).
 
-**Track chains.** Rename a track **VOX**, **DRUMS** or **BASS** (or any name that starts with one, like "Vox Lead") and, if the track has no inserts yet, its chain loads: Channel Strip, Bus Compressor and Air Exciter on VOX, Saturator and Bus Compressor on DRUMS, Drive Sat and Para EQ on BASS. One UNDO takes back the rename and the chain together. To save your own, dial in a track's inserts and rename it with a **#** on the end, like **KEYS#**: the chain is saved to `MPC-Sample/Chains/KEYS.xfx` on the card, and any track you name KEYS gets it.
+**Track chains.** Rename a track **VOX**, **DRUMS** or **BASS** (or any name that starts with one, like "Vox Lead") and, if the track has no inserts yet, its chain loads: Channel Strip, Bus Compressor and Air Exciter on VOX, Saturator and Bus Compressor on DRUMS, Drive Sat and Para EQ on BASS. One UNDO takes back the rename and the chain together. To save your own, dial in a track's inserts and rename it with a **#** on the end, like **KEYS#**: the chain is saved to `MPC-Sample/Chains/KEYS.xfx` on the card, the track is named KEYS again, and any track you name KEYS gets it. A short box on the screen says what happened: **Chain loaded**, **Chain saved**, or why not (the track already has effects, no effects to save).
 
 **Key and BPM in the browser.** Preview a sample and its row shows the key and the tempo the preview plays at, like **C# MIN 75 BPM**. WAV and MP3.
 
-**LUFS meters.** On the SEQ page, **B2** switches to the meters: loudness Momentary, Short-term and Integrated (EBU R128) and a peak hold. Integrated and peak restart after 2 seconds of silence.
+**Stems (optional).** Tick **Add Stems** on the installer and the MPC can split a sample into Vocals, Drums, Bass and Other by itself, no computer. In the browser, preview a WAV or MP3, hold **SHIFT** and hold **B1** for 1.5 seconds. On the Sample screen, hold **SHIFT** and hold **B3** for 1.5 seconds to split the selected pad's sample. Tick the stems you want, choose **Separate** (one file each) or **Sum** (one mixed file), then **Go**. A pad split also loads the stems onto the next empty pads of that pad's bank, on the same track, and the box says where ("On pads A02-A05"). If the bank is full, the files stay in `MPC-Sample/Samples/Stems` and the box says so. Each stem on a pad is one UNDO. A split takes about as long as the sample plays; nothing above 11 kHz comes through. It adds a 92 MB download and uses the Spleeter model by Deezer (MIT).
 
-**Stems (optional).** Tick **Add Stems** on the installer and the MPC can split a sample into Vocals, Drums, Bass and Other by itself, no computer. In the browser, preview a WAV or MP3, hold **SHIFT** and hold **B1** for 1.5 seconds. On the Sample screen, hold **SHIFT** and hold **B3** for 1.5 seconds to split the selected pad's sample. Tick the stems you want, choose **Separate** (one file each) or **Sum** (one mixed file), then **Go**. A split takes about as long as the sample plays; nothing above 11 kHz comes through. It adds a 92 MB download and uses the Spleeter model by Deezer (MIT).
+**SampQOL screens in HS colours.** SampQOL's own list screens (the insert pages, the effect list) get a red bar along the top, a cyan edge on the selected row and a dark blue palette, to match the rest of the kit.
+
+**Graphic mixer.** **PAD FX** then **B2** shows SampQOL's Ch. Mixer, and **B2** again the Pad Mixer, as a console: eight strips per page with pan, mute and solo, a fader, a stereo meter with peak hold and the output. The selected strip has a cyan frame, yellow while you edit it.
 
 **Page label.** On HS effects with more than one page, the box over the middle screen button shows **PAGE 2/3**: press it for the next page, **SHIFT** + it to go back.
 
-| SEQ desk page | Page label |
-|---|---|
-| ![SEQ page redrawn as a desk: VU meter, tempo, output LEDs, transport](assets/screens/seq-desk.png) | ![HS Drive Sat on page 2 of 3, with PAGE 2/3 over the middle button](assets/screens/hs-page-label.png) |
+| SEQ desk page | METERS page (B2) | Page label |
+|---|---|---|
+| ![SEQ page redrawn as a desk: VU meter, tempo, output LEDs, transport](assets/screens/seq-desk.png) | ![METERS page: left and right VU meters, LUFS M, S and I, and peak](assets/screens/seq-meters.png) | ![HS Drive Sat on page 2 of 3, with PAGE 2/3 over the middle button](assets/screens/hs-page-label.png) |
+
+| Chain loaded | Stems chooser | Stems on pads |
+|---|---|---|
+| ![Track renamed drums: the Chain loaded DRUMS box over the track's insert page](assets/screens/chain-loaded.png) | ![Stems chooser for pad A01: Vocals, Drums, Bass and Other ticked, Separate, Go](assets/screens/stems-chooser.png) | ![Stems saved in Samples/Stems and loaded on pads A02 to A05](assets/screens/stems-on-pads.png) |
+
+| SampQOL screen styling | Graphic mixer | Key and BPM tag |
+|---|---|---|
+| ![Pad insert page with the red top bar, the dark blue palette and a cyan edge on the selected slot](assets/screens/sampqol-styling.png) | ![Ch. Mixer as a console: strips with pan, mute, solo, fader, stereo meter and output](assets/screens/graphic-mixer.png) | ![Browser row for Leroys C#Min 75bpm.wav tagged C# MIN 112.9 BPM](assets/screens/browser-key-tag.png) |
 
 These are real 320×240 captures from the MPC Sample emulator running the public installer output:
 
@@ -83,6 +94,8 @@ The HS Pump, HS Heat, HS Crush, HS Bass Focus and HS Tube Strip panels above are
 - An **exFAT SD card**
 - A **Mac or Windows** computer with a web browser
 - **SampQOL OS 0.2.0**, downloaded free from [Snare Bes's official page](https://github.com/snarebes/SampQOL-OS/releases)
+
+**Not on SampQOL?** HS Tools runs on stock firmware 1.3.0: on-device stems, browser key and BPM tags, and the SEQ desk with LUFS meters. Download `henryskillz-mpc-sample-hs-tools.zip` from the [latest release](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/releases/latest), copy its `autorun` folder to an exFAT SD card and power on. The effects and track chains need SampQOL.
 
 ## Install in 5 steps
 

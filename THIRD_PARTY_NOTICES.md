@@ -25,5 +25,5 @@ The firmware-check implementation here is independently written from the publish
 - **Spleeter** 4stems model by Deezer Research (https://github.com/deezer/spleeter), MIT License, copyright (c) 2019 Deezer. `docs/install/stems/spl4h.bin` is that model's weights converted to float16 by `src/stems/export_weights.py`. `src/stems/hs_stems.c` is an independent C implementation of the Spleeter network that runs it.
 - **OpenBLAS** (https://github.com/OpenMathLib/OpenBLAS), BSD 3-Clause License, is linked into `hs-stems`, with **libgfortran** (GPL v3 with the GCC Runtime Library Exception).
 - `hs-stems` is statically linked against **glibc** (LGPL 2.1 or later). Its full source and build script (`src/stems/build.sh`) are here, so you can rebuild and relink it yourself.
-- `src/stems/font.h` is drawn from **DejaVu Sans Mono** (https://dejavu-fonts.github.io), Bitstream Vera and DejaVu font licenses (free to use, copy and modify).
+- `src/stems/font.h` is drawn from **DejaVu Sans Mono** (https://dejavu-fonts.github.io), Bitstream Vera and DejaVu font licenses (free to use, copy and modify). The track chains box (`src/chains/chains_toast.c`, in `hs-chains.so`) draws its text with the same font, whether or not Stems is installed.
 - `src/stems/minimp3.h` is minimp3 (CC0), as in the browser tag.

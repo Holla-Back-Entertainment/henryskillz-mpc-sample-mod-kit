@@ -13,6 +13,8 @@ void stems_paint_chooser(uint32_t *px, int stride, const char *title, int ticks,
 /* stems_pad.c */
 int stems_pad_label(const uint32_t *px, int stride, int *track, int *pad);
 const char *stems_xpj_sample(const char *json, int track, int pad, char *file, size_t n);
+int stems_free_pads(const char *json, int track, int from, int skip, int *out, int max, const char **why);
+int stems_pads_note(const int *pads, int placed, int wanted, char *out, size_t n);
 int stems_pick(int ticks, int summed, char *pick, size_t n);
 int stems_out_name(const char *base, int ticks, int summed, int i, char *out, size_t n);
 void stems_paint_b3(uint32_t *px, int stride, const char *label);

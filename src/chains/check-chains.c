@@ -1,5 +1,5 @@
 // Chain-name matching check (runs in Linux, e.g. the hs-flavor-tools image):
-// gcc -O2 -o /tmp/cc check-chains.c && /tmp/cc
+// gcc -O2 -o /tmp/cc check-chains.c chains_toast.c -ldl -lpthread && /tmp/cc
 #define _GNU_SOURCE
 #include <assert.h>
 #define CHAIN_DIR "/tmp/hs-chains-check"

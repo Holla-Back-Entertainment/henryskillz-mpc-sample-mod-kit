@@ -47,6 +47,7 @@
 #include <time.h>
 #include <unistd.h>
 #ifndef STEMS_HOST
+#include <link.h>
 #include <zlib.h>
 #endif
 
@@ -330,7 +331,8 @@ static void decorate(uint32_t *px, int stride, int kind) {
         else if (job_pct > 0 && job_pct < 100) {
             long left = el * (100 - job_pct) / job_pct;
             snprintf(line, sizeof line, "Separating... %d%%  ~%ld:%02ld left", job_pct, left / 60, left % 60);
-        } else snprintf(line, sizeof line, "Separating... %d%%", job_pct);
+        } else if (job_pct >= 100) snprintf(line, sizeof line, "Loading onto pads...");
+        else snprintf(line, sizeof line, "Separating... %d%%", job_pct);
         char title[96]; snprintf(title, sizeof title, "Stems: %.80s", job_base);
         stems_paint_tabs(px, stride, "Cancel", "", "");
         stems_paint_box(px, stride, title, job_pct < 0 ? 0 : job_pct, line);
@@ -431,18 +433,25 @@ static char *read_xpj(void) {
     b[len] = 0;
     return b;
 }
-/* Pad source: wait until the autosave can hold the last change, then find the pad's file.
-   Fills path, base and dir (<card>/MPC-Sample/Samples/Stems/<base> Stems). NULL or a reason. */
-static const char *pad_source(int track, int pad, long input_rt, char *path, size_t pn, char *base, size_t bn, char *dir, size_t dn) {
-    for (;;) {                      /* fresh = saved after the last input, or long enough since it */
+/* Wait until the autosave can hold every change up to input_rt: saved after it, or AUTOSAVE_MS since
+   it, and >= 1 s old so a save in progress isn't read half-written. 0, or a reason. */
+static const char *fresh_autosave(long input_rt) {
+    for (;;) {
         struct stat st;
         long m = stat(XPJ, &st) ? 0 : st.st_mtim.tv_sec * 1000 + st.st_mtim.tv_nsec / 1000000;
-        long w = wall_ms();         /* and >= 1 s old, so a save in progress isn't read half-written */
-        if ((m >= input_rt || w >= input_rt + AUTOSAVE_MS) && w - m >= 1000) break;
+        long w = wall_ms();
+        if ((m >= input_rt || w >= input_rt + AUTOSAVE_MS) && w - m >= 1000) return NULL;
         if (cancelled()) return "Cancelled";
         set_pct(-1);
         usleep(250000);
     }
+}
+
+/* Pad source: wait until the autosave can hold the last change, then find the pad's file.
+   Fills path, base and dir (<card>/MPC-Sample/Samples/Stems/<base> Stems). NULL or a reason. */
+static const char *pad_source(int track, int pad, long input_rt, char *path, size_t pn, char *base, size_t bn, char *dir, size_t dn) {
+    const char *late = fresh_autosave(input_rt);
+    if (late) return late;
     char file[512];
     char *x = read_xpj();
     if (!x) return "Can't read the project";
@@ -462,6 +471,171 @@ static const char *pad_source(int track, int pad, long input_rt, char *path, siz
     if (mkdir(stems, 0755) && errno != EEXIST) return "Can't write to the card";
     int r = snprintf(dir, dn, "%s/%s Stems", stems, base);
     return r < 0 || (size_t)r >= dn ? "Name too long" : NULL;
+}
+
+/* ---------- onto pads ----------
+   The firmware's own path for the browser's Load: CommandFactory::loadSample (LoadSampleCommand +
+   AssignSampleToProgramCommand, one undo step "Load Sample"), onto the current track's program.
+   MPC Sample 1.3.0.12 (40e46ca7991) only: fw_ok() checks the version note and every object's vptr before
+   any call. All of it runs on the app's message thread, through JUCE's callFunctionOnMessageThread
+   (the job thread waits for it), as the browser's Load does. */
+#define FW_NOTE 0x2c0                /* .note.mpc.version text */
+static const char FW_VERSION[] = "1.3.0.12 (40e46ca7991)";
+#define MM_INSTANCE 0xff3ff0         /* juce::MessageManager::getInstance() */
+#define MM_CALL 0xff4e30             /* MessageManager::callFunctionOnMessageThread(mm, fn, arg): returns fn's result */
+#define FACTORY_VPTR 0x6d95318       /* CommandFactory (one on the heap, as hs_chains.c finds it) */
+#define LOAD_SAMPLE 0x195bd00        /* CommandFactory::loadSample(factory, LoadParams*) */
+#define FILE_RES 0x1df1ec0           /* FileResource(this, const File*, bool keep): keep=0 deletes the file when freed */
+#define FILE_RES_CB 0x6d8b498        /* vptr of make_shared<FileResource>'s control block */
+#define SP_RELEASE 0x123bca0         /* shared_ptr control block: drop one use */
+#define REPORTER 0x1df1a20           /* FileProgressReporter(this, MpcProgressHub*) */
+#define POOL_FIND 0x292ed50          /* SamplePool::find(pool, const String* name) -> shared_ptr<Sample> via x8 */
+#define STRING_CTOR 0xf535c0         /* juce::String(const char*) */
+#define STRING_DTOR 0xf0a290
+#define VP_ENGINE 0x6d9bc40          /* EngineMode       factory+0x88 */
+#define VP_HUB 0x6da24f8             /* MpcProgressHub   factory+0x90 */
+#define VP_LOADER 0x6e600a8          /* SampleLoader     factory+0x18 */
+#define VP_PROJECT 0x6ecc648         /* Project          factory+0x28 */
+#define VP_POOL 0x6dbd2f0            /* SamplePool       project+0x1278 */
+#define PROJECT_TRACK 0x140          /* project: the current Track* (loadSample assigns to its program) */
+
+static uintptr_t fw_base, fw_factory;
+static int fw_base_cb(struct dl_phdr_info *i, size_t s, void *d) { (void)s; (void)d; if (*i->dlpi_name) return 0; fw_base = i->dlpi_addr; return 1; }
+static int readable(uintptr_t p) {   /* plausible, 8-aligned, mapped */
+    return p > 0x10000 && p < 0xffffffffffffull && !(p & 7) && !msync((void *)(p & ~0xfffUL), 4096, MS_ASYNC);
+}
+static int is_a(uintptr_t obj, uintptr_t vptr) { return readable(obj) && *(uintptr_t *)obj == fw_base + vptr; }
+static uintptr_t word(uintptr_t p, unsigned off) { return *(uintptr_t *)(p + off); }
+/* The factory, checked; one heap scan the first time (on the message thread, as hs_chains.c). */
+static uintptr_t fw_ok(void) {
+    if (!fw_base) dl_iterate_phdr(fw_base_cb, 0);
+    if (!fw_base || memcmp((const void *)(fw_base + FW_NOTE), FW_VERSION, sizeof FW_VERSION)) return 0;
+    if (!is_a(fw_factory, FACTORY_VPTR)) {
+        fw_factory = 0;
+        FILE *m = fopen("/proc/self/maps", "r"); char line[512];
+        while (m && !fw_factory && fgets(line, sizeof line, m)) {
+            unsigned long a, b; char perm[5];
+            if (!strstr(line, "[heap]") || sscanf(line, "%lx-%lx %4s", &a, &b, perm) != 3 || perm[1] != 'w') continue;
+            for (uintptr_t *w = (uintptr_t *)a; w < (uintptr_t *)b; ++w) if (*w == fw_base + FACTORY_VPTR) { fw_factory = (uintptr_t)w; break; }
+        }
+        if (m) fclose(m);
+    }
+    uintptr_t f = fw_factory, pr = f ? word(f, 0x28) : 0;
+    return f && is_a(word(f, 0x88), VP_ENGINE) && is_a(word(f, 0x90), VP_HUB) && is_a(word(f, 0x18), VP_LOADER) &&
+           is_a(pr, VP_PROJECT) && is_a(word(pr, 0x1278), VP_POOL) ? f : 0;
+}
+/* fn(x0, x1) with x8 = out: C++ returns a shared_ptr through x8. */
+__attribute__((visibility("hidden"))) void hs_call_x8(uintptr_t fn, uintptr_t a, uintptr_t b, void *out);
+__asm__(".text\n.type hs_call_x8,%function\nhs_call_x8:\n"
+        "stp x29, x30, [sp, #-16]!\nmov x29, sp\nmov x16, x0\nmov x0, x1\nmov x1, x2\nmov x8, x3\nblr x16\n"
+        "ldp x29, x30, [sp], #16\nret\n");
+
+struct onto {                        /* one request to the message thread */
+    int load;                        /* 0: just read the current track */
+    uintptr_t track;                 /* in: the track it must still be (0 any); out: the current one */
+    int pad;                         /* load: the target pad */
+    const char *path, *name;         /* load: the WAV, its name in the project (made unique here) */
+    const char *why;                 /* out: NULL = done */
+};
+static void *on_message_thread(void *arg) {
+    struct onto *o = arg;
+    uintptr_t f = fw_ok(), pr = f ? word(f, 0x28) : 0;
+    if (!f) { o->why = "Not on this firmware"; return NULL; }
+    uintptr_t track = word(pr, PROJECT_TRACK);
+    if (!o->load) { o->track = track; o->why = NULL; return NULL; }
+    if (!track || (o->track && track != o->track)) { o->why = "Track changed"; return NULL; }
+    void (*str)(void *, const char *) = (void *)(fw_base + STRING_CTOR), (*unstr)(void *) = (void *)(fw_base + STRING_DTOR);
+    void (*sp_release)(uintptr_t) = (void *)(fw_base + SP_RELEASE);
+    uintptr_t pool = word(pr, 0x1278);
+    /* a free name: the pool finds samples by name, and loadSample assigns the one it finds */
+    char name[300]; void *jname = 0; uintptr_t found[2];
+    for (int k = 1; k < 100; ++k) {
+        snprintf(name, sizeof name, k == 1 ? "%s" : "%s-%d", o->name, k);
+        str(&jname, name);
+        found[0] = found[1] = 0;
+        hs_call_x8(fw_base + POOL_FIND, pool, (uintptr_t)&jname, found);
+        if (found[1]) sp_release(found[1]);
+        if (!found[0]) break;
+        unstr(&jname); jname = 0;
+    }
+    if (!jname) { o->why = "Name taken"; return NULL; }
+    static _Alignas(16) uintptr_t reporter[4];     /* commands keep it for undo/redo: never freed */
+    if (!reporter[0]) ((void (*)(void *, uintptr_t))(fw_base + REPORTER))(reporter, word(f, 0x90));
+    /* make_shared<FileResource>(File(path), keep=true): control block + the object (0x38 bytes, as the app) */
+    uintptr_t *cb = malloc(0x38);
+    void *file = 0;
+    if (!cb) { unstr(&jname); o->why = "No memory"; return NULL; }
+    cb[0] = fw_base + FILE_RES_CB; cb[1] = 0x100000001ull;
+    str(&file, o->path);
+    ((void (*)(void *, void *, int))(fw_base + FILE_RES))(cb + 2, &file, 1);
+    unstr(&file);
+    struct { uintptr_t engine, hub, reporter, pool, loader, res, cb; void *name; int pad, layer, flags; } p = {
+        word(f, 0x88), word(f, 0x90), (uintptr_t)reporter, pool, word(f, 0x18), (uintptr_t)(cb + 2), (uintptr_t)cb, jname, o->pad, -1, 0 };
+    _Static_assert(sizeof p == 0x50, "the firmware's LoadParams");
+    ((void (*)(uintptr_t, void *))(fw_base + LOAD_SAMPLE))(f, &p);
+    sp_release((uintptr_t)cb);       /* the command keeps its own reference */
+    found[0] = found[1] = 0;
+    hs_call_x8(fw_base + POOL_FIND, pool, (uintptr_t)&jname, found);   /* loaded = in the pool under its name */
+    if (found[1]) sp_release(found[1]);
+    unstr(&jname);
+    o->why = found[0] ? NULL : "Not loaded";
+    return NULL;
+}
+/* Run on the message thread and wait for it. The caller holds no lock (the message thread takes ours). */
+static const char *onto(struct onto *o) {
+    if (!fw_base) dl_iterate_phdr(fw_base_cb, 0);
+    if (!fw_base || memcmp((const void *)(fw_base + FW_NOTE), FW_VERSION, sizeof FW_VERSION)) return "Not on this firmware";
+    o->why = "App busy";             /* stays if the app is quitting and never runs it */
+    uintptr_t mm = ((uintptr_t (*)(void))(fw_base + MM_INSTANCE))();
+    if (mm) ((void *(*)(uintptr_t, void *(*)(void *), void *))(fw_base + MM_CALL))(mm, on_message_thread, o);
+    return o->why;
+}
+
+/* Plain C copy through <dst>.new + rename (no system(): its shell would inherit LD_PRELOAD). 0 = done. */
+static int copy_file(const char *src, const char *dst, mode_t mode) {
+    char tmp[1700]; snprintf(tmp, sizeof tmp, "%s.new", dst);
+    int in = open(src, O_RDONLY), out = in < 0 ? -1 : open(tmp, O_WRONLY | O_CREAT | O_TRUNC, mode);
+    char b[65536]; ssize_t n = 0;
+    while (out >= 0 && (n = read(in, b, sizeof b)) > 0 && write(out, b, n) == n) {}
+    int cl = out >= 0 ? close(out) : -1;
+    int bad = in < 0 || out < 0 || n != 0 || cl || rename(tmp, dst);
+    if (in >= 0) close(in);
+    if (bad) unlink(tmp);
+    return bad;
+}
+
+/* After a good pad job: each stem onto the next free pad in the source pad's bank, on the track the
+   job started on. The note says where they went. */
+static void place_stems(int track, int src_pad, uintptr_t start_track, const char *dir, const char *base,
+                        int ticks, int sum, char *note, size_t nn) {
+    char names[4][300]; int want = 0, pads[4], got = 0;
+    while (want < 4 && !stems_out_name(base, ticks, sum, want, names[want], sizeof names[want])) ++want;
+    struct onto o = {0};
+    const char *why = fresh_autosave(__atomic_load_n(&last_input_rt, __ATOMIC_RELAXED));
+    if (!why) why = onto(&o);                          /* the current track, now */
+    if (!why && o.track != start_track) why = "Track changed";
+    char *x = why ? NULL : read_xpj();
+    if (!why && !x) why = "Can't read the project";
+    int n = why ? -1 : stems_free_pads(x, track, src_pad, src_pad, pads, want, &why);
+    free(x);
+    for (int i = 0; i < n && !why; ++i) {
+        /* as the stock browser: the project gets its own copy in its data folder (else the next start
+           says "Sample not found"); a free file name there, the pool name is made free on load */
+        char src[1600], path[1700], name[300]; struct stat st;
+        snprintf(src, sizeof src, "%s/%s", dir, names[i]);
+        for (int k = 1; k < 100; ++k) {
+            snprintf(name, sizeof name, k == 1 ? "%.*s" : "%.*s-%d", (int)strlen(names[i]) - 4, names[i], k);
+            snprintf(path, sizeof path, "%s/%s.wav", PROJECT_DATA, name);
+            if (stat(path, &st)) break;
+        }
+        if (!stat(path, &st) || copy_file(src, path, 0644)) { why = "Can't copy to the project"; break; }
+        struct onto l = {.load = 1, .track = o.track, .pad = pads[i], .path = path, .name = name};
+        if ((why = onto(&l))) { unlink(path); break; }
+        ++got;
+    }
+    ulog("pads: %d of %d placed%s%s", got, want, why ? ": " : "", why ? why : "");
+    if (!why || got) stems_pads_note(pads, got, want, note, nn);
+    else snprintf(note, nn, "Not on pads: %.40s", why);
 }
 
 static void *job(void *unused) {
@@ -485,19 +659,17 @@ static void *job(void *unused) {
         pthread_mutex_lock(&lock); memcpy(job_base, base, sizeof job_base); job_pct = 0; job_t0 = now_ms(); repaint_locked(); pthread_mutex_unlock(&lock);
         snprintf(note, sizeof note, "%.80s Stems", base);
     }
+    struct onto now = {0};          /* the track the job starts on: its stems go back to it */
+    /* ponytail: pad jobs only; a browser job's track isn't on its screen, so its stems stay on disk */
+    const char *unplaceable = src == PAD ? onto(&now) : "browser job";
+    if (unplaceable && src == PAD) ulog("pads: %s", unplaceable);
     snprintf(bin_src, sizeof bin_src, "%s/hs-stems", src_dir ? src_dir : "");
     snprintf(weights, sizeof weights, "%s/spl4h.bin", src_dir ? src_dir : "");
     /* The card is noexec: run a copy from /tmp (made again when the card's copy changes). Plain C
        copy: system() would fork a shell that inherits the app's LD_PRELOAD. */
     struct stat st, ss;
     if (stat("/tmp/hs-stems", &st) || stat(bin_src, &ss) || st.st_size != ss.st_size || ss.st_mtime > st.st_mtime) {
-        int in = src_dir ? open(bin_src, O_RDONLY) : -1, out = in < 0 ? -1 : open("/tmp/.hs-stems.new", O_WRONLY | O_CREAT | O_TRUNC, 0755);
-        char b[65536]; ssize_t n = 0, w = 0;
-        while (out >= 0 && (n = read(in, b, sizeof b)) > 0 && (w = write(out, b, n)) == n) {}
-        int cl = out >= 0 ? close(out) : -1;
-        int bad = in < 0 || out < 0 || n != 0 || cl || rename("/tmp/.hs-stems.new", "/tmp/hs-stems");
-        if (in >= 0) close(in);
-        if (bad) { unlink("/tmp/.hs-stems.new"); snprintf(msg, sizeof msg, "hs-stems is missing"); goto out; }
+        if (!src_dir || copy_file(bin_src, "/tmp/hs-stems", 0755)) { snprintf(msg, sizeof msg, "hs-stems is missing"); goto out; }
     }
     made = !mkdir(dir, 0755);       /* only a folder this run made may be emptied on failure */
     if (!made && errno != EEXIST) { snprintf(msg, sizeof msg, "Cannot make the folder"); goto out; }
@@ -529,6 +701,8 @@ static void *job(void *unused) {
         for (int s = 0; s < 4; ++s)
             if (ticks >> s & 1) snprintf(msg + strlen(msg), sizeof msg - strlen(msg), "%s%s", !*msg ? "" : sum ? "+" : ", ", (const char *[]){"Vocals", "Drums", "Bass", "Other"}[s]);
         if (sum) snprintf(msg + strlen(msg), sizeof msg - strlen(msg), " in one file");
+        if (!unplaceable) { set_pct(100); place_stems(track, pad, now.track, dir, base, ticks, sum, note, sizeof note); }
+        else if (src == PAD) snprintf(note, sizeof note, "Not on pads: %.40s", unplaceable);
     } else {
         last[strcspn(last, "\n")] = 0;
         snprintf(msg, sizeof msg, "%s", stopped ? "Cancelled" : *last ? last : "Failed");
@@ -593,7 +767,7 @@ static void start_job(void) {
 typedef struct _snd_rawmidi snd_rawmidi_t;
 static snd_rawmidi_t *panel_midi;
 static unsigned char st, d1;
-static int nd;
+static int nd, drop_msg;           /* drop_msg: midi_filter removes the message just read */
 
 static int surface_card(void) {
     FILE *f = fopen("/proc/asound/cards", "r"); char l[256]; int n, card = -1;
@@ -648,7 +822,7 @@ static unsigned char midi_byte(unsigned char c) {
     if ((st & 0xf0) == 0xb0) {                /* knob, encoder or fader */
         if (st == 0xb0 && d1 == DATA_CC && __atomic_load_n(&state, __ATOMIC_RELAXED) == CHOOSE) {
             pthread_mutex_lock(&lock);
-            if (state == CHOOSE && c) { ch_sel = (ch_sel + (c < 64 ? 1 : 3)) % 4; repaint_locked(); c = 0; }  /* 0 = no step */
+            if (state == CHOOSE && c) { ch_sel = (ch_sel + (c < 64 ? 1 : 3)) % 4; repaint_locked(); c = 0; drop_msg = 1; }  /* 0 = no step */
             pthread_mutex_unlock(&lock);
             return c;
         }
@@ -702,7 +876,16 @@ static unsigned char midi_byte(unsigned char c) {
    bytes, so appending whole messages can't confuse running status). */
 static ssize_t midi_filter(void *buf, ssize_t n, size_t size) {
     unsigned char *b = buf;
-    for (ssize_t i = 0; i < n; ++i) b[i] = midi_byte(b[i]);
+    ssize_t w = 0, sw = -1;                    /* sw: where the current message's status byte was written */
+    for (ssize_t i = 0; i < n; ++i) {
+        if (b[i] >= 0x80 && b[i] < 0xf8) sw = w;
+        b[w++] = midi_byte(b[i]);
+        /* A wheel step the chooser took: drop the whole message when it all came in this read, because
+           even a value-0 step leaves an empty "Set Start" in the app's UNDO. Split across reads, the
+           value-0 step stays. */
+        if (drop_msg) { drop_msg = 0; if (sw >= 0 && w - sw == 3) w = sw; }
+    }
+    n = w;
     pthread_mutex_lock(&lock);
     unsigned char r = replay_note; replay_note = 0;
     pthread_mutex_unlock(&lock);

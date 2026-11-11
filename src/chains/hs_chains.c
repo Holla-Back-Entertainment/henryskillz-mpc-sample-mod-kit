@@ -4,8 +4,11 @@
 // command, so one UNDO removes the rename and the chain together.
 // Saving: rename a dialled-in track to NAME# and its inserts + settings are saved as NAME.xfx in
 // $HS_CHAINS_USER (on the card, outside the pinned files). Saved chains win over shipped ones.
+// After the save the track is named NAME again (the firmware's track-name setter; the command's
+// new name follows, so UNDO still goes back to the old name in one step).
+// A short box on the screen says what happened (chains_toast.c).
 // Firmware 1.3.0.12 only: find_base checks the MPC app's GNU build ID and does nothing on any other build.
-// Build: gcc -O2 -Wall -Wextra -Werror -fPIC -shared hs_chains.c -o hs-chains.so
+// Build: see build.sh at the top of the kit (gcc -O2 -Wall -Wextra -Werror -fPIC -shared hs_chains.c chains_toast.c -ldl -lpthread)
 // Research and addresses: research/track-chains.md
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -22,6 +25,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include "chains_toast.h"
+
 // link-time addresses (add the load base)
 #define RENAME_PERFORM_SLOT (0x6e43220 + 16 + 3 * 8)  // SetTrackNameCommand vtable, slot 3
 #define FACTORY_VPTR 0x6d95318                         // CommandFactory
@@ -33,6 +38,7 @@
 #define STRIP_WRITE 0x2993810  // (builder*, File*, plain, 0) -> bool; plain=0 gzips
 #define SAVE_TMP "/tmp/hs-chains-save.json"
 #define STRIP_FREE 0x28d3830   // (builder*)
+#define TRACK_SET_NAME 0x13bf450                       // (track+0x7d0, const String*): what the rename command calls
 #define STRING_CTOR 0xf535c0                           // juce::String(const char*)
 #define STRING_DTOR 0xf0a290                           // juce::String::~String
 #define WHOLE_PROGRAM 0x101                            // loader target: the program, not a pad
@@ -282,17 +288,37 @@ static int save_path(const char *track_name, char *path, size_t size)
     return k > 0 && snprintf(path, size, "%s/%s.xfx", user_dir, stem) < (int)size;
 }
 
+// "/a/b/VOX.xfx" -> "VOX", for the box on the screen
+static const char *chain_name(const char *path, char *out, size_t size)
+{
+    const char *slash = strrchr(path, '/');
+    snprintf(out, size, "%.40s", slash ? slash + 1 : path);
+    size_t n = strlen(out);
+    if (n > 4 && !strcasecmp(out + n - 4, ".xfx")) out[n - 4] = 0;
+    return out;
+}
+
 __attribute__((visibility("hidden"), used)) void hs_chains_after_rename(uintptr_t *cmd)
 {
     const char *name = (const char *)cmd[0x60 / 8];  // juce::String text of the new name
-    char chain[320];
+    char chain[320], shown[48];
     if (!ok((uintptr_t)name & ~7UL)) return;
     int save = save_path(name, chain, sizeof chain);
+    size_t len = strlen(name);
+    if (!save && user_dir && len > 1 && name[len - 1] == '#') {  // a save save_path refused
+        chains_toast("Chain not saved", "Use letters, digits, - or space");
+        return;
+    }
     if (!save && !find_chain(name, chain, sizeof chain)) return;
+    chain_name(chain, shown, sizeof shown);
     uintptr_t track = find_track(cmd[0x50 / 8], (uintptr_t)name);
     uintptr_t program = track ? find_program(track) : 0;
     uintptr_t f = program ? find_factory() : 0;
-    if (!f) { lg("skip: track %#lx program %#lx", track, program); return; }
+    if (!f) {
+        lg("skip: track %#lx program %#lx", track, program);
+        chains_toast(save ? "Chain not saved" : "Chain not loaded", "Track not found");
+        return;
+    }
     int used = used_slots(program);
     void (*str_ctor)(void *, const char *) = (void *)(base + STRING_CTOR);
     void (*str_dtor)(void *) = (void *)(base + STRING_DTOR);
@@ -300,7 +326,11 @@ __attribute__((visibility("hidden"), used)) void hs_chains_after_rename(uintptr_
     void *file = 0;
 
     if (save) {
-        if (used <= 0) { lg("skip save: no inserts on the track", 0, 0); return; }
+        if (used <= 0) {
+            lg("skip save: no inserts on the track", 0, 0);
+            chains_toast("Chain not saved", used ? "Track not read" : "No effects on the track");
+            return;
+        }
         mkdir(user_dir, 0755);
         void (*init)(void *) = (void *)(base + STRIP_INIT);
         void (*fill)(uintptr_t, void *) = (void *)(base + STRIP_FILL);
@@ -316,9 +346,28 @@ __attribute__((visibility("hidden"), used)) void hs_chains_after_rename(uintptr_
         unlink(SAVE_TMP);
         FILE *f2 = fopen(LOG_FILE, "a");
         if (f2) { fprintf(f2, saved ? "saved %d inserts to %s\n" : "SAVE FAILED %d %s\n", saved, chain); fclose(f2); }
+        if (saved) {
+            // Name the track NAME again, through the firmware's own setter (as the rename command does),
+            // and keep the command's new name in step: its UNDO finds the track by that name.
+            char plain[64];
+            size_t n = len - 1;  // drop the '#' and the blanks before it (save_path checked the rest)
+            while (n > 0 && name[n - 1] == ' ') --n;
+            snprintf(plain, sizeof plain, "%.*s", (int)n, name);
+            void (*set_name)(uintptr_t, void *) = (void *)(base + TRACK_SET_NAME);
+            str_dtor(&cmd[0x60 / 8]);
+            str_ctor(&cmd[0x60 / 8], plain);
+            set_name(track + 0x7d0, &cmd[0x60 / 8]);
+        }
+        char detail[64];
+        snprintf(detail, sizeof detail, saved ? "%s: %d effect%s" : "%s: could not write", shown, saved, saved == 1 ? "" : "s");
+        chains_toast(saved ? "Chain saved" : "Chain not saved", detail);
         return;
     }
-    if (used != 0) { lg("skip: %ld inserts already on the track", (uintptr_t)(long)used, 0); return; }
+    if (used != 0) {
+        lg("skip: %ld inserts already on the track", (uintptr_t)(long)used, 0);
+        chains_toast("Chain not loaded", used > 0 ? "Track already has effects" : "Track not read");
+        return;
+    }
     // Only the XML form: the firmware's JSON (gzip) chains need a progress screen and would crash here.
     // Also skip anything over 1 MB or cut short (a card pulled mid-save): it must end with </MPCVObject>.
     char head[6] = { 0 }, tail[32] = { 0 };
@@ -330,7 +379,13 @@ __attribute__((visibility("hidden"), used)) void hs_chains_after_rename(uintptr_
             tail[fread(tail, 1, 31, cf)] = 0;
         fclose(cf);
     }
-    if (strcmp(head, "<?xml") || !strstr(tail, "</MPCVObject>")) { lg("skip: %s is not a complete XML chain (%ld bytes)", (uintptr_t)chain, (uintptr_t)size); return; }
+    if (strcmp(head, "<?xml") || !strstr(tail, "</MPCVObject>")) {
+        lg("skip: %s is not a complete XML chain (%ld bytes)", (uintptr_t)chain, (uintptr_t)size);
+        char detail[64];
+        snprintf(detail, sizeof detail, "%s.xfx is damaged", shown);
+        chains_toast("Chain not loaded", detail);
+        return;
+    }
 
     void (*load)(uintptr_t, void *, uintptr_t, uintptr_t, int) = (void *)(base + LOAD_STRIP);
     str_ctor(&file, chain);
@@ -338,6 +393,7 @@ __attribute__((visibility("hidden"), used)) void hs_chains_after_rename(uintptr_
     str_dtor(&file);
     FILE *f2 = fopen(LOG_FILE, "a");
     if (f2) { fprintf(f2, "loaded %s on program %#lx\n", chain, (unsigned long)program); fclose(f2); }
+    chains_toast("Chain loaded", shown);
 }
 
 // Post-hook trampoline. The original may return an object through x8, so x8 must reach it intact;
