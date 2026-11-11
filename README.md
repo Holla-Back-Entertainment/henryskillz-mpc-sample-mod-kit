@@ -37,6 +37,12 @@ Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid 
 
 **SEQ page as a mixing desk.** The SEQ page (tempo, bars, Rec Quant) is redrawn as a desk panel with a VU meter and output LEDs that move with what the MPC is playing. **B2** switches to stereo meters, and the **K1 BPM** label stays clear. Every stock control works as before.
 
+**De-esser.** HS Channel Strip has a **DESS** page: Freq, Thresh, Range and Mode (split, wide, or listen to hear just what it removes).
+
+**MOD and the key bus.** HS Pump and HS Crush have a **KEY** page that sends their input to bus A, B, C or D, or keys their compressor from one. Seven HS effects (Pump, Crush, Tube Strip, Heat, Channel Strip, Drive Sat, Bus Compressor) have a **MOD** page: pick a bus as the Source, a knob as the Target and a Depth, and that knob moves with the level on the bus. **MOD TIME** sets the attack and release. Off by default, so old projects sound the same.
+
+**One Bypass.** Every HS effect uses the Bypass button above the screen. The old Bypass knobs on Drive Sat, Bus Compressor and Para EQ are gone (projects that used them still open).
+
 **Track chains.** Rename a track **VOX**, **DRUMS** or **BASS** (or any name that starts with one, like "Vox Lead") and, if the track has no inserts yet, its chain loads: Channel Strip, Bus Compressor and Air Exciter on VOX, Saturator and Bus Compressor on DRUMS, Drive Sat and Para EQ on BASS. One UNDO takes back the rename and the chain together. To save your own, dial in a track's inserts and rename it with a **#** on the end, like **KEYS#**: the chain is saved to `MPC-Sample/Chains/KEYS.xfx` on the card, and any track you name KEYS gets it.
 
 **Key and BPM in the browser.** Preview a sample and its row shows the key and the tempo the preview plays at, like **C# MIN 75 BPM**. WAV and MP3.

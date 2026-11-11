@@ -42,7 +42,7 @@ static int eq2_link(void)
 
 /* SampQOL 0.2.0 (pinned build): the insert editor object at qol+0x16333a0 holds the open insert at
  * +0xd0; the insert keeps its LADSPA descriptor at +0x128 and handle at +0x130 (read live on the
- * device 11 Nov 2026 with two X-EQ 2s open). The descriptor check keeps a wrong read harmless. */
+ * device 11 Nov 2026 with two Para EQs open). The descriptor check keeps a wrong read harmless. */
 static void *open_handle(const void *descriptor)
 {
     if (!qol_base || !descriptor) return NULL;
