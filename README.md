@@ -32,7 +32,7 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 
 **Where did HS Air Exciter and HS Drive Sat go?** SampQOL's insert menu has room for eight add-on effects, so HS Crush and HS Bass Focus took their places in the menu. They are still installed: a project that already uses them opens with them, as before.
 
-Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, and the HenrySkillz start screen (after SampQOL's own).
+Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, a desk-style SEQ page with an unobstructed **K1 BPM** label and B2-toggleable stereo meters, and the HenrySkillz start screen (after SampQOL's own).
 
 These are real 320×240 captures from the MPC Sample emulator running the public installer output:
 

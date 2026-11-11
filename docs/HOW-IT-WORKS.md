@@ -27,6 +27,7 @@ It refuses to run if `mpcqol.so` isn't a supported version, if any pinned file w
 |---|---|
 | `src/fx/` | The 10 LADSPA effects (`hs-pro-fx-ladspa.so`), the effect list and live displays (`hs-fx.so`), and the firmware-1.3.0 hooks (`hs-flavor.so`, `probe.cc`) |
 | `src/eq/` | The EQ page grid (`hs-eq.so`) |
+| `src/seq/` | The desk-style SEQ page and B2-toggleable stereo meters (`hs-seq.so`) |
 | `addon/hs/` | `hs-addons.sh` (copies the add-ons to RAM, sets `HS_PRELOAD`) and `hs-splash.raw` |
 | `starter-card/` | The splash-only boot-test card |
 | `tools/` | Command-line helpers: sign an autorun folder, make a splash |

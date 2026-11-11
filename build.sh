@@ -11,5 +11,7 @@ docker run --rm -v "$PWD:/w" -w /w/src "${IMAGE:-gcc:12}" sh -ec '
   gcc -O2 -Wall -Wextra -Werror -shared -fPIC hs_fx.c hs_fx_picker.c hs_ducker_gain.c -o /w/addon/hs/hs-fx.so -lm -ldl -pthread
   cd ../eq
   gcc -O2 -Wall -Wextra -shared -fPIC hs_eq.c -o /w/addon/hs/hs-eq.so -ldl
+  cd ../seq
+  gcc -O2 -Wall -Wextra -Werror -shared -fPIC hs_seq.c -o /w/addon/hs/hs-seq.so -ldl -lm -pthread
 '
 python3 installer/make_installer.py
