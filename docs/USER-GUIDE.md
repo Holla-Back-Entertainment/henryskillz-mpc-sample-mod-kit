@@ -632,6 +632,8 @@ When you preview a sample in the browser, its row shows the key and tempo at the
 
 There is nothing to press. It is just there while you browse.
 
+![Browser row for Leroys C#Min 75bpm.wav with the tag C# MIN 112.9 BPM at the right end](../assets/screens/browser-key-tag.png)
+
 If it doesn't work: the tag only shows for a sample that is previewing. Check Preview is on in the browser.
 
 ---

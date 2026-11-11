@@ -64,9 +64,9 @@ Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid 
 |---|---|---|
 | ![Track renamed drums: the Chain loaded DRUMS box over the track's insert page](assets/screens/chain-loaded.png) | ![Stems chooser for pad A01: Vocals, Drums, Bass and Other ticked, Separate, Go](assets/screens/stems-chooser.png) | ![Stems saved in Samples/Stems and loaded on pads A02 to A05](assets/screens/stems-on-pads.png) |
 
-| SampQOL screen styling | Graphic mixer |
-|---|---|
-| ![Pad insert page with the red top bar, the dark blue palette and a cyan edge on the selected slot](assets/screens/sampqol-styling.png) | ![Ch. Mixer as a console: strips with pan, mute, solo, fader, stereo meter and output](assets/screens/graphic-mixer.png) |
+| SampQOL screen styling | Graphic mixer | Key and BPM tag |
+|---|---|---|
+| ![Pad insert page with the red top bar, the dark blue palette and a cyan edge on the selected slot](assets/screens/sampqol-styling.png) | ![Ch. Mixer as a console: strips with pan, mute, solo, fader, stereo meter and output](assets/screens/graphic-mixer.png) | ![Browser row for Leroys C#Min 75bpm.wav tagged C# MIN 112.9 BPM](assets/screens/browser-key-tag.png) |
 
 These are real 320×240 captures from the MPC Sample emulator running the public installer output:
 
