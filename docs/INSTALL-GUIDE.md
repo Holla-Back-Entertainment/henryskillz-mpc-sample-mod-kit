@@ -126,11 +126,11 @@ Wait until it says it's safe, then take the card out.
 
 Wherever you choose an insert effect (for example a pad's insert slots in the **Mixer**), the HenrySkillz effects are in the list. Their names start with **HS**:
 
-- **Harmonic:** HS Saturator, HS Channel Strip, HS Heat
+- **Harmonic:** HS Saturator, HS Channel Strip, HS Heat, HS Tube Strip
 - **Dynamics:** HS Bus Compressor, HS Pump, HS Crush
 - **EQ / Filter:** HS Para EQ, HS Bass Focus
 
-HS Air Exciter and HS Drive Sat are no longer in the menu (it has room for eight add-on effects), but projects that already use them still open with them.
+HS Air Exciter, HS Drive Sat and the stock Bus Compressor are no longer in the menu (it has 40 rows), but projects that already use them still open with them.
 
 ![Insert effects list showing the HS Harmonic effects](../assets/screens/hs-effects-list.png)
 
@@ -140,7 +140,7 @@ HS Air Exciter and HS Drive Sat are no longer in the menu (it has room for eight
 2. Turn the **data wheel** to an empty insert slot and press the wheel.
 3. Choose a category, turn to the HS effect you want, then press the wheel again to load it.
 4. Turn **K1, K2 and K3** to change the three parameters named along the bottom of the screen.
-5. On Channel Strip, Para EQ, Bus Compressor, Pump, Heat and Crush, press the **middle screen button** to move through their pages. Hold **SHIFT** and press it to move backwards.
+5. On Channel Strip, Para EQ, Bus Compressor, Pump, Heat, Crush and Tube Strip, press the **middle screen button** to move through their pages. Hold **SHIFT** and press it to move backwards.
 6. On HS Para EQ, turn the **data wheel** to choose a band. The selected band and response curve are shown on screen.
 7. Use **Bypass** to compare the processed and original sound. Keep the output level sensible while auditioning drive or compression.
 8. Press the **left screen button** under **Back** to return to the insert rack.
