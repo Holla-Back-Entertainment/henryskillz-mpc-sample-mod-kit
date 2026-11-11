@@ -15,6 +15,14 @@ if cp "$HS/hs-flavor.so" /tmp/hs-flavor.so &&
     chmod 644 /tmp/hs-flavor.so /tmp/hs-browser.so /tmp/hs-eq.so /tmp/hs-fx.so /tmp/hs-seq.so /tmp/hs-ladspa-test/hs-pro-fx-ladspa.so
     HS_PRELOAD="/tmp/hs-flavor.so:/tmp/hs-browser.so:/tmp/hs-eq.so:/tmp/hs-fx.so:/tmp/hs-seq.so:"
 fi 2>/dev/null
+# SampQOL screen styling (SampQOL 0.2.0 only; it checks that itself and steps aside on any other build).
+# Optional: it goes after hs-fx and before hs-seq.
+for so in hs-chrome; do
+    if [ -n "$HS_PRELOAD" ] && cp "$HS/$so.so" "/tmp/$so.so"; then
+        chmod 644 "/tmp/$so.so"
+        HS_PRELOAD="${HS_PRELOAD%/tmp/hs-seq.so:}/tmp/$so.so:/tmp/hs-seq.so:"
+    fi 2>/dev/null
+done
 # Track chains: rename a track VOX, DRUMS or BASS and, if it has no inserts, that chain loads.
 # Rename a dialled-in track NAME# to save its inserts as MPC-Sample/Chains/NAME.xfx. Optional.
 if [ -n "$HS_PRELOAD" ] && mkdir -p /tmp/hs-chains && cp "$HS/"*.xfx /tmp/hs-chains/ &&
