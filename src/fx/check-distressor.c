@@ -1,11 +1,12 @@
 /* HS Crush behaviour check: curves, timing, audio HP, distortion, mix/bypass, meter.
- * cc -O2 -I. check-distressor.c hs_distressor.c -lm -o /tmp/check-distressor && /tmp/check-distressor */
+ * cc -O2 -I. check-distressor.c hs_distressor.c hs_env.c -lm -o /tmp/check-distressor && /tmp/check-distressor */
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include "ladspa.h"
 #include "hs_distressor.h"
+#include "hs_env.h"
 extern const LADSPA_Descriptor hs_distressor_descriptor;
 
 enum { RATE = 48000, N = 6*RATE };
@@ -105,6 +106,13 @@ int main(void)
         tone(.5f, 1000, 0, N); go();
         for (int i = 0; i < N; ++i) assert(out[0][i] == in[0][i]);
     }
+    /* Key In from bus D ducks a quiet signal; with no key it would pass untouched at this level. */
+    reset(); ctl[DS_RATIO] = 6; ctl[DS_KEY] = 4; tone(.01f, 1000, 0, N); hs_env_send(4, 1); go();
+    float keyed = gain_db(N/2, N);
+    reset(); ctl[DS_RATIO] = 6; tone(.01f, 1000, 0, N); go();
+    float own = gain_db(N/2, N);
+    printf("keyed from D: %.2f dB vs own key %.2f dB\n", keyed, own);
+    assert(keyed < own - 8);
     puts("check-distressor: OK");
     return 0;
 }

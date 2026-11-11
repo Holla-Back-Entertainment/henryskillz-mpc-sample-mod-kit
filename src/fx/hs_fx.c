@@ -209,6 +209,34 @@ static void center_ink(uint32_t *dst, const uint32_t *src, int x0, int x1,
         }
 }
 
+/* SampQOL's value readout, centred, with the unit after it ("-6.0 DB"): the label stays a plain
+   word, as stock shows units in the value. The unit takes the readout's brightest colour, bottom-aligned. */
+static void center_value(uint32_t *dst, const uint32_t *src, int x0, int x1, int y, int cx, int dy,
+                         const char *unit)
+{
+    enum { TEXT_HEIGHT = 13 };
+    int first = x1, last = x0, bottom = -1;
+    uint32_t ink = 0;
+    for (int j = 0; j < TEXT_HEIGHT; ++j)
+        for (int x = x0; x < x1; ++x)
+            if (src[(y + j) * W + x] & 0xffffff) {
+                if (x < first) first = x;
+                if (x > last) last = x;
+                bottom = j;
+                uint32_t c = src[(y + j) * W + x];        /* brightest pixel: edges are anti-aliased */
+                if ((c >> 8 & 255) > (ink >> 8 & 255)) ink = c;
+            }
+    int width = last - first + 1, extra = unit ? 3 + text_width(unit, 4) : 0;
+    if (first > last || width + extra > 86) { center_ink(dst, src, x0, x1, y, cx, dy); return; }
+    int dx = cx - (width + extra) / 2;
+    for (int j = 0; j < TEXT_HEIGHT; ++j)
+        for (int x = first; x <= last; ++x) {
+            uint32_t c = src[(y + j) * W + x];
+            if (c & 0xffffff) dst[(dy + j) * W + dx + x - first] = c;
+        }
+    if (unit) text(dst, dx + width + 3, dy + bottom - 4, unit, 4, ink);
+}
+
 static void large_knob(uint32_t *p, int cx, int cy, int value, int bypassed)
 {
     for (int y = -17; y <= 17; ++y)
@@ -392,19 +420,24 @@ static const uint32_t *draw_stock_rack(struct effect_page *page)
         }
         rect(p, x+5, 137, 88, 14, 0x0a0f12);
         frame(p, x+5, 137, 88, 14, 0x323d43);
-        const char *marked = page->kind == HS_BUS ? bus_marking(i, page->values[i])
+        const char *marked = mod_page(page->kind) ? mod_marking(i)
+            : page->kind == HS_BUS ? bus_marking(i, page->values[i])
             : page->kind == HS_PUMP ? pump_marking(i, page->values[i])
             : page->kind == HS_HEAT ? heat_marking(i, page->values[i])
             : page->kind == HS_DISTRESSOR ? dist_marking(i, page->values[i])
             : page->kind == HS_BASS_FOCUS ? bf_marking(i, page->values[i])
             : page->kind == HS_TUBE_STRIP ? tube_marking(i, page->values[i])
-            : page->kind == HS_EQ2 ? eq2_marking(i,page->values[i]) : NULL;
+            : page->kind == HS_EQ2 ? eq2_marking(i,page->values[i])
+            : page->kind == HS_CHANNEL ? channel_marking(i, page->shifted, page->values[i]) : NULL;
         if (marked)
             text(p, cx - 2*(int)strlen(marked), 142, marked, 22,
                  page->kind == HS_PUMP || page->kind == HS_DISTRESSOR ? 0xf0f0ec : page->kind == HS_HEAT ? 0xd8f040
                  : page->kind == HS_BASS_FOCUS ? bf_green : page->kind == HS_TUBE_STRIP ? tube_amber : 0xb7e0ce);
-        else
-            center_ink(p, src, 205, 309, rows[bank+i], cx, 137);
+        else {
+            static const char *(*unit_of)(int);
+            if (!unit_of) unit_of = (const char *(*)(int))dlsym(RTLD_DEFAULT, "hs_knob_unit");
+            center_value(p, src, 205, 309, rows[bank+i], cx, 137, unit_of ? unit_of(bank + i) : NULL);
+        }
     }
     return p;
 }

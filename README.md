@@ -33,9 +33,23 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 
 **Where did HS Air Exciter, HS Drive Sat and the stock Bus Compressor go?** SampQOL's insert menu has 40 rows. To fit nine HS effects, the stock Bus Compressor leaves the Dynamics list (HS Bus Compressor and HS Crush cover it), and HS Air Exciter and HS Drive Sat leave the menu. All three are still installed: a project that already uses them opens with them, as before.
 
-Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, a desk-style SEQ page with an unobstructed **K1 BPM** label and B2-toggleable stereo meters, and the HenrySkillz start screen (after SampQOL's own).
+Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, and the HenrySkillz start screen (after SampQOL's own).
 
-**SEQ page as a mixing desk.** The SEQ page (tempo, bars, Rec Quant) is redrawn as a desk panel with a VU meter and output LEDs that move with what the MPC is playing. Every stock control works as before.
+**SEQ page as a mixing desk.** The SEQ page (tempo, bars, Rec Quant) is redrawn as a desk panel with a VU meter and output LEDs that move with what the MPC is playing. **B2** switches to stereo meters, and the **K1 BPM** label stays clear. Every stock control works as before.
+
+**De-esser.** HS Channel Strip has a **DESS** page: Freq, Thresh, Range and Mode (split, wide, or listen to hear just what it removes).
+
+**MOD and the key bus.** HS Pump and HS Crush have a **KEY** page that sends their input to bus A, B, C or D, or keys their compressor from one. Seven HS effects (Pump, Crush, Tube Strip, Heat, Channel Strip, Drive Sat, Bus Compressor) have a **MOD** page: pick a bus as the Source, a knob as the Target and a Depth, and that knob moves with the level on the bus. **MOD TIME** sets the attack and release. Off by default, so old projects sound the same.
+
+**One Bypass.** Every HS effect uses the Bypass button above the screen. The old Bypass knobs on Drive Sat, Bus Compressor and Para EQ are gone (projects that used them still open).
+
+**Track chains.** Rename a track **VOX**, **DRUMS** or **BASS** (or any name that starts with one, like "Vox Lead") and, if the track has no inserts yet, its chain loads: Channel Strip, Bus Compressor and Air Exciter on VOX, Saturator and Bus Compressor on DRUMS, Drive Sat and Para EQ on BASS. One UNDO takes back the rename and the chain together. To save your own, dial in a track's inserts and rename it with a **#** on the end, like **KEYS#**: the chain is saved to `MPC-Sample/Chains/KEYS.xfx` on the card, and any track you name KEYS gets it.
+
+**Key and BPM in the browser.** Preview a sample and its row shows the key and the tempo the preview plays at, like **C# MIN 75 BPM**. WAV and MP3.
+
+**LUFS meters.** On the SEQ page, **B2** switches to the meters: loudness Momentary, Short-term and Integrated (EBU R128) and a peak hold. Integrated and peak restart after 2 seconds of silence.
+
+**Stems (optional).** Tick **Add Stems** on the installer and the MPC can split a sample into Vocals, Drums, Bass and Other by itself, no computer. In the browser, preview a WAV or MP3, hold **SHIFT** and hold **B1** for 1.5 seconds. On the Sample screen, hold **SHIFT** and hold **B3** for 1.5 seconds to split the selected pad's sample. Tick the stems you want, choose **Separate** (one file each) or **Sum** (one mixed file), then **Go**. A split takes about as long as the sample plays; nothing above 11 kHz comes through. It adds a 92 MB download and uses the Spleeter model by Deezer (MIT).
 
 **Page label.** On HS effects with more than one page, the box over the middle screen button shows **PAGE 2/3**: press it for the next page, **SHIFT** + it to go back.
 

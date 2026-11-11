@@ -16,10 +16,11 @@ struct bus {
     float makeup, mix, hp, reduction, slow, balance, fixed_offset, auto_offset;
     float auto_fast_attack, auto_fast_release, auto_slow_release, auto_slow_lo, auto_slow_hi, auto_voicing;
     struct biquad sc;
-    int ready, bypass, automatic;
+    int ready, automatic;
+    struct hs_mod mod;
 };
 
-static const float defaults[] = {20, 1, 0, 0, 0, 0, 100, 0};
+static const float defaults[] = {20, 1, 0, 0, 0, 0, 100, 0, HS_MOD_DEFAULTS};
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
 #define D0 (B | LADSPA_HINT_DEFAULT_0)
 #define INT0 (D0 | LADSPA_HINT_INTEGER)
@@ -32,7 +33,8 @@ static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+BUS_RELEASE] = {INT0,-6,0},
     [FIRST+BUS_HPF] = {D0,0,185},
     [FIRST+BUS_MIX] = {MAX,0,100},
-    [FIRST+BUS_BYPASS] = {D0|LADSPA_HINT_TOGGLED,0,1}
+    [FIRST+BUS_BYPASS] = {D0|LADSPA_HINT_TOGGLED,0,1},
+    HS_MOD_HINTS(FIRST+BUS_MOD, BUS_MOD)
 };
 #undef B
 #undef D0
@@ -97,7 +99,7 @@ static void configure(struct bus *s, const float *v)
     s->auto_offset = -.004f*(attack-4);
     s->makeup = powf(10, v[BUS_MAKEUP]*.05f);
     s->mix = .01f*v[BUS_MIX];
-    s->bypass = v[BUS_BYPASS] >= .5f;
+    /* BUS_BYPASS stays a port so old projects load, but is ignored: the one Bypass is SampQOL's B3. */
     float hp = v[BUS_HPF] < 10.0f ? 0 : fmaxf(20.0f, v[BUS_HPF]);
     if (!s->ready || hp != s->hp) {
         /* The reference detector rejects bass at about 12 dB/oct. */
@@ -143,6 +145,7 @@ static void run(LADSPA_Handle handle, unsigned long frames)
         const LADSPA_PortRangeHint *h = &hints[FIRST+i];
         v[i] = p && isfinite(*p) ? fminf(h->UpperBound,fmaxf(h->LowerBound,*p)) : defaults[i];
     }
+    hs_mod_apply(&s->mod, v, BUS_MOD, hints + FIRST, frames, s->rate);
     if (!s->ready || memcmp(v,s->values,sizeof v)) configure(s,v);
     float peak = s->peak, gr = s->reduction, slow = s->slow, balance = s->balance, voicing = s->auto_voicing;
     for (unsigned long i = 0; i < frames; ++i) {
@@ -180,7 +183,7 @@ static void run(LADSPA_Handle handle, unsigned long frames)
             amount = gr;
         }
         float wet_gain = amount < .00001f ? 1 : exp2f(-.166096405f*amount);
-        float gain = s->bypass ? 1 : 1-s->mix+s->mix*s->makeup*wet_gain;
+        float gain = 1-s->mix+s->mix*s->makeup*wet_gain;
         s->port[OL][i] = l*gain;
         s->port[OR][i] = r*gain;
     }
@@ -198,10 +201,10 @@ static void run(LADSPA_Handle handle, unsigned long frames)
 #define AI (LADSPA_PORT_INPUT | LADSPA_PORT_AUDIO)
 #define AO (LADSPA_PORT_OUTPUT | LADSPA_PORT_AUDIO)
 #define C (LADSPA_PORT_INPUT | LADSPA_PORT_CONTROL)
-static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C};
+static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,HS_MOD_TYPES};
 static const char *const names[] = {
     "Input L", "Input R", "Output L", "Output R", "Threshold (dB)", "Ratio step",
-    "Makeup (dB)", "Attack step", "Release step", "Sidechain HPF (Hz)", "Dry/Wet Mix (%)", "Bypass"
+    "Makeup (dB)", "Attack step", "Release step", "Sidechain HPF (Hz)", "Dry/Wet Mix (%)", "Bypass", HS_MOD_NAMES
 };
 _Static_assert(sizeof names / sizeof *names == PORTS &&
                sizeof types / sizeof *types == PORTS &&

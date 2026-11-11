@@ -28,7 +28,7 @@
 <main>
   <h1>HenrySkillz MPC Sample Installer</h1>
   <div class="bar"></div>
-  <p>Adds the HenrySkillz FX rack (with HS Crush, Bass Focus and Tube Strip), the EQ display, the SEQ desk page and the splash to <b>SampQOL OS __SAMPQOL_VERSION__</b> on an <b>MPC Sample (firmware 1.3.0)</b>.
+  <p>Adds the HenrySkillz FX rack (with HS Crush, Bass Focus and Tube Strip), track chains, key and BPM tags in the browser, LUFS meters, the EQ display, the SEQ desk page, the splash and, if you tick it, Stems to <b>SampQOL OS __SAMPQOL_VERSION__</b> on an <b>MPC Sample (firmware 1.3.0)</b>.
      Everything happens in this page. Nothing is uploaded anywhere.</p>
   <ol>
     <li>Download <b>SampQOL-OS-v__SAMPQOL_VERSION__.zip</b> from the official page:
@@ -36,6 +36,7 @@
     <li>Drop that zip here (or, if your Mac already unzipped it, choose the <b>SampQOL-OS-v__SAMPQOL_VERSION__</b> folder).</li>
     <li>Save the <b>autorun-hs.zip</b> this page gives you, unzip it, and copy the <b>autorun</b> folder to the top of your SD card.</li>
   </ol>
+  <p><label><input type="checkbox" id="stems"> <b>Add Stems</b>: split a sample into vocals, drums, bass and other on the MPC itself. Adds a 92 MB download, and needs this page online (not the saved copy).</label></p>
   <div class="drop" id="drop">
     <p>Drop the SampQOL zip here</p>
     <label class="btn">Choose zip<input type="file" id="zip" accept=".zip"></label>
@@ -47,10 +48,10 @@
   <ol>
     <li>Switch the MPC off, put the SD card in your computer and copy <b>autorun/hs</b> somewhere safe as a backup.</li>
     <li><button id="fx">Download hs-effects-update.zip</button></li>
-    <li>Unzip it and copy the five <b>.so</b> files into <b>autorun/hs</b> on the card, replacing the old ones. Replace all five together.</li>
+    <li>Unzip it and copy <b>everything</b> in its <b>hs</b> folder into <b>autorun/hs</b> on the card, replacing the old files. Replace them all together.</li>
     <li>Eject the card, switch the MPC on and press <b>B1</b>.</li>
   </ol>
-  <p class="small">These files are not part of the signed autorun, so nothing needs re-signing. If the MPC boots stock or restarts twice, put your backup of <b>autorun/hs</b> back.</p>
+  <p class="small">Stems is not in this update: to add Stems, run the installer above again with <b>Add Stems</b> ticked. These files are not part of the signed autorun, so nothing needs re-signing. If the MPC boots stock or restarts twice, put your backup of <b>autorun/hs</b> back.</p>
   <p class="small">Back up your SD card first. To undo: switch off and take the SD card out, or delete the <b>autorun</b> folder from it.
      Step-by-step help with pictures: <a href="https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/blob/main/docs/INSTALL-GUIDE.md" target="_blank" rel="noopener">install guide</a> ·
      <a href="https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/blob/main/docs/FAQ.md" target="_blank" rel="noopener">FAQ</a> ·
@@ -76,6 +77,7 @@ const SAMPQOL = __SAMPQOL_HASHES__;            // sha256 of mpcqol.so -> version
 // MPC Sample 1.3.0 firmware salt for autorun.check. Public: github.com/orrpunk-art/mpc-sample-root-ssh
 const SALT = "f7bed1c9-7e90-4731-9194-c996666b4331";
 const ADDON = __ADDON_FILES__;                 // "hs/<file>" -> base64
+const STEMS = __STEMS_FILES__;                 // "stems/<file>" -> sha256, fetched from ./stems/ when ticked
 const enc = new TextEncoder(), dec = new TextDecoder("utf-8", { fatal: true });
 
 async function sha256hex(bytes) {
@@ -106,7 +108,7 @@ async function patch(files) {
 
   let run = dec.decode(files.get("qol-run.sh"));
   run = replaceOnce(run, "SO=/tmp/mpcqol.so\n", 'SO=/tmp/mpcqol.so\n. "$DIR/hs/hs-addons.sh"  # Henry Skillz add-ons (HS_PRELOAD)\n', "qol-run.sh");
-  run = replaceOnce(run, 'export LD_PRELOAD="$SO"', 'export LD_PRELOAD="$HS_PRELOAD$SO"', "qol-run.sh");
+  run = replaceOnce(run, 'export LD_PRELOAD="$SO"', 'export LD_PRELOAD="$HS_PRELOAD$SO$HS_POSTLOAD"', "qol-run.sh");
   // HenrySkillz splash as a second frame: SampQOL's own splash still shows first.
   run = replaceOnce(run, '        cat "$DIR/qol-splash.raw" > /dev/fb0\n',
     '        cat "$DIR/qol-splash.raw" > /dev/fb0\n        [ -f "$DIR/hs/hs-splash.raw" ] && { sleep 2; cat "$DIR/hs/hs-splash.raw" > /dev/fb0; }\n', "qol-run.sh");
@@ -147,8 +149,19 @@ async function run(getEntries) {
     say(`Found SampQOL (${files.size} files).`);
     const { out, version } = await patch(files);
     say(`SampQOL ${version} checked. Add-ons installed, autorun signed.`, "ok");
+    if (document.getElementById("stems").checked) {
+      say("Downloading Stems (92 MB)…");
+      for (const [path, hash] of Object.entries(STEMS)) {
+        let data;
+        try { data = new Uint8Array(await (await fetch(path, { cache: "no-store" })).arrayBuffer()); }
+        catch { throw new Error("Stems could not be downloaded. Use the online installer, or untick Add Stems."); }
+        if (await sha256hex(data) !== hash) throw new Error(`${path} did not download correctly. Try again, or untick Add Stems.`);
+        out.set(path, data);
+      }
+      say("Stems added.", "ok");
+    }
     const zip = new JSZip();
-    for (const [p, d] of out) zip.file("autorun/" + p, d, { unixPermissions: p.endsWith(".sh") ? 0o755 : 0o644 });
+    for (const [p, d] of out) zip.file("autorun/" + p, d, { unixPermissions: p.endsWith(".sh") || p === "stems/hs-stems" ? 0o755 : 0o644 });
     const blob = await zip.generateAsync({ type: "blob", platform: "UNIX" });
     const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "autorun-hs.zip" });
     a.textContent = "Download autorun-hs.zip";
@@ -168,7 +181,7 @@ const fromDir = fileList => async () =>
 
 document.getElementById("fx").onclick = async () => {
   const zip = new JSZip();
-  for (const [path, data] of Object.entries(ADDON)) if (path.endsWith(".so") || path.endsWith("/hs-addons.sh")) zip.file(path, b64(data), { unixPermissions: 0o644 });
+  for (const [path, data] of Object.entries(ADDON)) if (path.endsWith(".so") || path.endsWith(".xfx") || path.endsWith("/hs-addons.sh")) zip.file(path, b64(data), { unixPermissions: 0o644 });
   const blob = await zip.generateAsync({ type: "blob", platform: "UNIX" });
   Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "hs-effects-update.zip" }).click();
 };

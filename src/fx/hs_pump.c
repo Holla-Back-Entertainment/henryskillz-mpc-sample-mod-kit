@@ -13,6 +13,7 @@
 
 #include "ladspa.h"
 #include "hs_pump.h"
+#include "hs_env.h"
 
 enum { IL, IR, OL, OR, FIRST, PORTS = FIRST + PU_COUNT, RATIOS = 9, STEPS = 8, OPTO = 7 };
 
@@ -33,10 +34,11 @@ struct pump {
     float sat_in, sat_out, opto_charge, opto_tail, sat_lp, dc_coef;
     float hb0, hb1, hb2, ha1, ha2, z1[2], z2[2];
     float gr, tail, onset, lp[2], dc_x[2], dc_y[2];
-    int ready, ratio, opto, atmod, det_hp, sat, bypass;
+    int ready, ratio, opto, atmod, det_hp, sat, bypass, key, send;
+    struct hs_mod mod;
 };
 
-static const float defaults[] = {0, 3, 3, 3, 0, 0, 0, 0, 100, 0};
+static const float defaults[] = {0, 3, 3, 3, 0, 0, 0, 0, 100, 0, 0, 0, HS_MOD_DEFAULTS};
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
 #define TOG (B | LADSPA_HINT_TOGGLED | LADSPA_HINT_DEFAULT_0)
 #define STEP (B | LADSPA_HINT_INTEGER | LADSPA_HINT_DEFAULT_MIDDLE)
@@ -50,7 +52,10 @@ static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+PU_SAT] = {TOG,0,1},
     [FIRST+PU_OUTPUT] = {B|LADSPA_HINT_DEFAULT_0,-20,20},
     [FIRST+PU_MIX] = {B|LADSPA_HINT_DEFAULT_MAXIMUM,0,100},
-    [FIRST+PU_BYPASS] = {TOG,0,1}
+    [FIRST+PU_BYPASS] = {TOG,0,1},
+    [FIRST+PU_KEY] = {B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_0,0,HS_ENV_BUSES},
+    [FIRST+PU_SEND] = {B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_0,0,HS_ENV_BUSES},
+    HS_MOD_HINTS(FIRST+PU_MOD, PU_MOD)
 };
 #undef B
 #undef TOG
@@ -117,6 +122,8 @@ static void configure(struct pump *s, const float *v)
     s->det_hp = v[PU_DET_HP] >= .5f;
     s->sat = v[PU_SAT] >= .5f;
     s->bypass = v[PU_BYPASS] >= .5f;
+    s->key = (int)lroundf(v[PU_KEY]);
+    s->send = (int)lroundf(v[PU_SEND]);
     memcpy(s->values, v, sizeof s->values);
     s->ready = 1;
 }
@@ -157,17 +164,25 @@ static void run(LADSPA_Handle h, unsigned long frames)
         const LADSPA_PortRangeHint *r = &hints[FIRST+i];
         v[i] = p && isfinite(*p) ? fminf(r->UpperBound, fmaxf(r->LowerBound, *p)) : defaults[i];
     }
+    hs_mod_apply(&s->mod, v, PU_MOD, hints + FIRST, frames, s->rate);
     if (!s->ready || memcmp(v, s->values, sizeof v)) configure(s, v);
 
-    float gr = s->gr, tail = s->tail, onset = s->onset;
+    float gr = s->gr, tail = s->tail, onset = s->onset, sent = 0;
+    /* Key In from another track: a block-old level (a few ms), fed forward since the loop can't hear it */
+    float key = s->key ? hs_env_read(s->key)*s->in_gain : 0;
+    float key_want = s->key && key > 1e-6f ? computer(s, 20*log10f(key))/ratio_value[s->ratio] : 0;
     for (unsigned long i = 0; i < frames; ++i) {
         float dry_l = s->port[IL][i], dry_r = s->port[IR][i];
+        sent = fmaxf(sent, fmaxf(fabsf(dry_l), fabsf(dry_r)));
         if (s->bypass) { s->port[OL][i] = dry_l; s->port[OR][i] = dry_r; continue; }
         float l = dry_l*s->in_gain, r = dry_r*s->in_gain;
         float applied = s->atmod ? onset : gr + tail;
         float vca = exp2f(-.166096405f*applied);
         l *= vca; r *= vca;
-        if (s->ratio) {
+        if (s->ratio && s->key) {
+            tail = 0;
+            gr += (key_want > gr ? s->attack : s->release)*(key_want - gr);
+        } else if (s->ratio) {
             /* feedback detector: it hears the VCA output, before Sat */
             float dl = l, dr = r;
             if (s->det_hp) {
@@ -200,6 +215,7 @@ static void run(LADSPA_Handle h, unsigned long frames)
         s->port[OL][i] = dry_l + s->mix*(l - dry_l);
         s->port[OR][i] = dry_r + s->mix*(r - dry_r);
     }
+    if (s->send && !s->bypass) hs_env_send(s->send, sent);
     /* flush denormals; recover from a NaN sample */
     s->gr = isfinite(gr) && gr > 1e-9f ? gr : 0;
     s->tail = isfinite(tail) && tail > 1e-9f ? tail : 0;
@@ -213,12 +229,12 @@ static void run(LADSPA_Handle h, unsigned long frames)
 #define AI (LADSPA_PORT_INPUT | LADSPA_PORT_AUDIO)
 #define AO (LADSPA_PORT_OUTPUT | LADSPA_PORT_AUDIO)
 #define C (LADSPA_PORT_INPUT | LADSPA_PORT_CONTROL)
-static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C};
+static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C,C,C,HS_MOD_TYPES};
 static const char *const names[] = {
     "Input L", "Input R", "Output L", "Output R", "Input (dB)",
     "Ratio (1,2,3,4,6,8,10,12,20)", "Attack (.2,1,3,6,10,20,30,40 ms)",
     "Release (.05,.1,.15,.2,.25,.3,.5 s, Opto)", "AtMod", "Detector HP 110 Hz", "Sat",
-    "Output (dB)", "Mix (%)", "Bypass"
+    "Output (dB)", "Mix (%)", "Bypass", "Key In (Own,A,B,C,D)", "Key Send (Off,A,B,C,D)", HS_MOD_NAMES
 };
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == PU_COUNT, "Pump port count");

@@ -1,6 +1,7 @@
 #ifndef HS_BUS_H
 #define HS_BUS_H
+#include "hs_mod.h"
 enum { HS_BUS_ID = 0x485306 };
 enum { BUS_THRESHOLD, BUS_RATIO, BUS_MAKEUP, BUS_ATTACK, BUS_RELEASE, BUS_HPF,
-       BUS_MIX, BUS_BYPASS, BUS_COUNT };
+       BUS_MIX, BUS_BYPASS, BUS_MOD, BUS_COUNT = BUS_MOD + HS_MOD_PORTS };
 #endif

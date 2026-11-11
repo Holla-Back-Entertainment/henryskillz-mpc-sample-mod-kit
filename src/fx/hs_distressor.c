@@ -15,6 +15,7 @@
 
 #include "ladspa.h"
 #include "hs_distressor.h"
+#include "hs_env.h"
 
 enum { IL, IR, OL, OR, FIRST, PORTS = FIRST + DS_COUNT, RATIOS = 8, OPTO = 5, NUKE = 7 };
 
@@ -32,13 +33,14 @@ struct distressor {
     float d2, d3, dc_coef, hp1_coef;
     struct biquad det_hp, det_band, aud_hp;
     float gr, tail, hp1_x[2], hp1_y[2], dc_x[2], dc_y[2];
-    int ready, ratio, det_mode, aud_hp_on, brit, bypass;
+    int ready, ratio, det_mode, aud_hp_on, brit, bypass, key, send;
+    struct hs_mod mod;
 };
 
 #ifndef OUT_MAKEUP_DB
 #define OUT_MAKEUP_DB 4
 #endif
-static const float defaults[] = {5, 5, 5, 7.5f, 4, 0, 0, 0, 100, 0};
+static const float defaults[] = {5, 5, 5, 7.5f, 4, 0, 0, 0, 100, 0, 0, 0, HS_MOD_DEFAULTS};
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
 #define TOG (B | LADSPA_HINT_TOGGLED | LADSPA_HINT_DEFAULT_0)
 #define STEP (B | LADSPA_HINT_INTEGER)
@@ -52,7 +54,10 @@ static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+DS_AUDIO] = {STEP|LADSPA_HINT_DEFAULT_0,0,5},
     [FIRST+DS_BRIT] = {TOG,0,1},
     [FIRST+DS_MIX] = {B|LADSPA_HINT_DEFAULT_MAXIMUM,0,100},
-    [FIRST+DS_BYPASS] = {TOG,0,1}
+    [FIRST+DS_BYPASS] = {TOG,0,1},
+    [FIRST+DS_KEY] = {B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_0,0,HS_ENV_BUSES},
+    [FIRST+DS_SEND] = {B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_0,0,HS_ENV_BUSES},
+    HS_MOD_HINTS(FIRST+DS_MOD, DS_MOD)
 };
 #undef B
 #undef TOG
@@ -143,6 +148,8 @@ static void configure(struct distressor *s, const float *v)
     s->d3 = dist == 3 ? 1.6f : 0;
     if (s->brit) s->d2 *= 2;
     s->bypass = v[DS_BYPASS] >= .5f;
+    s->key = (int)lroundf(v[DS_KEY]);
+    s->send = (int)lroundf(v[DS_SEND]);
     memcpy(s->values, v, sizeof s->values);
     s->ready = 1;
 }
@@ -175,11 +182,14 @@ static void run(LADSPA_Handle h, unsigned long frames)
         const LADSPA_PortRangeHint *r = &hints[FIRST+i];
         v[i] = p && isfinite(*p) ? fminf(r->UpperBound, fmaxf(r->LowerBound, *p)) : defaults[i];
     }
+    hs_mod_apply(&s->mod, v, DS_MOD, hints + FIRST, frames, s->rate);
     if (!s->ready || memcmp(v, s->values, sizeof v)) configure(s, v);
 
-    float gr = s->gr, tail = s->tail;
+    float gr = s->gr, tail = s->tail, sent = 0;
+    float key = s->key ? hs_env_read(s->key)*s->in_gain : 0;   /* another track's level, a block old */
     for (unsigned long i = 0; i < frames; ++i) {
         float dry[2] = {s->port[IL][i], s->port[IR][i]}, x[2];
+        sent = fmaxf(sent, fmaxf(fabsf(dry[0]), fabsf(dry[1])));
         if (s->bypass) { s->port[OL][i] = dry[0]; s->port[OR][i] = dry[1]; continue; }
         float det = 0;
         for (int c = 0; c < 2; ++c) {
@@ -194,6 +204,7 @@ static void run(LADSPA_Handle h, unsigned long frames)
             if (s->det_mode & 2) d = bq(&s->det_band, d, c);
             det = fmaxf(det, fabsf(d));     /* ponytail: always stereo-linked, no Link button */
         }
+        if (s->key) det = key;
         if (s->ratio || s->brit) {
             float want = det > 1e-6f ? computer(s, 20*log10f(det)) : 0;
             if (s->ratio == OPTO) {
@@ -217,6 +228,7 @@ static void run(LADSPA_Handle h, unsigned long frames)
             s->port[c ? OR : OL][i] = out;
         }
     }
+    if (s->send && !s->bypass) hs_env_send(s->send, sent);
     s->gr = isfinite(gr) && gr > 1e-9f ? gr : 0;
     s->tail = isfinite(tail) && tail > 1e-9f ? tail : 0;
     struct biquad *f[] = {&s->det_hp, &s->det_band, &s->aud_hp};
@@ -236,11 +248,12 @@ float hs_distressor_gr(const void *handle)
 #define AI (LADSPA_PORT_INPUT | LADSPA_PORT_AUDIO)
 #define AO (LADSPA_PORT_OUTPUT | LADSPA_PORT_AUDIO)
 #define C (LADSPA_PORT_INPUT | LADSPA_PORT_CONTROL)
-static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C};
+static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C,C,C,HS_MOD_TYPES};
 static const char *const names[] = {
     "Input L", "Input R", "Output L", "Output R", "Input", "Attack", "Release", "Output",
     "Ratio (1,2,3,4,6,10 Opto,20,Max)", "Detector (Norm,HP,Band,HP+Band)",
-    "Audio (Clean,HP,Dist 2,Dist 3,HP+D2,HP+D3)", "British Mode", "Mix (%)", "Bypass"
+    "Audio (Clean,HP,Dist 2,Dist 3,HP+D2,HP+D3)", "British Mode", "Mix (%)", "Bypass",
+    "Key In (Own,A,B,C,D)", "Key Send (Off,A,B,C,D)", HS_MOD_NAMES
 };
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == DS_COUNT, "Crush port count");

@@ -55,6 +55,7 @@ static inline uint16_t glyph(char c)
     case '7': return G(7,1,2,2,2); case '8': return G(2,5,2,5,2); case '9': return G(2,5,3,1,6);
     case '-': return G(0,0,7,0,0); case '.': return G(0,0,0,0,2); case '/': return G(1,1,2,4,4);
     case '>': return G(4,2,1,2,4); case '+': return G(0,2,7,2,0); case ':': return G(0,2,0,2,0);
+    case '%': return G(5,1,2,4,5);
     default: return 0;
     }
 }

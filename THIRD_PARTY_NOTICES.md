@@ -15,3 +15,15 @@ The firmware-check implementation here is independently written from the publish
 ## LADSPA
 
 `src/fx/ladspa.h` is the LADSPA plugin API header (LGPL-2.1, Richard W.E. Furse, Paul Barton-Davis, Stefan Westerfeld).
+
+## minimp3
+
+`src/warp/minimp3.h` is minimp3 by lieff (https://github.com/lieff/minimp3), dedicated to the public domain under CC0 1.0. The browser key tag uses it to read MP3s.
+
+## Stems (optional, only when "Add Stems" is ticked)
+
+- **Spleeter** 4stems model by Deezer Research (https://github.com/deezer/spleeter), MIT License, copyright (c) 2019 Deezer. `docs/install/stems/spl4h.bin` is that model's weights converted to float16 by `src/stems/export_weights.py`. `src/stems/hs_stems.c` is an independent C implementation of the Spleeter network that runs it.
+- **OpenBLAS** (https://github.com/OpenMathLib/OpenBLAS), BSD 3-Clause License, is linked into `hs-stems`, with **libgfortran** (GPL v3 with the GCC Runtime Library Exception).
+- `hs-stems` is statically linked against **glibc** (LGPL 2.1 or later). Its full source and build script (`src/stems/build.sh`) are here, so you can rebuild and relink it yourself.
+- `src/stems/font.h` is drawn from **DejaVu Sans Mono** (https://dejavu-fonts.github.io), Bitstream Vera and DejaVu font licenses (free to use, copy and modify).
+- `src/stems/minimp3.h` is minimp3 (CC0), as in the browser tag.
