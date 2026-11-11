@@ -7,7 +7,7 @@ SAMPQOL = {"fc9285ac4a3145e04c1b162e3f5058a9c447a9752fec1e06510156ff20575dbd": "
 
 files = {f"hs/{p.name}": base64.b64encode(p.read_bytes()).decode()
          for p in sorted((ROOT / "addon/hs").iterdir()) if p.is_file() and not p.name.startswith(".")}
-need = {"hs/hs-addons.sh", "hs/hs-splash.raw", "hs/hs-flavor.so", "hs/hs-eq.so", "hs/hs-fx.so", "hs/hs-pro-fx-ladspa.so", "hs/hs-seq.so"}
+need = {"hs/hs-addons.sh", "hs/hs-splash.raw", "hs/hs-flavor.so", "hs/hs-eq.so", "hs/hs-fx.so", "hs/hs-seq.so", "hs/hs-pro-fx-ladspa.so"}
 missing = need - files.keys()
 if missing:
     raise SystemExit(f"missing add-on files (run ./build.sh): {sorted(missing)}")

@@ -14,11 +14,13 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
+#include <stdatomic.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <time.h>
 
 #include "dsb_logo.h"
 
@@ -112,9 +114,18 @@ static const unsigned char *glyph(char c)
 {
     static const struct { char c; unsigned char b[5]; } T[] = {
         {'0',{0x3E,0x51,0x49,0x45,0x3E}},{'1',{0x00,0x42,0x7F,0x40,0x00}},{'2',{0x42,0x61,0x51,0x49,0x46}},
-        {'3',{0x21,0x41,0x45,0x4B,0x31}},{'5',{0x27,0x45,0x45,0x45,0x39}},{'+',{0x08,0x08,0x3E,0x08,0x08}},
-        {'V',{0x1F,0x20,0x40,0x20,0x1F}},{'U',{0x3F,0x40,0x40,0x40,0x3F}},{'L',{0x7F,0x40,0x40,0x40,0x40}},
-        {'R',{0x7F,0x09,0x19,0x29,0x46}},{'O',{0x3E,0x41,0x41,0x41,0x3E}},{'T',{0x01,0x01,0x7F,0x01,0x01}},
+        {'3',{0x21,0x41,0x45,0x4B,0x31}},{'4',{0x18,0x14,0x12,0x7F,0x10}},{'5',{0x27,0x45,0x45,0x45,0x39}},
+        {'6',{0x3C,0x4A,0x49,0x49,0x30}},{'7',{0x01,0x71,0x09,0x05,0x03}},{'8',{0x36,0x49,0x49,0x49,0x36}},
+        {'9',{0x06,0x49,0x49,0x29,0x1E}},{'+',{0x08,0x08,0x3E,0x08,0x08}},{'-',{0x08,0x08,0x08,0x08,0x08}},
+        {'.',{0x00,0x60,0x60,0x00,0x00}},{':',{0x00,0x36,0x36,0x00,0x00}},{'/',{0x20,0x10,0x08,0x04,0x02}},
+        {'A',{0x7E,0x11,0x11,0x11,0x7E}},{'B',{0x7F,0x49,0x49,0x49,0x36}},{'C',{0x3E,0x41,0x41,0x41,0x22}},
+        {'E',{0x7F,0x49,0x49,0x49,0x41}},{'F',{0x7F,0x09,0x09,0x09,0x01}},{'G',{0x3E,0x41,0x49,0x49,0x7A}},
+        {'I',{0x00,0x41,0x7F,0x41,0x00}},
+        {'K',{0x7F,0x08,0x14,0x22,0x41}},{'L',{0x7F,0x40,0x40,0x40,0x40}},{'M',{0x7F,0x02,0x0C,0x02,0x7F}},
+        {'N',{0x7F,0x04,0x08,0x10,0x7F}},{'O',{0x3E,0x41,0x41,0x41,0x3E}},{'P',{0x7F,0x09,0x09,0x09,0x06}},
+        {'Q',{0x3E,0x41,0x51,0x21,0x5E}},
+        {'R',{0x7F,0x09,0x19,0x29,0x46}},{'S',{0x46,0x49,0x49,0x49,0x31}},{'T',{0x01,0x01,0x7F,0x01,0x01}},
+        {'U',{0x3F,0x40,0x40,0x40,0x3F}},{'V',{0x1F,0x20,0x40,0x20,0x1F}},{'W',{0x3F,0x40,0x38,0x40,0x3F}},
     };
     static const unsigned char sp[5];
     for (unsigned i = 0; i < sizeof T / sizeof *T; ++i) if (T[i].c == c) return T[i].b;
@@ -205,12 +216,48 @@ static float vu_pos(void)                       /* needle position 0..1 across t
     for (int i = 1; i < 11; ++i) if (v <= db[i]) return f[i-1] + (f[i] - f[i-1]) * (v - db[i-1]) / (db[i] - db[i-1]);
     return 1.04f;                               /* pinned just past +3 */
 }
+static float vu_pos_ch(int ch)
+{
+    static const float db[] = {-20,-10,-7,-5,-3,-2,-1,0,1,2,3}, f[] = {0,.2f,.32f,.44f,.58f,.66f,.74f,.82f,.88f,.94f,1};
+    float v = 10 * log10f(hs_seq_ms[ch] + 1e-12f) - VU_REF_DBFS;
+    if (v <= db[0]) return 0;
+    for (int i = 1; i < 11; ++i) if (v <= db[i]) return f[i-1] + (f[i] - f[i-1]) * (v - db[i-1]) / (db[i] - db[i-1]);
+    return 1.04f;
+}
 static float led_pos(int ch) { float d = 20 * log10f(hs_seq_pk[ch] + 1e-9f); return fminf(1, fmaxf(0, (d + 48) / 48)); }
 
 static void meters(uint32_t *d)
 {
     vu(d, 6, 36, 150, 100, vu_pos());
     leds(d, 252, 72, 314, 102, led_pos(0), led_pos(1));
+}
+
+static void db_text(char out[8], float db)
+{
+    if (!isfinite(db) || db < -99.9f) memcpy(out, "  --  ", 7);
+    else snprintf(out, 8, "%+.1f", db);
+}
+
+static void meter_readout(uint32_t *d, int x, int y, const char *label, float db, uint32_t colour)
+{
+    char value[8]; db_text(value, db);
+    text(d, x, y, label, DIM, 1);
+    text(d, x, y + 10, value, colour, 2);
+}
+
+static void meters_page(uint32_t *d)
+{
+    vu(d, 6, 36, 157, 124, vu_pos_ch(0));
+    vu(d, 162, 36, 314, 124, vu_pos_ch(1));
+    text(d, 132, 112, "L", INK, 1);
+    text(d, 288, 112, "R", INK, 1);
+
+    box(d, 6, 130, 314, 236, LCD);
+    meter_readout(d, 14, 138, "PEAK L", 20 * log10f(hs_seq_pk[0] + 1e-9f), AMB);
+    meter_readout(d, 170, 138, "PEAK R", 20 * log10f(hs_seq_pk[1] + 1e-9f), AMB);
+    meter_readout(d, 14, 177, "RMS L", 10 * log10f(hs_seq_ms[0] + 1e-12f), GRN);
+    meter_readout(d, 170, 177, "RMS R", 10 * log10f(hs_seq_ms[1] + 1e-12f), GRN);
+    text(d, 14, 222, "B2: SEQ", DIM, 1);
 }
 
 /* ---------- the page ---------- */
@@ -233,9 +280,9 @@ void hs_seq_draw(const uint32_t *s, uint32_t *d)
     memcpy(d, s, 4 * W * sizeof *d);                                  /* stock position bar, rows 0-3 */
 
     rect(d, 0, 4, W - 1, 31, PANEL2); rect(d, 0, 32, W - 1, 32, 0x1a1d20);  /* header */
-    logo(d, 4, 6);
-    box(d, 70, 5, 314, 30, CREAM);
-    paste(d, s, 17, 54, 248, 76, 76, 6, 0, INK);                      /* Seq A01  Sequence 01 */
+    text(d, 0, 11, "K1 BPM", AMB, 2);                                  /* keep the tempo control visible */
+    box(d, 74, 5, 314, 30, CREAM);
+    paste(d, s, 17, 54, 248, 76, 80, 6, 0, INK);                      /* Seq A01  Sequence 01 */
 
     box(d, 156, 36, 314, 68, LCD);
     paste(d, s, 28, 9, 78, 36, 162, 39, 0, GRN);                      /* tempo */
@@ -260,6 +307,24 @@ void hs_seq_draw(const uint32_t *s, uint32_t *d)
         paste_fit(d, s, k[i].sx0, k[i].sx1, 207, 236, k[i].x0 + 24, k[i].x1 - 5, 200);
     }
     paste(d, s, 309, 226, 316, 237, 309, 226, 0, 0);                  /* SHIFT arrow */
+}
+
+static void hs_seq_draw_meters(const uint32_t *s, uint32_t *d)
+{
+    rect(d, 0, 0, W - 1, H - 1, PANEL);
+    memcpy(d, s, 4 * W * sizeof *d);                                  /* stock position bar */
+    rect(d, 0, 4, W - 1, 31, PANEL2); rect(d, 0, 32, W - 1, 32, 0x1a1d20);
+    logo(d, 4, 6);
+    box(d, 70, 5, 314, 30, CREAM);
+    text(d, 78, 11, "METERS", INK, 2);
+    text(d, 258, 14, "B2", INK, 1);
+    meters_page(d);
+}
+
+static void hs_seq_draw_page(const uint32_t *s, uint32_t *d, int page)
+{
+    if (page) hs_seq_draw_meters(s, d);
+    else hs_seq_draw(s, d);
 }
 
 #ifndef HS_SEQ_HOST
@@ -325,6 +390,75 @@ static struct map *own_fb(int fd)                      /* two buffers of ours, u
     return &own[next];
 }
 
+#define NEXT(name, ret, args) static ret (*real)args; if (!real) real = (ret (*)args)dlsym(RTLD_NEXT, name)
+
+/* ---------- SCREEN 2 ----------
+   The control-surface stream is observed without changing a byte. B2 is MIDI note 13 on the
+   Sample; the wrappers always pass the same panel input through the RTLD_NEXT chain. */
+typedef struct _snd_rawmidi snd_rawmidi_t;
+static snd_rawmidi_t *panel_midi;
+static unsigned char midi_status, midi_data1;
+static int midi_need_data1;
+static atomic_uint screen2_presses;
+
+static int surface_card(void)
+{
+    FILE *f = fopen("/proc/asound/cards", "r");
+    char line_[256]; int n, card = -1;
+    if (!f) return -1;
+    while (fgets(line_, sizeof line_, f))
+        if (sscanf(line_, " %d [", &n) == 1 && strstr(line_, "Control Surface")) { card = n; break; }
+    fclose(f);
+    return card;
+}
+
+static int panel_name(const char *name)
+{
+    if (!name) return 0;
+    if (strstr(name, "Surface")) return 1;
+    int card;
+    return sscanf(name, "hw:%d", &card) == 1 && card == surface_card();
+}
+
+int snd_rawmidi_open(snd_rawmidi_t **in, snd_rawmidi_t **out, const char *name, int mode)
+{
+    NEXT("snd_rawmidi_open", int, (snd_rawmidi_t **, snd_rawmidi_t **, const char *, int));
+    int rc = real(in, out, name, mode);
+    if (!rc && in && *in && panel_name(name)) panel_midi = *in;
+    return rc;
+}
+
+static void midi_byte(unsigned char c)
+{
+    if (c >= 0xf8) return;
+    if (c & 0x80) { midi_status = c; midi_need_data1 = 1; return; }
+    if (midi_status < 0x80 || midi_status >= 0xf0 || (midi_status & 0xe0) == 0xc0) return;
+    if (midi_need_data1) { midi_data1 = c; midi_need_data1 = 0; return; }
+    midi_need_data1 = 1;
+    if (midi_status == 0x90 && midi_data1 == 13 && c)
+        atomic_fetch_add_explicit(&screen2_presses, 1, memory_order_relaxed);
+}
+
+static ssize_t midi_track(void *buf, ssize_t n)
+{
+    for (ssize_t i = 0; i < n; ++i) midi_byte(((unsigned char *)buf)[i]);
+    return n;
+}
+
+ssize_t snd_rawmidi_read(snd_rawmidi_t *rm, void *buf, size_t size)
+{
+    NEXT("snd_rawmidi_read", ssize_t, (snd_rawmidi_t *, void *, size_t));
+    ssize_t n = real(rm, buf, size);
+    return rm == panel_midi && n > 0 ? midi_track(buf, n) : n;
+}
+
+ssize_t snd_rawmidi_tread(snd_rawmidi_t *rm, struct timespec *ts, void *buf, size_t size)
+{
+    NEXT("snd_rawmidi_tread", ssize_t, (snd_rawmidi_t *, struct timespec *, void *, size_t));
+    ssize_t n = real(rm, ts, buf, size);
+    return rm == panel_midi && n > 0 ? midi_track(buf, n) : n;
+}
+
 /* ---------- audio tap ---------- */
 enum { FMT_S16 = 2, FMT_S24 = 6, FMT_S32 = 10, FMT_FLOAT = 14, ACC_NONINTERLEAVED = 4 };
 /* The app writes two outputs (the I2S codec and the USB audio gadget); each keeps its own levels
@@ -339,7 +473,6 @@ static struct pcm *pcm_of(void *pcm)
     for (int i = 0; i < 4; ++i) if (!pcms[i].pcm) { pcms[i] = (struct pcm){ .pcm = pcm, .fmt = -1, .ch = 2, .access = 3 }; return &pcms[i]; }
     return NULL;
 }
-#define NEXT(name, ret, args) static ret (*real)args; if (!real) real = (ret (*)args)dlsym(RTLD_NEXT, name)
 int snd_pcm_hw_params_set_format(void *pcm, void *hw, int fmt)
 { NEXT("snd_pcm_hw_params_set_format", int, (void *, void *, int)); struct pcm *p = pcm_of(pcm); if (p) p->fmt = fmt; return real(pcm, hw, fmt); }
 int snd_pcm_hw_params_set_access(void *pcm, void *hw, int acc)
@@ -406,12 +539,30 @@ static struct map *front;                       /* our buffer on screen, or NULL
 static int front_fd = -1;                       /* the DRM fd it was flipped on */
 static int dirty_rc = 1;                        /* last dirty-call result, for the log */
 static int meters_clear;                        /* no overlay over the meter rects */
-static const int mrect[2][4] = {{6, 36, 150, 100}, {252, 72, 314, 102}};
+static uint32_t seq_stock[N], seq_out[N];
+static int seq_active, seq_stock_valid;
+static atomic_int seq_page;
+static atomic_uint seq_seen_press;
+static const int page0_rects[2][4] = {{6, 36, 150, 100}, {252, 72, 314, 102}};
+static const int page1_rects[3][4] = {{6, 36, 157, 124}, {162, 36, 314, 124}, {6, 130, 314, 236}};
 
-static int rects_match(const uint32_t *px, uint32_t stride, const uint32_t *ref)
+static const int (*dynamic_rects(int page, int *count))[4]
 {
-    for (int r = 0; r < 2; ++r) for (int y = mrect[r][1]; y <= mrect[r][3]; ++y)
-        if (memcmp(px + (size_t)y * stride + mrect[r][0], ref + y * W + mrect[r][0], (mrect[r][2] - mrect[r][0] + 1) * 4)) return 0;
+    *count = page ? 3 : 2;
+    return page ? page1_rects : page0_rects;
+}
+
+static void dynamic_draw(uint32_t *d, int page)
+{
+    if (page) meters_page(d);
+    else meters(d);
+}
+
+static int rects_match(const uint32_t *px, uint32_t stride, const uint32_t *ref, int page)
+{
+    int count; const int (*rects_)[4] = dynamic_rects(page, &count);
+    for (int r = 0; r < count; ++r) for (int y = rects_[r][1]; y <= rects_[r][3]; ++y)
+        if (memcmp(px + (size_t)y * stride + rects_[r][0], ref + y * W + rects_[r][0], (rects_[r][2] - rects_[r][0] + 1) * 4)) return 0;
     return 1;
 }
 
@@ -429,19 +580,35 @@ static void *animate(void *arg)
                 fputc('\n', f); fclose(f);
             }
         }
-        uint32_t id = 0; int fd = -1;
+        uint32_t id = 0; int fd = -1, count = 0, full = 0, page = atomic_load_explicit(&seq_page, memory_order_relaxed);
+        const int (*rects_)[4] = dynamic_rects(page, &count);
+        pthread_mutex_lock(&draw_lock);
         pthread_mutex_lock(&show_lock);
-        if (front && meters_clear) {
-            meters(m);
-            for (int r = 0; r < 2; ++r) for (int y = mrect[r][1]; y <= mrect[r][3]; ++y)
-                memcpy(front->px + (size_t)y * front->stride + mrect[r][0], m + y * W + mrect[r][0], (mrect[r][2] - mrect[r][0] + 1) * 4);
-            id = front->id; fd = front_fd;
+        if (front && meters_clear && seq_stock_valid) {
+            unsigned presses = atomic_load_explicit(&screen2_presses, memory_order_relaxed);
+            unsigned seen = atomic_load_explicit(&seq_seen_press, memory_order_relaxed);
+            if (presses != seen) {
+                if ((presses - seen) & 1) page ^= 1;
+                atomic_store_explicit(&seq_page, page, memory_order_relaxed);
+                atomic_store_explicit(&seq_seen_press, presses, memory_order_relaxed);
+                hs_seq_draw_page(seq_stock, seq_out, page);
+                for (int y = 0; y < H; ++y) memcpy(front->px + (size_t)y * front->stride, seq_out + y * W, W * 4);
+                full = 1; count = 1;
+            } else if (!page || tick % 3 == 0) { /* page 2 is larger: 8.3 fps keeps SPI traffic modest */
+                dynamic_draw(m, page);
+                rects_ = dynamic_rects(page, &count);
+                for (int r = 0; r < count; ++r) for (int y = rects_[r][1]; y <= rects_[r][3]; ++y)
+                    memcpy(front->px + (size_t)y * front->stride + rects_[r][0], m + y * W + rects_[r][0], (rects_[r][2] - rects_[r][0] + 1) * 4);
+            } else count = 0;
+            if (full || count) { id = front->id; fd = front_fd; }
         }
         pthread_mutex_unlock(&show_lock);
-        if (id && fd >= 0) {                    /* push the two rects to the panel; no lock held */
-            struct cliprect c[2];
-            for (int r = 0; r < 2; ++r) c[r] = (struct cliprect){mrect[r][0], mrect[r][1], mrect[r][2] + 1, mrect[r][3] + 1};
-            struct dirtycmd d = {.fb_id = id, .num_clips = 2, .clips_ptr = (uintptr_t)c};
+        pthread_mutex_unlock(&draw_lock);
+        if (id && fd >= 0) {                    /* push changed rects to the panel; no lock held */
+            struct cliprect c[3];
+            if (full) c[0] = (struct cliprect){0, 0, W, H};
+            else for (int r = 0; r < count; ++r) c[r] = (struct cliprect){rects_[r][0], rects_[r][1], rects_[r][2] + 1, rects_[r][3] + 1};
+            struct dirtycmd d = {.fb_id = id, .num_clips = (uint32_t)count, .clips_ptr = (uintptr_t)c};
             dirty_rc = ioctl(fd, DIRTYFB, &d) ? -errno : 0;
         }
     }
@@ -452,7 +619,6 @@ static void animate_start(void) { pthread_t t; if (!pthread_create(&t, NULL, ani
 int drmModePageFlip(int fd, uint32_t crtc, uint32_t fb, uint32_t flags, void *ud)
 {
     static flip_fn real;
-    static uint32_t stock[N], out[N];
     static pthread_once_t once = PTHREAD_ONCE_INIT;
     if (!real) real = (flip_fn)dlsym(RTLD_NEXT, "drmModePageFlip");
     pthread_once(&once, animate_start);
@@ -461,20 +627,35 @@ int drmModePageFlip(int fd, uint32_t crtc, uint32_t fb, uint32_t flags, void *ud
     pthread_mutex_lock(&draw_lock);
     struct map *a = app_fb(fd, fb), *o = NULL;
     if (a) {
-        for (int y = 0; y < H; ++y) memcpy(stock + y * W, a->px + (size_t)y * a->stride, W * 4);
-        if (hs_seq_is_seq(stock) && (o = own_fb(fd))) {
+        for (int y = 0; y < H; ++y) memcpy(seq_stock + y * W, a->px + (size_t)y * a->stride, W * 4);
+        if (hs_seq_is_seq(seq_stock) && (o = own_fb(fd))) {
+            unsigned presses = atomic_load_explicit(&screen2_presses, memory_order_relaxed);
+            if (!seq_active) {
+                seq_active = 1;
+                atomic_store_explicit(&seq_page, 0, memory_order_relaxed);
+                atomic_store_explicit(&seq_seen_press, presses, memory_order_relaxed);
+            } else {
+                unsigned seen = atomic_load_explicit(&seq_seen_press, memory_order_relaxed);
+                if (presses != seen) {
+                    if ((presses - seen) & 1) atomic_fetch_xor_explicit(&seq_page, 1, memory_order_relaxed);
+                    atomic_store_explicit(&seq_seen_press, presses, memory_order_relaxed);
+                }
+            }
+            int page = atomic_load_explicit(&seq_page, memory_order_relaxed);
+            seq_stock_valid = 1;
             pthread_mutex_lock(&show_lock);
             front = NULL;                                       /* animate keeps off while o changes */
             pthread_mutex_unlock(&show_lock);
-            hs_seq_draw(stock, out);
-            for (int y = 0; y < H; ++y) memcpy(o->px + (size_t)y * o->stride, out + y * W, W * 4);
-        }
+            hs_seq_draw_page(seq_stock, seq_out, page);
+            for (int y = 0; y < H; ++y) memcpy(o->px + (size_t)y * o->stride, seq_out + y * W, W * 4);
+        } else seq_active = seq_stock_valid = 0;
     }
     pthread_mutex_unlock(&draw_lock);
     if (o) {
         int rc = real(fd, crtc, o->id, flags, ud);          /* SampQOL may draw overlays in here */
         pthread_mutex_lock(&draw_lock);
-        int clear = !rc && rects_match(o->px, o->stride, out);
+        int page = atomic_load_explicit(&seq_page, memory_order_relaxed);
+        int clear = !rc && rects_match(o->px, o->stride, seq_out, page);
         pthread_mutex_unlock(&draw_lock);
         pthread_mutex_lock(&show_lock);
         front = rc ? NULL : o;
