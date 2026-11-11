@@ -35,6 +35,14 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 
 Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, a desk-style SEQ page with an unobstructed **K1 BPM** label and B2-toggleable stereo meters, and the HenrySkillz start screen (after SampQOL's own).
 
+**SEQ page as a mixing desk.** The SEQ page (tempo, bars, Rec Quant) is redrawn as a desk panel with a VU meter and output LEDs that move with what the MPC is playing. Every stock control works as before.
+
+**Page label.** On HS effects with more than one page, the box over the middle screen button shows **PAGE 2/3**: press it for the next page, **SHIFT** + it to go back.
+
+| SEQ desk page | Page label |
+|---|---|
+| ![SEQ page redrawn as a desk: VU meter, tempo, output LEDs, transport](assets/screens/seq-desk.png) | ![HS Drive Sat on page 2 of 3, with PAGE 2/3 over the middle button](assets/screens/hs-page-label.png) |
+
 These are real 320×240 captures from the MPC Sample emulator running the public installer output:
 
 ![Insert effects list showing the HS effects](assets/screens/hs-effects-list.png)

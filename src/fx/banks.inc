@@ -219,6 +219,24 @@ extern "C" int hs_flavor_power_module()
     return page.module >= 0 && page.parameters[0] == page.module ? page.module : -1;
 }
 
+/* Header label over B2: page index and count of the open HS editor, or -1 when none is open. */
+extern "C" int hs_bank_position(int *count)
+{
+    unsigned uid = insert_open();
+    if (uid == HS_EQ2_ID) {
+        unsigned sel = __atomic_load_n(&eq_selection, __ATOMIC_RELAXED);
+        *count = sel/4 ? 4 : 2;
+        return static_cast<int>(sel%4);
+    }
+    const unsigned *selection = uid == flavor_uid ? &bank : uid == HS_XSAT_ID ? &xsat_bank : uid == HS_BUS_ID ? &bus_bank
+        : uid == HS_PUMP_ID ? &pump_bank : uid == HS_DISTRESSOR_ID ? &dist_bank : uid == HS_TUBE_STRIP_ID ? &tube_bank : uid == HS_HEAT_ID ? &heat_bank
+        : uid == HS_CHANNEL_ID ? &channel_bank : nullptr;
+    if (!selection) return -1;
+    *count = static_cast<int>(uid == flavor_uid ? bank_count : uid == HS_XSAT_ID ? xsat_count : uid == HS_BUS_ID ? bus_count
+        : uid == HS_PUMP_ID ? pump_count : uid == HS_DISTRESSOR_ID ? dist_count : uid == HS_TUBE_STRIP_ID ? tube_count : uid == HS_HEAT_ID ? heat_count : channel_count);
+    return static_cast<int>(__atomic_load_n(selection, __ATOMIC_RELAXED));
+}
+
 __attribute__((constructor)) static void init_editor()
 {
     next_cc = reinterpret_cast<decltype(next_cc)>(dlsym(RTLD_NEXT, "padmix_cc"));

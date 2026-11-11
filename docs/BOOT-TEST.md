@@ -42,6 +42,10 @@ Open the insert effects list and test each effect with audio playing. Load one e
 - [ ] A project saved with the **stock Bus Compressor** on an insert still opens with it loaded.
 - [ ] A project saved with **HS Drive Sat** or **HS Air Exciter** on an insert (from v0.3.0) still opens with that effect loaded and passing audio.
 - [ ] The EQ page shows the dB/Hz grid.
+- [ ] On any HS effect with pages (Pump, Heat, Crush), the box over the **middle screen button** shows **PAGE 1/N**; pressing it shows PAGE 2/N, and **SHIFT** + it goes back. No "2 PAGE" text inside the panel.
+- [ ] The **SEQ** page shows the desk panel (logo, VU meter, tempo box, output LEDs). Tempo, bars, Rec Quant and swing still change with their knobs, and long values (128 Bars, Q 1/32T) are readable.
+- [ ] With a sequence playing, the **VU needle and output LEDs move with the music** without pressing anything.
+- [ ] Leave the SEQ page playing for **3 minutes**: the MPC does not freeze or restart.
 - [ ] The controls respond without a crash, freeze or unexpected silence.
 
 ## Return to stock
