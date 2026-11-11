@@ -77,6 +77,38 @@ int main(int argc, char **argv) {
     char small[8];
     assert(stems_xpj_sample(xpj, 1, 0, small, sizeof small));                           /* doesn't fit */
 
+    /* stems onto pads: the free pads in the source pad's bank, from it on, then from the bank's start */
+    static const char xpf[] =
+        "{\"data\": {\"tracks\": [{\"program\": {\"type\": 0, \"drum\": {\"instruments\": ["
+        "{\"layersv\": [{\"sampleFile\": \"Loop.wav\"}]},"                 /* A01: the source */
+        "{\"layersv\": [{\"sampleFile\": \"\"}, {\"sampleFile\": \"\"}]},"  /* A02 free */
+        "{\"layersv\": [{\"sampleFile\": \"\"}, {\"sampleFile\": \"Hat.wav\"}]},"  /* A03: layer 2 used */
+        "{\"layersv\": [{\"sampleName\": \"x\"}]},"                        /* A04: no file = free */
+        "{\"layersv\": [{\"sampleFile\": \"\"}]}, {\"layersv\": []},"       /* A05, A06 free */
+        "{\"layersv\": [{\"sampleFile\": \"S.wav\"}]}, {\"layersv\": [{\"sampleFile\": \"S.wav\"}]},"
+        "{\"layersv\": [{\"sampleFile\": \"S.wav\"}]}, {\"layersv\": [{\"sampleFile\": \"S.wav\"}]},"
+        "{\"layersv\": [{\"sampleFile\": \"S.wav\"}]}, {\"layersv\": [{\"sampleFile\": \"S.wav\"}]},"
+        "{\"layersv\": [{\"sampleFile\": \"S.wav\"}]}, {\"layersv\": [{\"sampleFile\": \"S.wav\"}]},"
+        "{\"layersv\": [{\"sampleFile\": \"S.wav\"}]}, {\"layersv\": [{\"sampleFile\": \"\"}]},"  /* A16 free */
+        "{\"layersv\": [{\"sampleFile\": \"\"}]}"                          /* B01 free, other bank */
+        "]}}}], \"currentTrackIndex\": 0}}";
+    int fp[8]; const char *why = NULL;
+    assert(stems_free_pads(xpf, 1, 0, 0, fp, 4, &why) == 4 && fp[0] == 1 && fp[1] == 3 && fp[2] == 4 && fp[3] == 5);
+    assert(stems_free_pads(xpf, 0, 0, 0, fp, 8, &why) == 5 && fp[4] == 15);          /* current track; A16 last */
+    assert(stems_free_pads(xpf, 1, 15, 15, fp, 4, &why) == 4 && fp[0] == 1 && fp[3] == 5);  /* from A16: wraps */
+    assert(stems_free_pads(xpf, 1, 3, -1, fp, 2, &why) == 2 && fp[0] == 3 && fp[1] == 4);   /* from an empty pad: it first */
+    assert(stems_free_pads(xpf, 1, 16, 16, fp, 4, &why) == 0);                       /* B01 skipped, B02+ missing */
+    assert(stems_free_pads(xpf, 2, 0, 0, fp, 4, &why) == -1 && !strcmp(why, "Track not found"));
+    assert(stems_free_pads(xpj, 2, 0, 0, fp, 4, &why) == -1 && !strcmp(why, "Not a drum program"));
+    char pn[40];
+    assert(!stems_pads_note((int[]){1, 2, 3, 4}, 4, 4, pn, sizeof pn) && !strcmp(pn, "On pads A02-A05"));
+    assert(!stems_pads_note((int[]){1, 3, 4, 5}, 4, 4, pn, sizeof pn) && !strcmp(pn, "On pads A02 A04 A05 A06"));
+    assert(!stems_pads_note((int[]){1, 2}, 2, 2, pn, sizeof pn) && !strcmp(pn, "On pads A02 A03"));
+    assert(!stems_pads_note((int[]){17}, 1, 1, pn, sizeof pn) && !strcmp(pn, "On pad B02"));
+    assert(!stems_pads_note((int[]){14, 15}, 2, 4, pn, sizeof pn) && !strcmp(pn, "On A15 A16, bank full"));
+    assert(!stems_pads_note(NULL, 0, 4, pn, sizeof pn) && !strcmp(pn, "Bank full: not on pads"));
+    assert((int)strlen("On A14 A15 A16, bank full") * 8 <= 240);                    /* fits the box line */
+
     /* picks and the file names they make (as hs_stems.c names them) */
     char pk[8], n[64];
     assert(!stems_pick(15, 0, pk, sizeof pk) && !strcmp(pk, "VDBO"));
@@ -100,6 +132,15 @@ int main(int argc, char **argv) {
     uint32_t *sh = load("test/pad-mod-shift-A01.ppm");
     stems_paint_b3(sh, 320, "Stems");
     if (argc > 3) dump(sh, argv[3]);
+    /* stems onto pads (argv[4] done, argv[5] bank full, argv[6] loading): the boxes over the Sample screen */
+    const char *done[3][2] = {{"Vocals, Drums, Bass, Other", "On pads A02-A05"},
+                              {"Vocals, Drums, Bass, Other", "On A15 A16, bank full"}, {NULL, NULL}};
+    for (int i = 0; i < 3; ++i) {
+        uint32_t *bx = load("test/pad-mod-A06.ppm");
+        if (done[i][0]) { stems_paint_box(bx, 320, "Saved in Samples/Stems", -1, done[i][0]); stems_paint_note(bx, 320, done[i][1]); }
+        else { stems_paint_tabs(bx, 320, "Cancel", "", ""); stems_paint_box(bx, 320, "Stems: Leroys C#Min 75bpm", 100, "Loading onto pads..."); }
+        if (argc > 4 + i) dump(bx, argv[4 + i]);
+    }
     puts("check_ui: ok");
     return 0;
 }

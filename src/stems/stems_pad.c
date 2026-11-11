@@ -162,9 +162,10 @@ static int str(const char *p, char *out, size_t n) {          /* decoded string 
     return *p == '"' ? 0 : -1;
 }
 
-const char *stems_xpj_sample(const char *json, int track, int pad, char *file, size_t n) {
+/* Track T's drum pads (T as in stems_xpj_sample), or NULL and why. */
+static const char *drum_pads(const char *json, int track, const char **why) {
     const char *d = get(strchr(json, '{'), "data"), *tracks = d ? get(d, "tracks") : NULL, *t = NULL;
-    if (!tracks) return "Can't read the project";
+    if (!tracks) { *why = "Can't read the project"; return NULL; }
     long v;
     if (track > 0) {                                          /* the T-th track that isn't a submix (8) or an output (9) */
         for (int i = 0, seen = 0; (t = at_index(tracks, i)); ++i) {
@@ -174,14 +175,41 @@ const char *stems_xpj_sample(const char *json, int track, int pad, char *file, s
         }
     } else if (!num(get(d, "currentTrackIndex"), &v) && v >= 0)
         t = at_index(tracks, (int)v);
-    if (!t) return "Track not found";
-    const char *layers = get(at_index(get(get(get(t, "program"), "drum"), "instruments"), pad), "layersv");
+    if (!t) { *why = "Track not found"; return NULL; }
+    const char *pads = get(get(get(t, "program"), "drum"), "instruments");
+    if (!pads) *why = "Not a drum program";
+    return pads;
+}
+
+const char *stems_xpj_sample(const char *json, int track, int pad, char *file, size_t n) {
+    const char *why = NULL, *pads = drum_pads(json, track, &why), *t;
+    if (!pads) return why;
+    const char *layers = get(at_index(pads, pad), "layersv");
     if (!layers) return "Not a drum program";
     for (int i = 0; (t = at_index(layers, i)); ++i) {
         const char *f = get(t, "sampleFile");
         if (f && !str(f, file, n) && *file && !strchr(file, '/') && strcmp(file, "..")) return NULL;
     }
     return "No sample on this pad";
+}
+
+/* Pads with no sample (every layer's sampleFile empty), in the bank of pad `from`: from it to the
+   bank's end, then from the bank's start. Pad `skip` never counts. Up to max into out; the count,
+   or -1 with *why. */
+int stems_free_pads(const char *json, int track, int from, int skip, int *out, int max, const char **why) {
+    const char *pads = drum_pads(json, track, why), *l, *f;
+    if (!pads) return -1;
+    if (from < 0 || from > 127) { *why = "No pad"; return -1; }
+    int n = 0, bank = from / 16 * 16;
+    for (int k = 0; k < 16 && n < max; ++k) {
+        int pad = bank + (from - bank + k) % 16;
+        const char *layers = pad == skip ? NULL : get(at_index(pads, pad), "layersv");
+        if (!layers) continue;                                /* no such pad: not ours to fill */
+        int used = 0;
+        for (int i = 0; !used && (l = at_index(layers, i)); ++i) used = (f = get(l, "sampleFile")) && *ws(f) == '"' && ws(f)[1] != '"';
+        if (!used) out[n++] = pad;
+    }
+    return n;
 }
 
 /* ---------- the chooser ---------- */
@@ -209,4 +237,20 @@ int stems_out_name(const char *base, int ticks, int summed, int i, char *out, si
     }
     int r = snprintf(out, n, "%s-%s.wav", base, mix);
     return r < 0 || (size_t)r >= n ? -2 : 0;
+}
+
+/* The result box's line for where the stems went: "On pads A02-A05", "On pads A02 A05", "On pad A04",
+   "On A15 A16, bank full", "Bank full: not on pads". */
+int stems_pads_note(const int *pads, int placed, int wanted, char *out, size_t n) {
+    if (!placed) return snprintf(out, n, "Bank full: not on pads") < 0 ? -1 : 0;
+    int run = 1;
+    for (int i = 1; i < placed; ++i) run &= pads[i] == pads[i - 1] + 1;
+    char list[48] = "";
+    for (int i = 0; i < placed; ++i) {
+        if (run && placed > 2 && i > 0 && i < placed - 1) continue;      /* A02-A05 */
+        snprintf(list + strlen(list), sizeof list - strlen(list), "%s%c%02d",
+                 !i ? "" : run && placed > 2 ? "-" : " ", 'A' + pads[i] / 16, pads[i] % 16 + 1);
+    }
+    int r = placed == wanted ? snprintf(out, n, "On pad%s %s", placed > 1 ? "s" : "", list) : snprintf(out, n, "On %s, bank full", list);
+    return r < 0 || (size_t)r >= n ? -1 : 0;
 }

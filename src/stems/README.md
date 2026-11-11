@@ -20,6 +20,16 @@ Out (16-bit, 44.1 kHz stereo):
 - browser: `<name> Stems/` next to the file, `<name>-Vocals.wav` ... or `<name>-Bass+Other.wav` (Sum).
 - pad: `MPC-Sample/Samples/Stems/<sample> Stems/` on the card (External > Samples > Stems in the browser).
 
+Onto pads (firmware 1.3.0.12 only, else the files stay on disk and the box says why): when a job
+ends, each stem loads onto the next empty pad of the source pad's bank (after it, then wrapping to the
+bank start; Sum: its one file), on the same track; the source pad is never touched. The box says where
+("On pads A02-A05", "On A15 A16, bank full", "Bank full: not on pads"). Each stem is one UNDO ("Load
+Sample"). The project gets its own copy in Temp-Project_[ProjectData], as the stock browser does.
+Browser jobs are not placed (files only).
+UNDO (SHIFT + -) takes the last loaded stem off its pad, one pad per press ("Undo: Load Sample"). Wheel
+steps in the chooser on the Sample screen are kept from the app, so they normally leave nothing in UNDO and
+Start stays put.
+
 Which file a pad plays: the pad label under the tabs ("A06", or "S03 T01 A06" with SampQOL) is read off
 the screen, then the app's autosave (/data/TempProjects/Temp-Project.xpj, written ~10 s after a change)
 gives that track's pad sample, a WAV in Temp-Project_[ProjectData]. So a pad just loaded or edited may
