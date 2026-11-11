@@ -45,7 +45,7 @@ const bad = new Map(files); bad.set("qol-run.sh", new Uint8Array([1]));
 await assert.rejects(patch(bad), /changed/);
 const wrong = new Map(files); wrong.set("mpcqol.so", new Uint8Array([2]));
 await assert.rejects(patch(wrong), /not SampQOL/);
-if (src) for (const f of ["hs-addons.sh", "hs-splash.raw", "hs-flavor.so", "hs-eq.so", "hs-fx.so", "hs-pro-fx-ladspa.so"])
+if (src) for (const f of ["hs-addons.sh", "hs-splash.raw", "hs-flavor.so", "hs-eq.so", "hs-fx.so", "hs-seq.so", "hs-pro-fx-ladspa.so"])
   assert.ok(out.get("hs/" + f)?.length > 100, `real mode must carry the built hs/${f}`);
 
 if (outDir) for (const [p, d] of out) { fs.mkdirSync(path.dirname(path.join(outDir, p)), { recursive: true }); fs.writeFileSync(path.join(outDir, p), d); }
