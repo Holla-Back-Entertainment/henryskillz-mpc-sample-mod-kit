@@ -16,6 +16,7 @@
 #include "hs_pump.h"
 #include "hs_heat.h"
 #include "hs_distressor.h"
+#include "hs_tube_strip.h"
 #include "hs_bass_focus.h"
 
 enum {
@@ -47,14 +48,16 @@ static const struct fx_row hs_rows[] = {
     {HS_PUMP_ID, -1, DYNAMICS, "HS Pump"},
     {HS_HEAT_ID, -1, HARMONIC, "HS Heat"},
     {HS_DISTRESSOR_ID, -1, DYNAMICS, "HS Crush"},
-    {HS_BASS_FOCUS_ID, -1, EQ_FILTER, "HS Bass Focus"}
+    {HS_BASS_FOCUS_ID, -1, EQ_FILTER, "HS Bass Focus"},
+    {HS_TUBE_STRIP_ID, -1, HARMONIC, "HS Tube Strip"}
 };
 enum { FX_COUNT = sizeof hs_rows / sizeof *hs_rows };
 
-/* SampQOL 0.2.0 builds the insert menu in 40 rows and 32 are stock, so 8 HS rows fit; one more
-   and SampQOL has no room, which hides every HS row. These two stay in the catalog, so saved
-   projects that use them still open them, but have no menu row. */
-enum { MENU_ROWS = 8 };
+/* SampQOL 0.2.0 builds the insert menu in 40 rows and 32 are stock. Hiding the stock Bus
+   Compressor leaves 9 HS rows; one more and SampQOL has no room, which hides every HS row.
+   Air Exciter and Drive Sat stay in the catalog, so saved projects that use them still open
+   them, but have no menu row. The stock Bus Compressor stays in the MPC for the same reason. */
+enum { MENU_ROWS = 9, STOCK_BUS_COMPRESSOR = 0x4143564a };
 static int in_menu(const struct fx_row *row)
 {
     return row->uid != HS_AIR_EXCITER && row->uid != HS_XSAT_ID;
@@ -226,15 +229,26 @@ int fxlist_get(void *context, struct fx_row *out, int capacity)
 {
     if (!next_list) return 0;
     int count = next_list(context, out, capacity);
-    if (!stock_base || !context || !out || count <= 0 || capacity - count < MENU_ROWS)
-        return count;
+    if (!stock_base || !context || !out || count <= 0) return count;
+    /* hide the stock Bus Compressor only when it makes the room the HS rows need */
+    int kept = 0;
+    for (int i = 0; i < count; ++i)
+        if (out[i].uid != STOCK_BUS_COMPRESSOR) ++kept;
+    /* no stock row to give up (another firmware, or a list without it): drop Tube Strip, keep the rest */
+    int rows = capacity - kept >= MENU_ROWS ? MENU_ROWS : MENU_ROWS - 1;
+    if (capacity - kept < rows) return count;
 
     pthread_mutex_lock(&catalog_lock);
     int ready = ensure_category();
     pthread_mutex_unlock(&catalog_lock);
     if (!ready) return count;
 
+    kept = 0;
+    for (int i = 0; i < count; ++i)
+        if (out[i].uid != STOCK_BUS_COMPRESSOR) out[kept++] = out[i];
+    count = kept;
     for (int i = 0; i < FX_COUNT; ++i)
-        if (in_menu(&hs_rows[i])) out[count++] = hs_rows[i];
+        if (in_menu(&hs_rows[i]) && (rows == MENU_ROWS || hs_rows[i].uid != HS_TUBE_STRIP_ID))
+            out[count++] = hs_rows[i];
     return count;
 }

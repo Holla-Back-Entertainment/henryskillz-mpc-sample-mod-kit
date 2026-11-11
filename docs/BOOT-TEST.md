@@ -35,9 +35,11 @@ Open the insert effects list and test each effect with audio playing. Load one e
 - [ ] **HS Pump** loads and passes audio. On its first page, turning **K2** lights the ratio lamps from 1 to 20.
 - [ ] **HS Heat** loads and passes audio. On its first page, turning **K1** moves the amber lamp across the 8 circuits; on its second page, **K1** moves the lamp across the 7 filter shapes.
 - [ ] **HS Crush** loads and passes audio near the same level. On its first page, turning **K2** lights the ratio lamps from 1 to MAX, and the red GR DB lamps move with the music (they show NO METER if they cannot read it: note that).
+- [ ] **HS Tube Strip** loads and passes audio near the same level (compressor idle at load). On the OPTO COMP page, turning **K1** (Threshold) down compresses and the amber OPTO GR DB lamps move with the music (note it if they show NO METER). The middle screen button moves through 7 pages; EQ First redraws the signal path as EQ > COMP.
 - [ ] **HS Bass Focus** loads and passes audio at the same level with Bass at 0 dB. Turning **K2** down moves the curve below the crossover marker; **K3** switches the lamp between MONO and STEREO.
 - [ ] On HS Pump, HS Heat and HS Crush, the **middle screen button** moves through their pages (3 on Pump, 6 on Heat, 3 on Crush).
-- [ ] The insert list shows exactly eight HS effects: Saturator, Channel Strip, Heat (Harmonic); Bus Compressor, Pump, Crush (Dynamics); Para EQ, Bass Focus (EQ/Filter). HS Air Exciter and HS Drive Sat are not listed.
+- [ ] The insert list shows exactly nine HS effects: Saturator, Channel Strip, Heat, Tube Strip (Harmonic); Bus Compressor, Pump, Crush (Dynamics); Para EQ, Bass Focus (EQ/Filter). HS Air Exciter, HS Drive Sat and the stock (non-HS) Bus Compressor are not listed.
+- [ ] A project saved with the **stock Bus Compressor** on an insert still opens with it loaded.
 - [ ] A project saved with **HS Drive Sat** or **HS Air Exciter** on an insert (from v0.3.0) still opens with that effect loaded and passing audio.
 - [ ] The EQ page shows the dB/Hz grid.
 - [ ] On any HS effect with pages (Pump, Heat, Crush), the box over the **middle screen button** shows **PAGE 1/N**; pressing it shows PAGE 2/N, and **SHIFT** + it goes back. No "2 PAGE" text inside the panel.

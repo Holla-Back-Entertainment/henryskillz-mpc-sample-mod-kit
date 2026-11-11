@@ -1,6 +1,6 @@
 # HenrySkillz MPC Sample Mod Kit
 
-**Eight studio effects for the Akai MPC Sample, installed from a web page in about 15 minutes.**
+**Nine studio effects for the Akai MPC Sample, installed from a web page in about 15 minutes.**
 No coding, no terminal, no apps to install, no AI tools. Free.
 
 Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top of [SampQOL OS](https://github.com/snarebes/SampQOL-OS) by **Snare Bes**.
@@ -13,7 +13,7 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 > Everything runs from the SD card. Switch off and take the card out, and the MPC is stock again.
 
 > **Tested:** the installer on the official SampQOL 0.2.0 download (Chrome and Safari), and this exact build booted end to end in an MPC Sample emulator.
-> The HS effects have run on Henry's own MPC Sample. **HS Crush and HS Bass Focus are new:** they have run in Henry's own build, but this kit build of them has not been boot-tested yet. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
+> The HS effects have run on Henry's own MPC Sample. **HS Crush, HS Bass Focus and HS Tube Strip are new:** they pass the emulator boot test but have not been boot-tested on hardware yet. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
 
 ---
 
@@ -29,8 +29,9 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 | **HS Para EQ** | EQ / Filter | Parametric EQ with a response-curve display |
 | **HS Crush** | Dynamics | Character compressor: eight curves from 1:1 to Max, an Opto mode, detector filters, two distortion modes, a British-style mode and a gain-reduction meter |
 | **HS Bass Focus** | EQ / Filter | Splits at a crossover (30 to 500 Hz), makes the lows mono and sets their level. The highs pass untouched |
+| **HS Tube Strip** | Harmonic | Tube channel strip: tube drive, a 6 dB/oct high-pass, an opto compressor with a gain-reduction meter and a 4-band EQ, with the EQ before or after the compressor and a side-chain EQ for de-essing |
 
-**Where did HS Air Exciter and HS Drive Sat go?** SampQOL's insert menu has room for eight add-on effects, so HS Crush and HS Bass Focus took their places in the menu. They are still installed: a project that already uses them opens with them, as before.
+**Where did HS Air Exciter, HS Drive Sat and the stock Bus Compressor go?** SampQOL's insert menu has 40 rows. To fit nine HS effects, the stock Bus Compressor leaves the Dynamics list (HS Bus Compressor and HS Crush cover it), and HS Air Exciter and HS Drive Sat leave the menu. All three are still installed: a project that already uses them opens with them, as before.
 
 Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, a desk-style SEQ page with an unobstructed **K1 BPM** label and B2-toggleable stereo meters, and the HenrySkillz start screen (after SampQOL's own).
 
@@ -54,11 +55,11 @@ These are real 320×240 captures from the MPC Sample emulator running the public
 |---|---|---|
 | ![HS Pump compress page: ratio lamps, input, ratio and output knobs](assets/screens/hs-pump.png) | ![HS Heat character page: circuit lamps, circuit, drive and wet knobs](assets/screens/hs-heat.png) | ![HS Heat filter page: filter type lamps, type, frequency and resonance knobs](assets/screens/hs-heat-filter.png) |
 
-| HS Crush | HS Bass Focus |
-|---|---|
-| ![HS Crush compress page: gain-reduction LEDs, ratio lamps, input, ratio and output knobs](assets/screens/hs-crush.png) | ![HS Bass Focus: live response curve with the crossover marker, crossover, bass and mono knobs](assets/screens/hs-bass-focus.png) |
+| HS Crush | HS Bass Focus | HS Tube Strip |
+|---|---|---|
+| ![HS Crush compress page: gain-reduction LEDs, ratio lamps, input, ratio and output knobs](assets/screens/hs-crush.png) | ![HS Bass Focus: live response curve with the crossover marker, crossover, bass and mono knobs](assets/screens/hs-bass-focus.png) | ![HS Tube Strip tube page: gain-reduction LEDs, signal path, drive, HPF and output knobs](assets/screens/hs-tube-strip.png) |
 
-The HS Pump, HS Heat, HS Crush and HS Bass Focus panels above are rendered at 3× from the panel drawing code in `src/fx/` (`panel-render.c` for the last two), not captured from the emulator yet.
+The HS Pump, HS Heat, HS Crush, HS Bass Focus and HS Tube Strip panels above are rendered at 3× from the panel drawing code in `src/fx/` (`panel-render.c` for the last three), not captured from the emulator yet.
 
 ![MPC EQ page with the dB and frequency grid](assets/screens/eq-page-grid.png)
 

@@ -11,6 +11,8 @@ static eq2_response_fn eq2_response;
 static eq2_values_fn eq2_values;
 static const void *dist_descriptor;
 static float (*dist_gr)(const void *);
+static const void *tube_descriptor;
+static float (*tube_gr)(const void *);
 
 static int find_ladspa(struct dl_phdr_info *info, size_t size, void *out)
 {
@@ -33,6 +35,8 @@ static int eq2_link(void)
     eq2_values = (eq2_values_fn)dlsym(lib, "hs_eq2_values");
     dist_descriptor = dlsym(lib, "hs_distressor_descriptor");
     dist_gr = (float (*)(const void *))dlsym(lib, "hs_distressor_gr");
+    tube_descriptor = dlsym(lib, "hs_tube_strip_descriptor");
+    tube_gr = (float (*)(const void *))dlsym(lib, "hs_tube_strip_gr");
     return eq2_response && eq2_values;
 }
 
@@ -52,6 +56,13 @@ static float dist_open_gr(void)
 {
     void *h = eq2_link() && dist_gr ? open_handle(dist_descriptor) : NULL;
     return h ? dist_gr(h) : -1;
+}
+
+/* Gain reduction of the open HS Tube Strip, or -1 when it cannot be read. */
+static float tube_open_gr(void)
+{
+    void *h = eq2_link() && tube_gr ? open_handle(tube_descriptor) : NULL;
+    return h ? tube_gr(h) : -1;
 }
 
 static unsigned eq2_seq(void)

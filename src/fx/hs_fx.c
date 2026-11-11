@@ -16,6 +16,7 @@ enum { W = 320, H = 160 };
 #include "hs_pump.h"
 #include "hs_heat.h"
 #include "hs_distressor.h"
+#include "hs_tube_strip.h"
 #include "hs_bass_focus.h"
 
 typedef void (*overlay_fn)(int, const void *, int);
@@ -74,7 +75,7 @@ enum effect {
     OTHER, DUCKER, COMPRESSOR, WIDTH, TUBE_DRIVE, SOFT_CLIPPER, HS_SATURATOR, HS_AIR_EXCITER,
     DELAY, DIFF_DELAY, TAPE_DELAY, SAMPLE_DELAY, REVERB, SPRING_REVERB, FILTER, BUS_COMP,
     DUCKER_INPUT, LIMITER, PUMPER, TRANSIENT, GATE, AMP_SIM, ENSEMBLE, CHORUS, PHASER,
-    FLANGER, WAH, AUTO_PAN, VINTAGE, VINYL, TAPE, AIR_FLAVOR, HS_CHANNEL, HS_XSAT, HS_BUS, HS_EQ2, HS_PUMP, HS_HEAT, HS_DISTRESSOR, HS_BASS_FOCUS
+    FLANGER, WAH, AUTO_PAN, VINTAGE, VINYL, TAPE, AIR_FLAVOR, HS_CHANNEL, HS_XSAT, HS_BUS, HS_EQ2, HS_PUMP, HS_HEAT, HS_DISTRESSOR, HS_BASS_FOCUS, HS_TUBE_STRIP
 };
 enum { KNOBS = 3 };
 
@@ -172,6 +173,7 @@ static enum effect identify_effect(const uint32_t *p)
     case HS_HEAT_ID: return HS_HEAT;
     case HS_DISTRESSOR_ID: return HS_DISTRESSOR;
     case HS_BASS_FOCUS_ID: return HS_BASS_FOCUS;
+    case HS_TUBE_STRIP_ID: return HS_TUBE_STRIP;
     default: return OTHER;
     }
 }
@@ -379,6 +381,8 @@ static const uint32_t *draw_stock_rack(struct effect_page *page)
             heat_knob(p, cx, 116, page->values[i], page->bypassed[i]);
         } else if (page->kind == HS_BASS_FOCUS) {
             rack_knob(p, cx, 116, page->values[i], page->bypassed[i], bf_green);
+        } else if (page->kind == HS_TUBE_STRIP) {
+            rack_knob(p, cx, 116, page->values[i], page->bypassed[i], tube_amber);
         } else if (page->kind == HS_XSAT) {
             rack_knob(p, cx, 116, page->values[i], page->bypassed[i], 0xd3a164);
         } else if (page->kind == HS_CHANNEL) {
@@ -393,11 +397,12 @@ static const uint32_t *draw_stock_rack(struct effect_page *page)
             : page->kind == HS_HEAT ? heat_marking(i, page->values[i])
             : page->kind == HS_DISTRESSOR ? dist_marking(i, page->values[i])
             : page->kind == HS_BASS_FOCUS ? bf_marking(i, page->values[i])
+            : page->kind == HS_TUBE_STRIP ? tube_marking(i, page->values[i])
             : page->kind == HS_EQ2 ? eq2_marking(i,page->values[i]) : NULL;
         if (marked)
             text(p, cx - 2*(int)strlen(marked), 142, marked, 22,
                  page->kind == HS_PUMP || page->kind == HS_DISTRESSOR ? 0xf0f0ec : page->kind == HS_HEAT ? 0xd8f040
-                 : page->kind == HS_BASS_FOCUS ? bf_green : 0xb7e0ce);
+                 : page->kind == HS_BASS_FOCUS ? bf_green : page->kind == HS_TUBE_STRIP ? tube_amber : 0xb7e0ce);
         else
             center_ink(p, src, 205, 309, rows[bank+i], cx, 137);
     }
@@ -571,6 +576,14 @@ static void effect_knobs(uint32_t *p)
         static const int steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
         int lit = dist_gr_db < 0 ? -1 : 0;
         for (int k = 0; k < 10 && lit >= 0; ++k) lit += dist_gr_db >= steps[k];
+        if (lit != drawn) { drawn = lit; changed = 1; }
+    }
+    if (page->kind == HS_TUBE_STRIP) {
+        static int drawn = -2;
+        tube_gr_db = tube_open_gr();
+        static const int steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
+        int lit = tube_gr_db < 0 ? -1 : 0;
+        for (int k = 0; k < 10 && lit >= 0; ++k) lit += tube_gr_db >= steps[k];
         if (lit != drawn) { drawn = lit; changed = 1; }
     }
     if (changed) {

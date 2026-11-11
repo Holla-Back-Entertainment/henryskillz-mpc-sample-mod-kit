@@ -76,7 +76,8 @@ static const struct faceplate faceplates[] = {
     [HS_PUMP] = {0x060708, 0x2fa8e8, "PUMP"},
     [HS_HEAT] = {0x0c0c0d, 0xe8e6e0, "HEAT"},
     [HS_DISTRESSOR] = {0x0a0a0b, 0xd8d8d4, "CRUSH"},
-    [HS_BASS_FOCUS] = {0x0b0e0f, 0x48c8a0, "BASS FOCUS"}
+    [HS_BASS_FOCUS] = {0x0b0e0f, 0x48c8a0, "BASS FOCUS"},
+    [HS_TUBE_STRIP] = {0x0d1116, 0xf0a040, "TUBE STRIP"}
 };
 
 static void fx_line(uint32_t *p, int x, int y, int ex, int ey, uint32_t color)
@@ -742,6 +743,112 @@ static void bf_panel(uint32_t *p, const int *values)
     #undef BF_Y
 }
 
+/* HS Tube Strip: blue-black face, amber tube print, a GR LED row read from the open instance
+   (tube_gr_db, set in effect_knobs; -1 = could not read), and lamps for HPF, order, SC EQ and Q.
+   The lamps remember the last value seen on their page. Knob values arrive as 0-73. */
+static const uint32_t tube_amber = 0xf0a040;
+static float tube_gr_db = -1;
+static int tube_hpf, tube_eq_first, tube_sc, tube_hi_q;
+
+static int tube_section(const char **name)
+{
+    typedef const char *(*bank_fn)(int *);
+    static bank_fn active_bank;
+    if (!active_bank) active_bank = (bank_fn)dlsym(RTLD_DEFAULT, "hs_tube_strip_bank");
+    int section = 0;
+    const char *title = active_bank ? active_bank(&section) : NULL;
+    if (name) *name = title ? title : "TUBE";
+    return section >= 0 && section < 7 ? section : 0;
+}
+
+static float tube_lin(int v, float lo, float hi) { return lo + (hi - lo)*v/73.0f; }
+static float tube_log(int v, float lo, float hi) { return lo*powf(hi/lo, v/73.0f); }
+
+static void tube_note(int section, int knob, int value)
+{
+    if (value < 0) return;
+    if (section == 0 && knob == 1) tube_hpf = tube_lin(value, 20, 140) >= 30;
+    if (section == 2 && knob == 1) tube_eq_first = value >= 37;
+    if (section == 2 && knob == 2) tube_sc = value >= 37;
+    if ((section == 4 || section == 5) && knob == 2) tube_hi_q = value >= 37;
+}
+
+static const char *tube_hz(char *s, size_t n, float hz)
+{
+    if (hz >= 1000) snprintf(s, n, hz >= 10000 ? "%.1f KHZ" : "%.2f KHZ", hz/1000);
+    else snprintf(s, n, "%d HZ", (int)lroundf(hz));
+    return s;
+}
+
+static const char *tube_marking(int knob, int value)
+{
+    static const char *const bass[] = {"15 HZ", "30 HZ", "60 HZ", "150 HZ"};
+    static const char *const treble[] = {"10 KHZ", "15 KHZ", "20 KHZ", "32 KHZ"};
+    static char s[3][16];
+    if (value < 0) return NULL;
+    int section = tube_section(NULL);
+    char *o = s[knob];
+    float x;
+    switch (section * 3 + knob) {
+    case 0: snprintf(o, 16, "%.1f", tube_lin(value, 0, 10)); break;
+    case 1: x = tube_lin(value, 20, 140); if (x < 30) return "OFF"; snprintf(o, 16, "%d HZ", (int)lroundf(x)); break;
+    case 2: snprintf(o, 16, "%+.1f DB", tube_lin(value, -20, 20)); break;
+    case 3: snprintf(o, 16, "%+.1f DB", tube_lin(value, -30, 20)); break;
+    case 4: snprintf(o, 16, "%.1f:1", tube_lin(value, 1, 20)); break;
+    case 5: x = tube_log(value, 2, 200); snprintf(o, 16, x < 10 ? "%.1f MS" : "%.0f MS", x); break;
+    case 6: x = tube_log(value, 100, 5000); snprintf(o, 16, x < 1000 ? "%.0f MS" : "%.2f S", x < 1000 ? x : x/1000); break;
+    case 7: return value >= 37 ? "EQ > COMP" : "COMP > EQ";
+    case 8: return value >= 37 ? "ON" : "OFF";
+    case 9: return bass[(value*3 + 36)/73];
+    case 10: snprintf(o, 16, "%+.1f DB", tube_lin(value, -24, 24)); break;
+    case 12: return tube_hz(o, 16, tube_log(value, 30, 4500));
+    case 13: case 16: snprintf(o, 16, "%+.1f DB", tube_lin(value, -16, 16)); break;
+    case 14: case 17: return value >= 37 ? "HIGH" : "LOW";
+    case 15: return tube_hz(o, 16, tube_log(value, 200, 20000));
+    case 18: return treble[(value*3 + 36)/73];
+    case 19: snprintf(o, 16, "%+.1f DB", tube_lin(value, -20, 20)); break;
+    default: return NULL;
+    }
+    return o;
+}
+
+static void tube_panel(uint32_t *p, const int *values)
+{
+    const char *name;
+    int section = tube_section(&name);
+    for (int i = 0; i < 3; ++i) tube_note(section, i, values[i]);
+    static const int gr_steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
+    const uint32_t ink = 0xf2ece0, dim = 0x8a8478;
+    rect(p, 8, 34, 304, 42, 0x0d1116);
+    frame(p, 8, 34, 304, 42, 0x3a4450);
+    text(p, 15, 38, "HS TUBE STRIP", 13, ink);
+    rect(p, 15, 45, 51, 1, tube_amber);
+    text(p, 78, 38, name, 19, ink);
+    text(p, 15, 50, "OPTO GR DB", 10, dim);
+    for (int i = 0; i < 10; ++i) {
+        int x = 19 + i*9;
+        pump_led(p, x, 59, tube_amber, tube_gr_db >= gr_steps[i]);
+        if (i == 0 || i == 4 || i == 9) {
+            char n[3]; snprintf(n, sizeof n, "%d", gr_steps[i]);
+            text(p, x - 2*(int)strlen(n) + 1, 64, n, 2, dim);
+        }
+    }
+    if (tube_gr_db < 0) text(p, 62, 50, "NO METER", 8, 0x6a6a68);
+    /* the signal path, left to right, with the order the switch sets */
+    static const char *const path[] = {"TUBE", "HPF", "COMP", "EQ"};
+    int order[] = {0, 1, tube_eq_first ? 3 : 2, tube_eq_first ? 2 : 3};
+    text(p, 116, 50, "SIGNAL PATH", 11, dim);
+    for (int i = 0; i < 4; ++i) {
+        int x = 116 + i*36, lit = order[i] != 1 || tube_hpf;
+        rect(p, x, 58, 30, 9, lit ? 0x2a2014 : 0x15171a);
+        frame(p, x, 58, 30, 9, lit ? tube_amber : 0x3a3e44);
+        text(p, x + 15 - 2*(int)strlen(path[order[i]]), 60, path[order[i]], 4, lit ? ink : dim);
+        if (i < 3) rect(p, x + 30, 62, 6, 1, dim);
+    }
+    pump_led(p, 266, 59, tube_amber, tube_sc);    text(p, 271, 57, "SC EQ", 5, ink);
+    pump_led(p, 266, 66, 0x7fb4e8, tube_hi_q);    text(p, 271, 64, "HI Q", 4, ink);
+}
+
 static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
 {
     enum effect kind = page->kind;
@@ -749,7 +856,7 @@ static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
     uint32_t accent = face->accent;
     rect(p,8,34,304,42,0x101719);
     frame(p,8,34,304,42,0x465259);
-    if (kind != TAPE_DELAY && kind != TAPE && kind != AIR_FLAVOR && kind != HS_CHANNEL && kind != HS_XSAT && kind != HS_BUS && kind != HS_EQ2 && kind != HS_PUMP && kind != HS_HEAT && kind != HS_DISTRESSOR && kind != HS_BASS_FOCUS)
+    if (kind != TAPE_DELAY && kind != TAPE && kind != AIR_FLAVOR && kind != HS_CHANNEL && kind != HS_XSAT && kind != HS_BUS && kind != HS_EQ2 && kind != HS_PUMP && kind != HS_HEAT && kind != HS_DISTRESSOR && kind != HS_BASS_FOCUS && kind != HS_TUBE_STRIP)
         text(p,17,38,face->legend,24,0xaebfc2);
 
     switch (kind) {
@@ -810,6 +917,9 @@ static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
         break;
     case HS_BASS_FOCUS:
         bf_panel(p, page->values);
+        break;
+    case HS_TUBE_STRIP:
+        tube_panel(p, page->values);
         break;
     case HS_HEAT:
         heat_panel(p, page->values);

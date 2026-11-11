@@ -33,9 +33,9 @@ It refuses to run if `mpcqol.so` isn't a supported version, if any pinned file w
 | `tools/` | Command-line helpers: sign an autorun folder, make a splash |
 | `installer/` | Page template, `make_installer.py` (embeds the add-ons), and `test_installer.mjs` (self-check) |
 
-## The eight-row menu limit
+## The menu row limit
 
-SampQOL 0.2.0 builds the insert menu in a fixed list of 40 rows, and 32 are stock effects. The picker (`src/fx/hs_fx_picker.c`) adds its rows only when they all fit, so more than eight HS rows hides the whole HS menu. Every effect stays in the library and the catalog, so saved projects reopen them by UniqueID; `in_menu()` picks which eight get a menu row, and `check-picker.sh` fails if that count isn't `MENU_ROWS`.
+SampQOL 0.2.0 builds the insert menu in a fixed list of 40 rows, and 32 are stock effects. The picker (`src/fx/hs_fx_picker.c`) takes the stock Bus Compressor row out of that list, which leaves nine rows, and adds its rows only when they all fit, so more than nine HS rows hides the whole HS menu. It only takes the stock row out when the HS rows go in. Every effect stays in the library and the catalog, and the stock Bus Compressor stays in the MPC, so saved projects reopen them; `in_menu()` picks which nine get a menu row, and `check-picker.sh` fails if that count isn't `MENU_ROWS`.
 
 ## Build
 
