@@ -33,9 +33,9 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 
 **Where did HS Air Exciter, HS Drive Sat and the stock Bus Compressor go?** SampQOL's insert menu has 40 rows. To fit nine HS effects, the stock Bus Compressor leaves the Dynamics list (HS Bus Compressor and HS Crush cover it), and HS Air Exciter and HS Drive Sat leave the menu. All three are still installed: a project that already uses them opens with them, as before.
 
-Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, a desk-style SEQ page with an unobstructed **K1 BPM** label and B2-toggleable stereo meters, and the HenrySkillz start screen (after SampQOL's own).
+Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, and the HenrySkillz start screen (after SampQOL's own).
 
-**SEQ page as a mixing desk.** The SEQ page (tempo, bars, Rec Quant) is redrawn as a desk panel with a VU meter and output LEDs that move with what the MPC is playing. Every stock control works as before.
+**SEQ page as a mixing desk.** The SEQ page (tempo, bars, Rec Quant) is redrawn as a desk panel with a VU meter and output LEDs that move with what the MPC is playing. **B2** switches to stereo meters, and the **K1 BPM** label stays clear. Every stock control works as before.
 
 **Page label.** On HS effects with more than one page, the box over the middle screen button shows **PAGE 2/3**: press it for the next page, **SHIFT** + it to go back.
 
