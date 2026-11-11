@@ -42,6 +42,15 @@
     <label class="btn">Choose folder<input type="file" id="dir" webkitdirectory></label>
   </div>
   <div id="log">Waiting for SampQOL…</div>
+  <h2>Already installed? Update just the effects</h2>
+  <p>Your card already has an <b>autorun/hs</b> folder from this page. You only need the new effect files, and you do not need SampQOL again.</p>
+  <ol>
+    <li>Switch the MPC off, put the SD card in your computer and copy <b>autorun/hs</b> somewhere safe as a backup.</li>
+    <li><button id="fx">Download hs-effects-update.zip</button></li>
+    <li>Unzip it and copy the four <b>.so</b> files into <b>autorun/hs</b> on the card, replacing the old ones. Replace all four together.</li>
+    <li>Eject the card, switch the MPC on and press <b>B1</b>.</li>
+  </ol>
+  <p class="small">These files are not part of the signed autorun, so nothing needs re-signing. If the MPC boots stock or restarts twice, put your backup of <b>autorun/hs</b> back.</p>
   <p class="small">Back up your SD card first. To undo: switch off and take the SD card out, or delete the <b>autorun</b> folder from it.
      Step-by-step help with pictures: <a href="https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/blob/main/docs/INSTALL-GUIDE.md" target="_blank" rel="noopener">install guide</a> ·
      <a href="https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/blob/main/docs/FAQ.md" target="_blank" rel="noopener">FAQ</a> ·
@@ -157,6 +166,12 @@ const fromZip = file => async () => {
 const fromDir = fileList => async () =>
   Promise.all([...fileList].map(async f => [f.webkitRelativePath || f.name, new Uint8Array(await f.arrayBuffer())]));
 
+document.getElementById("fx").onclick = async () => {
+  const zip = new JSZip();
+  for (const [path, data] of Object.entries(ADDON)) if (path.endsWith(".so")) zip.file(path, b64(data), { unixPermissions: 0o644 });
+  const blob = await zip.generateAsync({ type: "blob", platform: "UNIX" });
+  Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "hs-effects-update.zip" }).click();
+};
 document.getElementById("zip").onchange = e => e.target.files[0] && run(fromZip(e.target.files[0]));
 document.getElementById("dir").onchange = e => e.target.files.length && run(fromDir(e.target.files));
 const drop = document.getElementById("drop");

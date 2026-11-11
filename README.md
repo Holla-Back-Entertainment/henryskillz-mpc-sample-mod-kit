@@ -5,7 +5,7 @@ No coding, no terminal, no apps to install, no AI tools. Free.
 
 Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top of [SampQOL OS](https://github.com/snarebes/SampQOL-OS) by **Snare Bes**.
 
-### [Open the installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) · [Step-by-step guide](docs/INSTALL-GUIDE.md) · [FAQ](docs/FAQ.md) · [Undo it](docs/RECOVERY.md)
+### [Open the installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) · [Step-by-step guide](docs/INSTALL-GUIDE.md) · [Update just the effects](docs/UPDATE-EFFECTS.md) · [FAQ](docs/FAQ.md) · [Undo it](docs/RECOVERY.md)
 
 <img src="assets/henryskillz-splash-preview.png" width="320" alt="HenrySkillz start screen on the MPC Sample: DRUMS SAMPLE BASS">
 
@@ -13,7 +13,7 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 > Everything runs from the SD card. Switch off and take the card out, and the MPC is stock again.
 
 > **Tested:** the installer on the official SampQOL 0.2.0 download (Chrome and Safari), and this exact build booted end to end in an MPC Sample emulator.
-> The HS effects have run on Henry's own MPC Sample. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
+> The HS effects have run on Henry's own MPC Sample. **HS Crush and HS Bass Focus are new:** they have run in Henry's own build, but this kit build of them has not been boot-tested yet. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
 
 ---
 
@@ -22,13 +22,15 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 | Effect | Category | What it does |
 |---|---|---|
 | **HS Saturator** | Harmonic | Saturation for drums and bass |
-| **HS Air Exciter** | Harmonic | Adds brightness to the top end |
 | **HS Channel Strip** | Harmonic | Console-style channel: filters, 4-band EQ, compressor, gate |
-| **HS Drive Sat** | Harmonic | Saturation with drive and shape controls |
 | **HS Bus Compressor** | Dynamics | Bus compressor with a sidechain high-pass |
 | **HS Pump** | Dynamics | Stepped feedback compressor, 1:1 to 20:1, with an Opto release, attack modifier and output saturation |
 | **HS Heat** | Harmonic | Eight drive circuits into a multimode filter, with dirt, a 2-band EQ, an envelope follower and an LFO |
 | **HS Para EQ** | EQ / Filter | Parametric EQ with a response-curve display |
+| **HS Crush** | Dynamics | Character compressor: eight curves from 1:1 to Max, an Opto mode, detector filters, two distortion modes, a British-style mode and a gain-reduction meter |
+| **HS Bass Focus** | EQ / Filter | Splits at a crossover (30 to 500 Hz), makes the lows mono and sets their level. The highs pass untouched |
+
+**Where did HS Air Exciter and HS Drive Sat go?** SampQOL's insert menu has room for eight add-on effects, so HS Crush and HS Bass Focus took their places in the menu. They are still installed: a project that already uses them opens with them, as before.
 
 Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, a desk-style SEQ page with an unobstructed **K1 BPM** label and B2-toggleable stereo meters, and the HenrySkillz start screen (after SampQOL's own).
 
@@ -44,7 +46,11 @@ These are real 320×240 captures from the MPC Sample emulator running the public
 |---|---|---|
 | ![HS Pump compress page: ratio lamps, input, ratio and output knobs](assets/screens/hs-pump.png) | ![HS Heat character page: circuit lamps, circuit, drive and wet knobs](assets/screens/hs-heat.png) | ![HS Heat filter page: filter type lamps, type, frequency and resonance knobs](assets/screens/hs-heat-filter.png) |
 
-The HS Pump and HS Heat panels above are rendered at 3× from the panel drawing code in `src/fx/`, not captured from the emulator yet.
+| HS Crush | HS Bass Focus |
+|---|---|
+| ![HS Crush compress page: gain-reduction LEDs, ratio lamps, input, ratio and output knobs](assets/screens/hs-crush.png) | ![HS Bass Focus: live response curve with the crossover marker, crossover, bass and mono knobs](assets/screens/hs-bass-focus.png) |
+
+The HS Pump, HS Heat, HS Crush and HS Bass Focus panels above are rendered at 3× from the panel drawing code in `src/fx/` (`panel-render.c` for the last two), not captured from the emulator yet.
 
 ![MPC EQ page with the dB and frequency grid](assets/screens/eq-page-grid.png)
 
@@ -63,7 +69,9 @@ The HS Pump and HS Heat panels above are rendered at 3× from the panel drawing 
 4. **Unzip** it and copy the `autorun` folder to the top level of your SD card.
 5. **Eject** the card, put it in the MPC, switch on and press **B1** to start.
 
-The HS effects are in the insert effects list. **New to this? Follow the [step-by-step guide](docs/INSTALL-GUIDE.md).** It covers formatting, Mac and Windows, and what to do if anything looks wrong.
+The HS effects are in the insert effects list.
+
+**Already installed and want the new effects?** You don't need to reinstall: [update just the effects](docs/UPDATE-EFFECTS.md). **New to this? Follow the [step-by-step guide](docs/INSTALL-GUIDE.md).** It covers formatting, Mac and Windows, and what to do if anything looks wrong.
 
 <img src="assets/installer-page.png" width="480" alt="The installer page">
 

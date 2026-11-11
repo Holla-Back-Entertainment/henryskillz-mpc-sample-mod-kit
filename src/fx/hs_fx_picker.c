@@ -15,6 +15,8 @@
 #include "hs_eq2.h"
 #include "hs_pump.h"
 #include "hs_heat.h"
+#include "hs_distressor.h"
+#include "hs_bass_focus.h"
 
 enum {
     HS_SATURATOR = 0x485301,
@@ -43,9 +45,20 @@ static const struct fx_row hs_rows[] = {
     {HS_BUS_ID, -1, DYNAMICS, "HS Bus Compressor"},
     {HS_EQ2_ID, -1, EQ_FILTER, "HS Para EQ"},
     {HS_PUMP_ID, -1, DYNAMICS, "HS Pump"},
-    {HS_HEAT_ID, -1, HARMONIC, "HS Heat"}
+    {HS_HEAT_ID, -1, HARMONIC, "HS Heat"},
+    {HS_DISTRESSOR_ID, -1, DYNAMICS, "HS Crush"},
+    {HS_BASS_FOCUS_ID, -1, EQ_FILTER, "HS Bass Focus"}
 };
 enum { FX_COUNT = sizeof hs_rows / sizeof *hs_rows };
+
+/* SampQOL 0.2.0 builds the insert menu in 40 rows and 32 are stock, so 8 HS rows fit; one more
+   and SampQOL has no room, which hides every HS row. These two stay in the catalog, so saved
+   projects that use them still open them, but have no menu row. */
+enum { MENU_ROWS = 8 };
+static int in_menu(const struct fx_row *row)
+{
+    return row->uid != HS_AIR_EXCITER && row->uid != HS_XSAT_ID;
+}
 
 struct native_descriptions {
     unsigned char **items;
@@ -213,7 +226,7 @@ int fxlist_get(void *context, struct fx_row *out, int capacity)
 {
     if (!next_list) return 0;
     int count = next_list(context, out, capacity);
-    if (!stock_base || !context || !out || count <= 0 || capacity - count < FX_COUNT)
+    if (!stock_base || !context || !out || count <= 0 || capacity - count < MENU_ROWS)
         return count;
 
     pthread_mutex_lock(&catalog_lock);
@@ -221,6 +234,7 @@ int fxlist_get(void *context, struct fx_row *out, int capacity)
     pthread_mutex_unlock(&catalog_lock);
     if (!ready) return count;
 
-    memcpy(out + count, hs_rows, sizeof hs_rows);
-    return count + FX_COUNT;
+    for (int i = 0; i < FX_COUNT; ++i)
+        if (in_menu(&hs_rows[i])) out[count++] = hs_rows[i];
+    return count;
 }

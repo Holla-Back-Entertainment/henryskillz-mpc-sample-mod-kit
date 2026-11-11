@@ -25,13 +25,17 @@ It refuses to run if `mpcqol.so` isn't a supported version, if any pinned file w
 
 | Path | What |
 |---|---|
-| `src/fx/` | The 8 LADSPA effects (`hs-pro-fx-ladspa.so`), the effect list and live displays (`hs-fx.so`), and the firmware-1.3.0 hooks (`hs-flavor.so`, `probe.cc`) |
+| `src/fx/` | The 10 LADSPA effects (`hs-pro-fx-ladspa.so`), the effect list and live displays (`hs-fx.so`), and the firmware-1.3.0 hooks (`hs-flavor.so`, `probe.cc`) |
 | `src/eq/` | The EQ page grid (`hs-eq.so`) |
 | `src/seq/` | The desk-style SEQ page and B2-toggleable stereo meters (`hs-seq.so`) |
 | `addon/hs/` | `hs-addons.sh` (copies the add-ons to RAM, sets `HS_PRELOAD`) and `hs-splash.raw` |
 | `starter-card/` | The splash-only boot-test card |
 | `tools/` | Command-line helpers: sign an autorun folder, make a splash |
 | `installer/` | Page template, `make_installer.py` (embeds the add-ons), and `test_installer.mjs` (self-check) |
+
+## The eight-row menu limit
+
+SampQOL 0.2.0 builds the insert menu in a fixed list of 40 rows, and 32 are stock effects. The picker (`src/fx/hs_fx_picker.c`) adds its rows only when they all fit, so more than eight HS rows hides the whole HS menu. Every effect stays in the library and the catalog, so saved projects reopen them by UniqueID; `in_menu()` picks which eight get a menu row, and `check-picker.sh` fails if that count isn't `MENU_ROWS`.
 
 ## Build
 
