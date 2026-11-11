@@ -46,6 +46,13 @@ Open the insert effects list and test each effect with audio playing. Load one e
 - [ ] The **SEQ** page shows the desk panel (logo, VU meter, tempo box, output LEDs). Tempo, bars, Rec Quant and swing still change with their knobs, and long values (128 Bars, Q 1/32T) are readable.
 - [ ] With a sequence playing, the **VU needle and output LEDs move with the music** without pressing anything.
 - [ ] Leave the SEQ page playing for **3 minutes**: the MPC does not freeze or restart.
+- [ ] On the SEQ page, **B2** shows the meters page with LUFS M, S and I and PEAK, and they move with the music.
+- [ ] Rename an empty track **VOX**: Channel Strip, Bus Compressor and Air Exciter load on its inserts. One **UNDO** takes back the name and the chain.
+- [ ] Rename a track that already has inserts **DRUMS**: its inserts stay as they were.
+- [ ] Rename a dialled-in track **TEST#**: `MPC-Sample/Chains/TEST.xfx` appears on the card, and a new track named TEST loads that chain.
+- [ ] In the browser, preview a WAV and an MP3: the highlighted row shows a key and BPM tag, and scrolling away hides it.
+- [ ] (Card made with **Add Stems**) Preview a WAV, hold **SHIFT** and hold **B1** for 1.5 s: the Stems chooser opens. **Go** writes the stems into a "NAME Stems" folder next to the file. A quick SHIFT + B1 still does its stock job.
+- [ ] (Add Stems) On the Sample screen, hold **SHIFT** and hold **B3** for 1.5 s on a pad with a sample: the stems land in `MPC-Sample/Samples/Stems`.
 - [ ] The controls respond without a crash, freeze or unexpected silence.
 
 ## Return to stock
