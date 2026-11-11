@@ -1,6 +1,6 @@
 # Henry Skillz add-ons for SampQOL OS on the MPC Sample.
 # Sourced by SampQOL's qol-run.sh (the installer adds one line for this).
-# Copies the add-ons to RAM and sets HS_PRELOAD. Nothing is written to the MPC itself.
+# Copies the add-ons to RAM and sets HS_PRELOAD (before SampQOL) and HS_POSTLOAD (after it). Nothing is written to the MPC itself.
 # If anything is missing, HS_PRELOAD stays empty and SampQOL runs exactly as stock.
 HS="$DIR/hs"
 HS_PRELOAD=
@@ -21,13 +21,14 @@ if [ -n "$HS_PRELOAD" ] && mkdir -p /tmp/hs-chains && cp "$HS/"*.xfx /tmp/hs-cha
    cp "$HS/hs-chains.so" /tmp/hs-chains.so; then
     chmod 644 /tmp/hs-chains.so /tmp/hs-chains/*
     export HS_CHAINS_USER="${DIR%/*}/MPC-Sample/Chains"
-    HS_PRELOAD="/tmp/hs-flavor.so:/tmp/hs-chains.so:${HS_PRELOAD#/tmp/hs-flavor.so:}"  # same order as Henry's card
+    # After SampQOL (before Stems), so its "Chain loaded" box draws on top of SampQOL's screens.
+    HS_POSTLOAD=":/tmp/hs-chains.so"
 fi 2>/dev/null
 # Stems (only if "Add Stems" was ticked): browser SHIFT + hold B1 on a previewed file, Sample screen
-# SHIFT + hold B3. The engine and model stay in autorun/stems; the hook loads after SampQOL so its
-# screen copy sees every other drawing.
+# SHIFT + hold B3 on a pad. The engine and model stay in autorun/stems; the hook loads last, after
+# SampQOL, so its screen copy sees every other drawing.
 if [ -n "$HS_PRELOAD" ] && [ -f "$DIR/stems/hs-stems-ui.so" ] && cp "$DIR/stems/hs-stems-ui.so" /tmp/hs-stems-ui.so; then
     chmod 644 /tmp/hs-stems-ui.so
     export HS_STEMS_DIR="$DIR/stems"
-    HS_POSTLOAD=":/tmp/hs-stems-ui.so"
+    HS_POSTLOAD="$HS_POSTLOAD:/tmp/hs-stems-ui.so"
 fi 2>/dev/null
