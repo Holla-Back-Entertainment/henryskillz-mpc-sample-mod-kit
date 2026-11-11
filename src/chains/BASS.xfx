@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<MPCVObject>
+  <Version>
+    <File_Version>2.1</File_Version>
+    <Application>MPC-V</Application>
+    <Application_Version>0.0.0.495</Application_Version>
+    <Platform>Linux</Platform>
+  </Version>
+  <InsertEffectStrip>
+    <Insert1>
+      <Is64Bits>1</Is64Bits>
+      <Name>hs_drive_sat</Name>
+      <DescriptiveName></DescriptiveName>
+      <FormatName>LADSPA</FormatName>
+      <Category>Effect</Category>
+      <ManufacturerName>Henry Skillz</ManufacturerName>
+      <FileOrID>/tmp/hs-ladspa-test/hs-pro-fx-ladspa.so</FileOrID>
+      <UID>4739845</UID>
+      <IsInstrument>0</IsInstrument>
+      <NumInput>2</NumInput>
+      <NumOutput>2</NumOutput>
+      <ProgramNumber>0</ProgramNumber>
+      <Data></Data>
+    </Insert1>
+    <InsertEnable1>True</InsertEnable1>
+    <Insert2>
+      <Is64Bits>1</Is64Bits>
+      <Name>hs_para_eq</Name>
+      <DescriptiveName></DescriptiveName>
+      <FormatName>LADSPA</FormatName>
+      <Category>Effect</Category>
+      <ManufacturerName>Henry Skillz</ManufacturerName>
+      <FileOrID>/tmp/hs-ladspa-test/hs-pro-fx-ladspa.so</FileOrID>
+      <UID>4739847</UID>
+      <IsInstrument>0</IsInstrument>
+      <NumInput>2</NumInput>
+      <NumOutput>2</NumOutput>
+      <ProgramNumber>0</ProgramNumber>
+      <Data></Data>
+    </Insert2>
+    <InsertEnable2>True</InsertEnable2>
+  </InsertEffectStrip>
+</MPCVObject>

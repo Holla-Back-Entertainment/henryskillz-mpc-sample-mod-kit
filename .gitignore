@@ -10,3 +10,4 @@ id_*
 addon/hs/*.so
 dist/
 .claude/
+addon/hs/*.xfx

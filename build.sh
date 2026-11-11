@@ -13,5 +13,10 @@ docker run --rm -v "$PWD:/w" -w /w/src "${IMAGE:-gcc:12}" sh -ec '
   gcc -O2 -Wall -Wextra -shared -fPIC hs_eq.c -o /w/addon/hs/hs-eq.so -ldl
   cd ../seq
   gcc -O2 -Wall -Wextra -Werror -shared -fPIC hs_seq.c -o /w/addon/hs/hs-seq.so -ldl -lm -pthread
+  cd ../chains
+  gcc -O2 -Wall -Wextra -Werror -fPIC -shared hs_chains.c -o /w/addon/hs/hs-chains.so
+  cp VOX.xfx DRUMS.xfx BASS.xfx /w/addon/hs/
+  cd ../warp
+  gcc -O3 -Wall -Wextra -fPIC -shared browser_warp.c preview_tempo.c key_detect.c browser_tag.c -o /w/addon/hs/hs-browser.so -ldl -lm -lpthread
 '
 python3 installer/make_installer.py

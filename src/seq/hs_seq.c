@@ -23,6 +23,7 @@
 #include <time.h>
 
 #include "dsb_logo.h"
+#include "lufs.h"
 
 enum { W = 320, H = 240, N = W * H };
 
@@ -147,7 +148,7 @@ static void vu(uint32_t *d, int x0, int y0, int x1, int y1, float level) /* leve
     box(d, x0, y0, x1, y1, DARK);
     int fx0 = x0 + 3, fy0 = y0 + 3, fx1 = x1 - 3, fy1 = y1 - 3;
     rect(d, fx0, fy0, fx1, fy1, CREAM);
-    float w = fx1 - fx0, cx = fx0 + w / 2, cy = fy1 + w * .32f, r = w * .62f;
+    float w = fx1 - fx0, r = w * .62f, cx = fx0 + w / 2, cy = fy0 + 16 + r;   /* arc top 16 px under the face top, any face height */
     #define ANG(f) ((-90.f - 38.f + 76.f * (f)) * 3.14159265f / 180.f)
     for (int i = 0; i < 120; ++i) {
         float f = i / 120.f, a = ANG(f), red = f >= .82f;
@@ -206,6 +207,7 @@ static void logo(uint32_t *d, int x0, int y0)
 /* ---------- levels (written by the audio thread, read by the UI) ----------
    One writer per value, aligned 32-bit floats: plain stores and loads are enough on aarch64. */
 volatile float hs_seq_ms[2], hs_seq_pk[2];      /* mean square (~80 ms), peak with a 20 dB/s fall */
+volatile float hs_seq_lufs[3] = {-INFINITY, -INFINITY, -INFINITY}, hs_seq_pkmax;  /* M S I LUFS, peak hold */
 #define VU_REF_DBFS (-18.f)                     /* ponytail: 0 VU = -18 dBFS RMS, the usual digital line-up; tune here */
 
 static float vu_pos(void)                       /* needle position 0..1 across the printed scale */
@@ -249,14 +251,16 @@ static void meters_page(uint32_t *d)
 {
     vu(d, 6, 36, 157, 124, vu_pos_ch(0));
     vu(d, 162, 36, 314, 124, vu_pos_ch(1));
-    text(d, 132, 112, "L", INK, 1);
-    text(d, 288, 112, "R", INK, 1);
+    text(d, 12, 108, "L", INK, 1);                                   /* clear of the needle at rest */
+    text(d, 168, 108, "R", INK, 1);
 
+    /* EBU R128: M 400 ms, S 3 s, I gated since the last 2 s of silence; PEAK is held over the same span */
     box(d, 6, 130, 314, 236, LCD);
-    meter_readout(d, 14, 138, "PEAK L", 20 * log10f(hs_seq_pk[0] + 1e-9f), AMB);
-    meter_readout(d, 170, 138, "PEAK R", 20 * log10f(hs_seq_pk[1] + 1e-9f), AMB);
-    meter_readout(d, 14, 177, "RMS L", 10 * log10f(hs_seq_ms[0] + 1e-12f), GRN);
-    meter_readout(d, 170, 177, "RMS R", 10 * log10f(hs_seq_ms[1] + 1e-12f), GRN);
+    meter_readout(d, 14, 138, "LUFS M", hs_seq_lufs[0], GRN);
+    meter_readout(d, 170, 138, "LUFS S", hs_seq_lufs[1], GRN);
+    meter_readout(d, 14, 177, "LUFS I", hs_seq_lufs[2], AMB);
+    float pk = 20 * log10f(hs_seq_pkmax + 1e-9f);
+    meter_readout(d, 170, 177, "PEAK", pk, pk > -1 ? RED : AMB);
     text(d, 14, 222, "B2: SEQ", DIM, 1);
 }
 
@@ -463,7 +467,7 @@ ssize_t snd_rawmidi_tread(snd_rawmidi_t *rm, struct timespec *ts, void *buf, siz
 enum { FMT_S16 = 2, FMT_S24 = 6, FMT_S32 = 10, FMT_FLOAT = 14, ACC_NONINTERLEAVED = 4 };
 /* The app writes two outputs (the I2S codec and the USB audio gadget); each keeps its own levels
    and the meters show the louder, so a silent USB stream cannot pull them to zero. */
-static struct pcm { void *pcm; int fmt, ch, access; float ms[2], pk[2]; } pcms[4];
+static struct pcm { void *pcm; int fmt, ch, access; unsigned rate; float ms[2], pk[2]; struct lufs L; } pcms[4];
 static unsigned long tap_calls;
 static int tap_fmt = -1, tap_ch = -1;
 
@@ -477,6 +481,10 @@ int snd_pcm_hw_params_set_format(void *pcm, void *hw, int fmt)
 { NEXT("snd_pcm_hw_params_set_format", int, (void *, void *, int)); struct pcm *p = pcm_of(pcm); if (p) p->fmt = fmt; return real(pcm, hw, fmt); }
 int snd_pcm_hw_params_set_access(void *pcm, void *hw, int acc)
 { NEXT("snd_pcm_hw_params_set_access", int, (void *, void *, int)); struct pcm *p = pcm_of(pcm); if (p) p->access = acc; return real(pcm, hw, acc); }
+int snd_pcm_hw_params_set_rate(void *pcm, void *hw, unsigned rate, int dir)
+{ NEXT("snd_pcm_hw_params_set_rate", int, (void *, void *, unsigned, int)); int rc = real(pcm, hw, rate, dir); struct pcm *p = pcm_of(pcm); if (p && rc >= 0) p->rate = rate; return rc; }
+int snd_pcm_hw_params_set_rate_near(void *pcm, void *hw, unsigned *rate, int *dir)
+{ NEXT("snd_pcm_hw_params_set_rate_near", int, (void *, void *, unsigned *, int *)); int rc = real(pcm, hw, rate, dir); struct pcm *p = pcm_of(pcm); if (p && rate && rc >= 0) p->rate = *rate; return rc; }
 int snd_pcm_hw_params_set_channels(void *pcm, void *hw, unsigned ch)
 { NEXT("snd_pcm_hw_params_set_channels", int, (void *, void *, unsigned)); struct pcm *p = pcm_of(pcm); if (p) p->ch = (int)ch; return real(pcm, hw, ch); }
 int snd_pcm_hw_params_set_channels_near(void *pcm, void *hw, unsigned *ch)
@@ -515,6 +523,18 @@ static void measure(struct pcm *p, const void *const *bufs, unsigned long frames
         for (int i = 0; i < 4; ++i) { if (pcms[i].ms[c] > ms) ms = pcms[i].ms[c]; if (pcms[i].pk[c] > mp) mp = pcms[i].pk[c]; }
         hs_seq_ms[c] = ms; hs_seq_pk[c] = mp;
     }
+    /* loudness: K-weighted per output; the readout follows whichever output is louder (short-term) */
+    unsigned rate = p->rate ? p->rate : 48000;
+    if (p->L.rate != rate) lufs_init(&p->L, rate);
+    int r = p->ch > 1;
+    for (unsigned long i = 0; i < frames; ++i) {
+        float l = inter ? sample(p->fmt, bufs[0], i * p->ch) : sample(p->fmt, bufs[0], i);
+        float x = inter ? sample(p->fmt, bufs[0], i * p->ch + r) : sample(p->fmt, bufs[r], i);
+        lufs_frame(&p->L, isfinite(l) ? l : 0, isfinite(x) ? x : 0);
+    }
+    struct pcm *best = p;
+    for (int i = 0; i < 4; ++i) if (pcms[i].L.rate && pcms[i].L.s > best->L.s) best = &pcms[i];
+    hs_seq_lufs[0] = best->L.m; hs_seq_lufs[1] = best->L.s; hs_seq_lufs[2] = best->L.i; hs_seq_pkmax = best->L.peak;
 }
 
 long snd_pcm_writei(void *pcm, const void *buf, unsigned long frames)

@@ -15,3 +15,7 @@ The firmware-check implementation here is independently written from the publish
 ## LADSPA
 
 `src/fx/ladspa.h` is the LADSPA plugin API header (LGPL-2.1, Richard W.E. Furse, Paul Barton-Davis, Stefan Westerfeld).
+
+## minimp3
+
+`src/warp/minimp3.h` is minimp3 by lieff (https://github.com/lieff/minimp3), dedicated to the public domain under CC0 1.0. The browser key tag uses it to read MP3s.
