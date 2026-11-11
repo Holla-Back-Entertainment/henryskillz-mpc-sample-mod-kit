@@ -30,7 +30,7 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 | **HS Heat** | Harmonic | Eight drive circuits into a multimode filter, with dirt, a 2-band EQ, an envelope follower and an LFO |
 | **HS Para EQ** | EQ / Filter | Parametric EQ with a response-curve display |
 
-Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, and the HenrySkillz start screen (after SampQOL's own).
+Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, a desk-style SEQ page with an unobstructed **K1 BPM** label and B2-toggleable stereo meters, and the HenrySkillz start screen (after SampQOL's own).
 
 These are real 320×240 captures from the MPC Sample emulator running the public installer output:
 
