@@ -594,6 +594,17 @@ void overlay_update(int mode, const void *buf, int flag)
             uint32_t *p = (uint32_t *)buf;
             header(p);
             int gain = site == 0xad644 ? hs_ducker_gain_page() : -1;
+            static int (*position)(int *);
+            if (!position) position = (int (*)(int *))dlsym(RTLD_DEFAULT, "hs_bank_position");
+            int count = 0, at = gain < 0 && position ? position(&count) : -1;
+            if (at >= 0 && count > 1) {          /* B2 pages the HS editors: label it where stock labels B2 */
+                char label[12];
+                int n = snprintf(label, sizeof label, "PAGE %d/%d", at + 1, count);
+                rect(p, 124, 4, 71, 20, 0x15424d);
+                frame(p, 124, 4, 71, 20, cyan);
+                text(p, 160 - 2*n, 9, label, n, 0xc9f5ff);
+                text(p, 140, 17, "SHIFT BACK", 10, 0x7fa3ab);
+            }
             if (gain >= 0) {
                 rect(p, 124, 4, 71, 20, gain ? 0x15424d : 0x1d272b);
                 frame(p, 124, 4, 71, 20, gain ? cyan : rail);

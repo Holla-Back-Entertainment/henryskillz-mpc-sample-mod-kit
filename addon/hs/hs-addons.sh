@@ -12,3 +12,8 @@ if cp "$HS/hs-flavor.so" /tmp/hs-flavor.so &&
     chmod 644 /tmp/hs-flavor.so /tmp/hs-eq.so /tmp/hs-fx.so /tmp/hs-ladspa-test/hs-pro-fx-ladspa.so
     HS_PRELOAD="/tmp/hs-flavor.so:/tmp/hs-eq.so:/tmp/hs-fx.so:"
 fi 2>/dev/null
+# Desk-style SEQ page with live VU and output LEDs. Optional: without hs-seq.so the stock SEQ page shows.
+if [ -n "$HS_PRELOAD" ] && cp "$HS/hs-seq.so" /tmp/hs-seq.so 2>/dev/null; then
+    chmod 644 /tmp/hs-seq.so
+    HS_PRELOAD="$HS_PRELOAD/tmp/hs-seq.so:"
+fi

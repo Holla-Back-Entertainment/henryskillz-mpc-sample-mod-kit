@@ -197,7 +197,6 @@ static void channel_panel(uint32_t *p)
     int section = channel_section(&name);
     uint32_t accent = channel_colors[section];
     text(p, 15, 39, name, 19, 0xd9e0de);
-    text(p, 263, 39, "2 PAGE", 6, 0xb8c7ca);
     if (section >= 6) text(p, 207, 39, "SHIFT", 5, 0xc3b793);
     for (int i = 0; i < 8; ++i) {
         int x = 12 + i * 37;
@@ -247,7 +246,6 @@ static void xsat_panel(uint32_t *p)
     int section = 0;
     const char *title = active_bank ? active_bank(&section) : NULL;
     text(p, 15, 39, title ? title : "DRIVE", 19, 0xe2ddca);
-    text(p, 263, 39, "2 PAGE", 6, 0xb8c7ca);
     rect(p, 12, 48, 294, 1, 0xd3a164);
     for (int i = 0; i < 3; ++i) {
         int x = 12 + i * 99;
@@ -293,7 +291,6 @@ static void bus_panel(uint32_t *p)
     const char *name;
     int section = bus_section(&name);
     text(p, 15, 39, name, 19, 0xd9e0de);
-    text(p, 263, 39, "2 PAGE", 6, 0xb8c7ca);
     rect(p, 12, 48, 294, 1, 0x9baac0);
     for (int i = 0; i < 3; ++i) {
         int x = 12 + i*99, active = i == section;
@@ -402,14 +399,13 @@ static void pump_panel(uint32_t *p, const int *values)
     pump_led(p, 225, 55, 0x46c84a, pump_det);
     text(p, 236, 52, "SAT", 3, 0xf0f0ec);
     pump_led(p, 255, 55, 0xe8382c, pump_sat);
-    /* page lamps (pad 13 flips pages) */
+    /* page lamps (B2 flips pages) */
     for (int i = 0; i < 3; ++i) {
         int x = 206 + i*35, active = i == section;
         rect(p, x, 63, 32, 9, active ? pump_blue : 0x101317);
         frame(p, x, 63, 32, 9, active ? 0xbfe6fa : 0x2a5f7e);
         text(p, x + (32 - 4*(int)strlen(tabs[i]))/2 + 1, 65, tabs[i], 6, active ? 0x050608 : 0xb8d8ea);
     }
-    text(p, 282, 39, "2 PAGE", 6, 0x9fc6dc);
 }
 
 /* HS Heat: black face, light grey knobs with white dots, amber lamps for the 8 circuits and
@@ -572,7 +568,7 @@ static void eq2_panel(uint32_t *p)
     char title[]="BAND 01";
     title[5]='0'+band/10; title[6]='0'+band%10;
     text(p,15,39,band ? title : "GLOBAL",12,0xe1ece7);
-    text(p,203,39,"ENC BAND  2 PAGE",17,0xb8c7ca);
+    text(p,239,39,"ENC BAND",8,0xb8c7ca);
     for (int i=0;i<=EQ_BANDS;++i) {
         int x=12+12*i;
         rect(p,x,49,10,7,i==band ? color : i%4==0 ? 0x52616b : 0x303d44);
@@ -654,7 +650,6 @@ static void dist_panel(uint32_t *p, const int *values)
     text(p, 15, 38, "HS CRUSH", 8, ink);
     rect(p, 15, 45, 31, 1, 0xe8382c);
     text(p, 56, 38, name, 19, ink);
-    text(p, 282, 38, "2 PAGE", 6, dim);
     /* gain reduction, red LEDs */
     text(p, 15, 50, "GR DB", 5, dim);
     for (int i = 0; i < 10; ++i) {
@@ -834,7 +829,6 @@ static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
         const char *title = current_bank ? current_bank(&selected) : NULL;
         flavor_sprite(p, 9, 35, 302, 13, flavor_header);
         text(p, 15, 38, title ? title : "GLOBAL", 19, 0xe5efe8);
-        text(p, 241, 38, "2 PAGE", 7, 0xd4eeeb);
         flavor_sprite(p, 12, 49, 296, 23, flavor_rail);
         for (int i = 0; i < 6; ++i) {
             int x = 12 + 49 * i;
