@@ -14,9 +14,11 @@ struct xsat {
     float gain_in, gain_out, drive, mix, dc_coefficient;
     float previous[2], dc[2];
     int ready;
+    unsigned long rate;
+    struct hs_mod mod;
 };
 
-static const float defaults[] = {0, 0, 50, 50, 100, 0, 0, 0, 0};
+static const float defaults[] = {0, 0, 50, 50, 100, 0, 0, 0, 0, HS_MOD_DEFAULTS};
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
 #define ZERO (B | LADSPA_HINT_DEFAULT_0)
 #define MID (B | LADSPA_HINT_DEFAULT_MIDDLE)
@@ -31,7 +33,8 @@ static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+XS_HEADROOM] = {TOGGLE,0,1},
     [FIRST+XS_INPUT] = {ZERO,-30,0},
     [FIRST+XS_OUTPUT] = {ZERO,-30,0},
-    [FIRST+XS_BYPASS] = {TOGGLE,0,1}
+    [FIRST+XS_BYPASS] = {TOGGLE,0,1},
+    HS_MOD_HINTS(FIRST+XS_MOD, XS_MOD)
 };
 #undef B
 #undef ZERO
@@ -44,7 +47,7 @@ static LADSPA_Handle instantiate(const LADSPA_Descriptor *desc, unsigned long ra
     (void)desc;
     if (!rate) return NULL;
     struct xsat *s = calloc(1, sizeof *s);
-    if (s) s->dc_coefficient = -expm1f(-30.15928947f / rate);
+    if (s) { s->dc_coefficient = -expm1f(-30.15928947f / rate); s->rate = rate; }
     return s;
 }
 
@@ -113,6 +116,7 @@ static void run(LADSPA_Handle instance, unsigned long frames)
         const LADSPA_PortRangeHint *h = &hints[FIRST+i];
         v[i] = p && isfinite(*p) ? fminf(h->UpperBound, fmaxf(h->LowerBound, *p)) : defaults[i];
     }
+    hs_mod_apply(&s->mod, v, XS_MOD, hints + FIRST, frames, s->rate);
     if (!s->ready || memcmp(v, s->values, sizeof v)) configure(s, v);
     for (unsigned long i = 0; i < frames; ++i) {
         float in[] = {s->port[IL][i], s->port[IR][i]};
@@ -132,11 +136,11 @@ static void run(LADSPA_Handle instance, unsigned long frames)
 #define AI (LADSPA_PORT_INPUT | LADSPA_PORT_AUDIO)
 #define AO (LADSPA_PORT_OUTPUT | LADSPA_PORT_AUDIO)
 #define C (LADSPA_PORT_INPUT | LADSPA_PORT_CONTROL)
-static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C};
+static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,HS_MOD_TYPES};
 static const char *const names[] = {
     "Input L", "Input R", "Output L", "Output R", "Drive (dB)", "Shape",
     "Depth (%)", "Harmonics (%)", "Dry/Wet Mix (%)", "+6dB Headroom",
-    "Input Gain (dB)", "Output Gain (dB)", "Bypass"
+    "Input Gain (dB)", "Output Gain (dB)", "Bypass", HS_MOD_NAMES
 };
 _Static_assert(sizeof names / sizeof *names == PORTS &&
                sizeof types / sizeof *types == PORTS &&

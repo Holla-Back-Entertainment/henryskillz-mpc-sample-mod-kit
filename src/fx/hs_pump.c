@@ -35,9 +35,10 @@ struct pump {
     float hb0, hb1, hb2, ha1, ha2, z1[2], z2[2];
     float gr, tail, onset, lp[2], dc_x[2], dc_y[2];
     int ready, ratio, opto, atmod, det_hp, sat, bypass, key, send;
+    struct hs_mod mod;
 };
 
-static const float defaults[] = {0, 3, 3, 3, 0, 0, 0, 0, 100, 0, 0, 0};
+static const float defaults[] = {0, 3, 3, 3, 0, 0, 0, 0, 100, 0, 0, 0, HS_MOD_DEFAULTS};
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
 #define TOG (B | LADSPA_HINT_TOGGLED | LADSPA_HINT_DEFAULT_0)
 #define STEP (B | LADSPA_HINT_INTEGER | LADSPA_HINT_DEFAULT_MIDDLE)
@@ -53,7 +54,8 @@ static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+PU_MIX] = {B|LADSPA_HINT_DEFAULT_MAXIMUM,0,100},
     [FIRST+PU_BYPASS] = {TOG,0,1},
     [FIRST+PU_KEY] = {B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_0,0,HS_ENV_BUSES},
-    [FIRST+PU_SEND] = {B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_0,0,HS_ENV_BUSES}
+    [FIRST+PU_SEND] = {B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_0,0,HS_ENV_BUSES},
+    HS_MOD_HINTS(FIRST+PU_MOD, PU_MOD)
 };
 #undef B
 #undef TOG
@@ -162,6 +164,7 @@ static void run(LADSPA_Handle h, unsigned long frames)
         const LADSPA_PortRangeHint *r = &hints[FIRST+i];
         v[i] = p && isfinite(*p) ? fminf(r->UpperBound, fmaxf(r->LowerBound, *p)) : defaults[i];
     }
+    hs_mod_apply(&s->mod, v, PU_MOD, hints + FIRST, frames, s->rate);
     if (!s->ready || memcmp(v, s->values, sizeof v)) configure(s, v);
 
     float gr = s->gr, tail = s->tail, onset = s->onset, sent = 0;
@@ -226,12 +229,12 @@ static void run(LADSPA_Handle h, unsigned long frames)
 #define AI (LADSPA_PORT_INPUT | LADSPA_PORT_AUDIO)
 #define AO (LADSPA_PORT_OUTPUT | LADSPA_PORT_AUDIO)
 #define C (LADSPA_PORT_INPUT | LADSPA_PORT_CONTROL)
-static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C,C,C};
+static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C,C,C,HS_MOD_TYPES};
 static const char *const names[] = {
     "Input L", "Input R", "Output L", "Output R", "Input (dB)",
     "Ratio (1,2,3,4,6,8,10,12,20)", "Attack (.2,1,3,6,10,20,30,40 ms)",
     "Release (.05,.1,.15,.2,.25,.3,.5 s, Opto)", "AtMod", "Detector HP 110 Hz", "Sat",
-    "Output (dB)", "Mix (%)", "Bypass", "Key In (Own,A,B,C,D)", "Key Send (Off,A,B,C,D)"
+    "Output (dB)", "Mix (%)", "Bypass", "Key In (Own,A,B,C,D)", "Key Send (Off,A,B,C,D)", HS_MOD_NAMES
 };
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == PU_COUNT, "Pump port count");

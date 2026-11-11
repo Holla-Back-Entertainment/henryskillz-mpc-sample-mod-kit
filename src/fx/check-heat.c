@@ -1,5 +1,5 @@
 /* HS Heat behaviour check.
- * cc -O2 -I. check-heat.c hs_heat.c -lm -o /tmp/check-heat && /tmp/check-heat */
+ * cc -O2 -I. check-heat.c hs_heat.c hs_env.c -lm -o /tmp/check-heat && /tmp/check-heat */
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>

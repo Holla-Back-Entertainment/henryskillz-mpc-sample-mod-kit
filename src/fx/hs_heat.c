@@ -49,9 +49,10 @@ struct heat {
     float g, k;                          /* filter coefficients, updated at control rate */
     float gl, gr;
     float env, phase, random_value;
+    struct hs_mod mod;
 };
 
-static const float defaults[] = {1, 40, 0, 0, 100, 0, 0, 0, 0, 0, 20, 60, 0, 64, 0, 0, 100, 0};
+static const float defaults[] = {1, 40, 0, 0, 100, 0, 0, 0, 0, 0, 20, 60, 0, 64, 0, 0, 100, 0, HS_MOD_DEFAULTS};
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
 #define INT (B | LADSPA_HINT_INTEGER)
 static const LADSPA_PortRangeHint hints[PORTS] = {
@@ -72,7 +73,8 @@ static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+HE_LFO_WAVE] = {INT|LADSPA_HINT_DEFAULT_0,0,6},
     [FIRST+HE_FREQ_PAN] = {B|LADSPA_HINT_DEFAULT_0,-64,63},
     [FIRST+HE_MIX] = {B|LADSPA_HINT_DEFAULT_MAXIMUM,0,100},
-    [FIRST+HE_VOLUME] = {B|LADSPA_HINT_DEFAULT_0,-24,12}
+    [FIRST+HE_VOLUME] = {B|LADSPA_HINT_DEFAULT_0,-24,12},
+    HS_MOD_HINTS(FIRST+HE_MOD, HE_MOD)
 };
 #undef B
 #undef INT
@@ -259,6 +261,7 @@ static void run(LADSPA_Handle h, unsigned long frames)
         const LADSPA_PortRangeHint *r = &hints[FIRST+i];
         v[i] = p && isfinite(*p) ? fminf(r->UpperBound, fmaxf(r->LowerBound, *p)) : defaults[i];
     }
+    hs_mod_apply(&s->mod, v, HE_MOD, hints + FIRST, frames, s->rate);
     if (!s->ready || memcmp(v, s->values, sizeof v)) { configure(s, v); s->countdown = 0; }
 
     for (unsigned long i = 0; i < frames; ++i) {
@@ -297,12 +300,12 @@ static void run(LADSPA_Handle h, unsigned long frames)
 #define AI (LADSPA_PORT_INPUT | LADSPA_PORT_AUDIO)
 #define AO (LADSPA_PORT_OUTPUT | LADSPA_PORT_AUDIO)
 #define C (LADSPA_PORT_INPUT | LADSPA_PORT_CONTROL)
-static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C};
+static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,HS_MOD_TYPES};
 static const char *const names[] = {
     "Input L", "Input R", "Output L", "Output R",
     "Circuit", "Drive", "Wet (dB)", "Filter type", "Filter freq", "Resonance", "Dirt",
     "EQ low", "EQ high", "Env > freq", "Env attack", "Env release", "LFO > freq", "LFO speed",
-    "LFO wave", "Freq pan", "Mix (%)", "Volume (dB)"
+    "LFO wave", "Freq pan", "Mix (%)", "Volume (dB)", HS_MOD_NAMES
 };
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == HE_COUNT, "Heat port count");

@@ -883,6 +883,63 @@ static void tube_panel(uint32_t *p, const int *values)
     pump_led(p, 266, 66, 0x7fb4e8, tube_hi_q);    text(p, 271, 64, "HI Q", 4, ink);
 }
 
+/* MOD and MOD TIME (hs_mod.h): the last two pages of every paged HS effect. One panel for all of
+   them, drawn instead of the effect's own (its lamps would read the MOD knobs as their own). hs-flavor
+   (banks.inc hs_mod_view) says which page is open and names the target; Source and Target come from
+   the MOD page's knobs, remembered for MOD TIME as the Pump lamps are (-1: not seen on this insert yet). */
+static int mod_on, mod_source;
+static char mod_target[24];
+static int mod_panel(uint32_t *p, uint32_t accent, const int *values)
+{
+    typedef int (*view_fn)(const int *, int *, const char **, const char **);
+    static view_fn view;
+    if (!view) view = (view_fn)dlsym(RTLD_DEFAULT, "hs_mod_view");
+    const char *where = NULL, *label = NULL;
+    mod_on = view ? view(values, &mod_source, &where, &label) : 0;
+    if (!mod_on) return 0;
+    if (mod_source > 4) mod_source = 0;
+    snprintf(mod_target, sizeof mod_target, "%s", label ? label : "-");
+    const uint32_t ink = 0xd9e0de, dim = 0x7f8d91;
+    text(p, 15, 39, "ENV FOLLOW", 10, accent);
+    rect(p, 15, 46, 39, 1, accent);
+    text(p, 63, 39, mod_on == 1 ? "MOD" : "MOD TIME", 8, ink);
+    /* bus lamps: the source, lit like the KEY page's routing */
+    text(p, 196, 39, "BUS", 3, dim);
+    for (int i = 0; i < 4; ++i) {
+        int x = 212 + i*24, lit = mod_source == i + 1;
+        char n[2] = {(char)('A' + i), 0};
+        rect(p, x, 37, 20, 9, lit ? 0xf2a23a : 0x15191b);
+        frame(p, x, 37, 20, 9, lit ? 0xffd08a : 0x3a4448);
+        text(p, x + 9, 39, n, 1, lit ? 0x1a1206 : dim);
+    }
+    char line[48];
+    text(p, 15, 53, "TARGET", 6, dim);
+    snprintf(line, sizeof line, "%s / %s", where ? where : "-", mod_target);
+    text(p, 43, 53, line, 44, mod_source > 0 ? ink : dim);
+    text(p, 15, 65, mod_source < 0 ? "SOURCE AND TARGET: SEE THE MOD PAGE"
+                    : mod_source ? "SEND THE BUS FROM HS PUMP OR CRUSH KEY PAGE" : "OFF: SOURCE KNOB PICKS BUS A-D",
+         48, dim);
+    return 1;
+}
+
+/* On a MOD page the effect's own markings would read the MOD knobs as theirs: mod_marking only. */
+static int mod_page(enum effect kind) { return mod_on && kind >= HS_CHANNEL; }   /* not a stock editor */
+
+static const char *mod_marking(int knob)
+{
+    static const char *const source[] = {"OFF","BUS A","BUS B","BUS C","BUS D"};
+    static char target[24];
+    if (mod_on != 1 || mod_source < 0) return NULL;   /* MOD TIME: SampQOL's own readouts */
+    if (knob == 0) return source[mod_source];
+    if (knob != 1) return NULL;                 /* depth: SampQOL's own readout */
+    for (int i = 0; ; ++i) {                     /* the glyphs are upper case */
+        char c = mod_target[i];
+        target[i] = c >= 'a' && c <= 'z' ? (char)(c - 32) : c;
+        if (!c) break;
+    }
+    return target;
+}
+
 static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
 {
     enum effect kind = page->kind;
@@ -890,6 +947,7 @@ static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
     uint32_t accent = face->accent;
     rect(p,8,34,304,42,0x101719);
     frame(p,8,34,304,42,0x465259);
+    if (mod_panel(p, accent, page->values)) return;
     if (kind != TAPE_DELAY && kind != TAPE && kind != AIR_FLAVOR && kind != HS_CHANNEL && kind != HS_XSAT && kind != HS_BUS && kind != HS_EQ2 && kind != HS_PUMP && kind != HS_HEAT && kind != HS_DISTRESSOR && kind != HS_BASS_FOCUS && kind != HS_TUBE_STRIP)
         text(p,17,38,face->legend,24,0xaebfc2);
 

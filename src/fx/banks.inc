@@ -45,7 +45,8 @@ static constexpr FlavorBank channel_banks[] = {
         {"Threshold", "Range", "Release", "Fast Attack", "Expand", ""}, {"DB", "DB", "MS"}},
     {"DE-ESSER", 8, {CH_DS_FREQ, CH_DS_THRESHOLD, CH_DS_RANGE,
                      CH_DS_MODE, -1, -1},
-        {"Frequency", "Threshold", "Range", "Mode", "", ""}, {"HZ", "DB", "DB"}}
+        {"Frequency", "Threshold", "Range", "Mode", "", ""}, {"HZ", "DB", "DB"}},
+    HS_MOD_BANKS(CH_MOD, 0)
 };
 /* No Bypass knob on any HS page: SampQOL's B3 is the one Bypass (the old ports are ignored). */
 static constexpr FlavorBank xsat_banks[] = {
@@ -54,7 +55,8 @@ static constexpr FlavorBank xsat_banks[] = {
     {"HARMONICS", 1, {XS_HARMONICS, XS_MIX, XS_HEADROOM, -1, -1, -1},
         {"Harmonics", "Mix", "Headroom +6", "", "", ""}, {"%", "%"}},
     {"INPUT / OUTPUT", 2, {XS_INPUT, XS_OUTPUT, -1, -1, -1, -1},
-        {"Input", "Output", "", "", "", ""}, {"DB", "DB"}}
+        {"Input", "Output", "", "", "", ""}, {"DB", "DB"}},
+    HS_MOD_BANKS(XS_MOD, 0)
 };
 static constexpr FlavorBank bus_banks[] = {
     {"COMPRESSION", 0, {BUS_THRESHOLD, BUS_RATIO, BUS_MAKEUP, -1, -1, -1},
@@ -62,7 +64,8 @@ static constexpr FlavorBank bus_banks[] = {
     {"TIMING", 1, {BUS_ATTACK, BUS_RELEASE, BUS_HPF, -1, -1, -1},
         {"Attack", "Release", "Sidechain HP", "", "", ""}, {"", "", "HZ"}},
     {"PARALLEL", 2, {BUS_MIX, -1, -1, -1, -1, -1},
-        {"Mix", "", "", "", "", ""}, {"%"}}
+        {"Mix", "", "", "", "", ""}, {"%"}},
+    HS_MOD_BANKS(BUS_MOD, 0)
 };
 static constexpr FlavorBank pump_banks[] = {
     {"COMPRESS", 0, {PU_INPUT, PU_RATIO, PU_OUTPUT, -1, -1, -1},
@@ -72,13 +75,15 @@ static constexpr FlavorBank pump_banks[] = {
     {"COLOUR", 2, {PU_SAT, PU_DET_HP, PU_MIX, -1, -1, -1},
         {"Saturation", "Detector HP", "Mix", "", "", ""}, {"", "", "%"}},
     {"KEY", 3, {PU_KEY, PU_SEND, -1, -1, -1, -1},
-        {"Key In", "Send", "", "", "", ""}, {}}
+        {"Key In", "Send", "", "", "", ""}, {}},
+    HS_MOD_BANKS(PU_MOD, 0)
 };
 static constexpr FlavorBank dist_banks[] = {
     {"COMPRESS", 0, {DS_INPUT, DS_RATIO, DS_OUTPUT, -1, -1, -1}, {"Input", "Ratio", "Output", "", "", ""}, {}},
     {"TIMING", 1, {DS_ATTACK, DS_RELEASE, DS_DETECTOR, -1, -1, -1}, {"Attack", "Release", "Detector", "", "", ""}, {}},
     {"AUDIO", 2, {DS_AUDIO, DS_BRIT, DS_MIX, -1, -1, -1}, {"Audio", "British", "Mix", "", "", ""}, {"", "", "%"}},
-    {"KEY", 3, {DS_KEY, DS_SEND, -1, -1, -1, -1}, {"Key In", "Send", "", "", "", ""}, {}}
+    {"KEY", 3, {DS_KEY, DS_SEND, -1, -1, -1, -1}, {"Key In", "Send", "", "", "", ""}, {}},
+    HS_MOD_BANKS(DS_MOD, 0)
 };
 static constexpr FlavorBank tube_banks[] = {
     {"TUBE", 0, {TS_DRIVE, TS_HPF, TS_OUTPUT, -1, -1, -1}, {"Drive", "High-Pass", "Output", "", "", ""}, {}},
@@ -87,7 +92,8 @@ static constexpr FlavorBank tube_banks[] = {
     {"BASS", 3, {TS_BASS_HZ, TS_BASS_DB, -1, -1, -1, -1}, {"Frequency", "Gain", "", "", "", ""}, {}},
     {"LOW MID", 4, {TS_LMID_HZ, TS_LMID_DB, TS_Q, -1, -1, -1}, {"Frequency", "Gain", "High Q", "", "", ""}, {}},
     {"HIGH MID", 5, {TS_HMID_HZ, TS_HMID_DB, TS_Q, -1, -1, -1}, {"Frequency", "Gain", "High Q", "", "", ""}, {}},
-    {"TREBLE", 6, {TS_TREBLE_HZ, TS_TREBLE_DB, -1, -1, -1, -1}, {"Frequency", "Gain", "", "", "", ""}, {}}
+    {"TREBLE", 6, {TS_TREBLE_HZ, TS_TREBLE_DB, -1, -1, -1, -1}, {"Frequency", "Gain", "", "", "", ""}, {}},
+    HS_MOD_BANKS(TS_MOD, 0)
 };
 static constexpr FlavorBank heat_banks[] = {
     {"CHARACTER", 0, {HE_CIRCUIT, HE_DRIVE, HE_WET, -1, -1, -1}, {"Circuit", "Drive", "Wet", "", "", ""}, {"", "", "DB"}},
@@ -95,7 +101,8 @@ static constexpr FlavorBank heat_banks[] = {
     {"DIRT + EQ", 2, {HE_DIRT, HE_EQ_LO, HE_EQ_HI, -1, -1, -1}, {"Dirt", "EQ Low", "EQ High", "", "", ""}, {}},
     {"ENVELOPE", 3, {HE_ENV_DEPTH, HE_ENV_ATK, HE_ENV_REL, -1, -1, -1}, {"Env Depth", "Attack", "Release", "", "", ""}, {}},
     {"LFO", 4, {HE_LFO_DEPTH, HE_LFO_SPEED, HE_LFO_WAVE, -1, -1, -1}, {"LFO Depth", "Speed", "Wave", "", "", ""}, {}},
-    {"OUTPUT", 5, {HE_FREQ_PAN, HE_MIX, HE_VOLUME, -1, -1, -1}, {"Freq Pan", "Mix", "Volume", "", "", ""}, {"", "%", "DB"}}
+    {"OUTPUT", 5, {HE_FREQ_PAN, HE_MIX, HE_VOLUME, -1, -1, -1}, {"Freq Pan", "Mix", "Volume", "", "", ""}, {"", "%", "DB"}},
+    HS_MOD_BANKS(HE_MOD, 0)
 };
 static constexpr FlavorBank eq_global[] = {
     {"GLOBAL",0,{EQ_INPUT,EQ_OUTPUT,EQ_MIDSIDE,-1,-1,-1},{"Input","Output","Mid/Side","","",""},{"DB","DB"}},
@@ -174,6 +181,9 @@ static unsigned *paged(unsigned uid, unsigned *count)
     return nullptr;
 }
 
+/* MOD knobs last seen on the open insert (hs_mod_view), -1 = not yet. */
+static int mod_seen_source = -1, mod_seen_target = -1;
+
 /* Page state is one word per effect type. When the editor opens a different insert (another slot,
    track or a second copy of the effect), start it on page 1 and band 1, as stock opens a screen.
    ponytail: keyed on SampQOL's insert object; reopening the same insert keeps its page. */
@@ -185,6 +195,7 @@ static void follow_instance()
     unsigned *pages[] = {&xsat_bank, &bus_bank, &pump_bank, &dist_bank, &tube_bank, &heat_bank, &channel_bank, &bank};
     for (unsigned *s : pages) __atomic_store_n(s, 0u, __ATOMIC_RELAXED);
     __atomic_store_n(&eq_selection, 4u, __ATOMIC_RELAXED);
+    mod_seen_source = mod_seen_target = -1;     /* hs_mod_view: MOD knobs not seen on this insert */
 }
 
 extern "C" const char *hs_xsat_bank(int *section)
@@ -425,4 +436,32 @@ extern "C" int fxmap_get_row(void *context, int id, void *output)
     memcpy(row->parameters, page.parameters, sizeof row->parameters);
     memcpy(row->labels, page.labels, sizeof row->labels);
     return 1;
+}
+
+/* MOD pages (hs_mod.h, the last two pages of every paged HS effect but the flavor) for hs-fx's panel:
+   1 = MOD, 2 = MOD TIME, 0 = not on one. knobs = the page's knob positions (0-72, -1 unused) as hs-fx
+   sees them. On MOD, Source and Target are read from those knobs and remembered for this insert, so
+   MOD TIME can show them too; *source is -1 until the MOD page has been seen on this insert.
+   ponytail: the kit has no instance registry to read the live ports, so this follows the knobs. */
+extern "C" int hs_mod_view(const int *knobs, int *source, const char **target_page, const char **target)
+{
+    unsigned uid = insert_open(), count;
+    const FlavorBank *pages = uid == HS_XSAT_ID ? xsat_banks : uid == HS_BUS_ID ? bus_banks
+        : uid == HS_PUMP_ID ? pump_banks : uid == HS_DISTRESSOR_ID ? dist_banks
+        : uid == HS_TUBE_STRIP_ID ? tube_banks : uid == HS_HEAT_ID ? heat_banks
+        : uid == HS_CHANNEL_ID ? channel_banks : nullptr;
+    unsigned *at = pages ? paged(uid, &count) : nullptr;
+    unsigned page = at ? __atomic_load_n(at, __ATOMIC_RELAXED) : 0;
+    if (!at || count < 3 || page + 2 < count || page >= count) return 0;
+    int base = pages[count - 2].parameters[0] - HS_MOD_SRC;   /* = the effect's own control count */
+    if (page + 2 == count && knobs && knobs[0] >= 0 && knobs[1] >= 0) {
+        mod_seen_source = (knobs[0]*4 + 36)/73;   /* Off, A-D: integer knob steps, as the panels read them */
+        mod_seen_target = (knobs[1]*(base - 1) + 36)/73;
+    }
+    *source = mod_seen_source;
+    *target_page = *target = nullptr;
+    for (unsigned i = 0; mod_seen_target >= 0 && i + 2 < count && !*target; ++i)
+        for (int k = 0; k < 6; ++k)
+            if (pages[i].parameters[k] == mod_seen_target) { *target_page = pages[i].title; *target = pages[i].labels[k]; break; }
+    return static_cast<int>(page + 3 - count);
 }

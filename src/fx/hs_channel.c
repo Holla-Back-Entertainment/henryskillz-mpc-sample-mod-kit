@@ -31,6 +31,7 @@ struct channel {
     float gate_step, gate_release, detector_decay;
     float comp_threshold, comp_floor, comp_slope, gate_threshold, gate_close;
     unsigned configured;
+    struct hs_mod mod;
 };
 
 static const float defaults[CH_COUNT] = {
@@ -39,7 +40,8 @@ static const float defaults[CH_COUNT] = {
     [CH_HM_HZ] = 2500, [CH_HM_Q] = 1, [CH_HF_HZ] = 8000,
     [CH_COMP_THRESHOLD] = 10, [CH_COMP_RATIO] = 1, [CH_COMP_RELEASE] = 632.4555f,
     [CH_GATE_THRESHOLD] = -30, [CH_GATE_RELEASE] = 632.4555f,
-    [CH_DS_FREQ] = 6000, [CH_DS_THRESHOLD] = -25
+    [CH_DS_FREQ] = 6000, [CH_DS_THRESHOLD] = -25,
+    [CH_MOD+HS_MOD_ATTACK] = 5.623f, [CH_MOD+HS_MOD_RELEASE] = 223.6f   /* HS_MOD_DEFAULTS */
 };
 
 static const char *const names[] = {
@@ -49,7 +51,7 @@ static const char *const names[] = {
     "HM Hz", "HM dB", "HM Q", "HF Hz", "HF dB", "HF Bell",
     "Comp Thresh", "Comp Ratio", "Make-Up dB", "Fast Attack", "Release ms",
     "Hard Knee", "Gate Thresh", "Gate Range", "Release ms", "Fast Attack", "Expand",
-    "DS Freq Hz", "DS Thresh dB", "DS Range dB", "DS Mode"
+    "DS Freq Hz", "DS Thresh dB", "DS Range dB", "DS Mode", HS_MOD_NAMES
 };
 
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
@@ -92,7 +94,8 @@ static const LADSPA_PortRangeHint hints[] = {
     PORT(CH_DS_FREQ) = {B | L | MID, 3000, 12000},
     PORT(CH_DS_THRESHOLD) = {B | MID, -50, 0},
     PORT(CH_DS_RANGE) = {B | D0, 0, 18},
-    PORT(CH_DS_MODE) = {B | D0, 0, 3}    /* thirds of the turn: split, wide, listen (hs-fx labels them) */
+    PORT(CH_DS_MODE) = {B | D0, 0, 3},   /* thirds of the turn: split, wide, listen (hs-fx labels them) */
+    HS_MOD_HINTS(FIRST_CONTROL + CH_MOD, CH_MOD)
 };
 #undef PORT
 #undef B
@@ -415,6 +418,7 @@ static void run(LADSPA_Handle handle, unsigned long frames)
         p[i] = control && isfinite(*control)
             ? fminf(hint->UpperBound, fmaxf(hint->LowerBound, *control)) : defaults[i];
     }
+    hs_mod_apply(&s->mod, p, CH_MOD, hints + FIRST_CONTROL, frames, (unsigned long)s->rate);
     if (!s->configured || memcmp(p, s->parameters, sizeof p)) configure(s, p);
     if (!s->ports[LEFT_IN] || !s->ports[RIGHT_IN] || !s->ports[LEFT_OUT] || !s->ports[RIGHT_OUT]) return;
 
@@ -474,7 +478,8 @@ static const LADSPA_PortDescriptor descriptors[] = {
     CONTROL, CONTROL, CONTROL, CONTROL, CONTROL, CONTROL,
     CONTROL, CONTROL, CONTROL, CONTROL, CONTROL, CONTROL,
     CONTROL, CONTROL, CONTROL, CONTROL, CONTROL,
-    CONTROL, CONTROL, CONTROL, CONTROL
+    CONTROL, CONTROL, CONTROL, CONTROL,
+    HS_MOD_TYPES
 };
 _Static_assert(sizeof names / sizeof *names == FIRST_CONTROL + CH_COUNT, "parameter names");
 _Static_assert(sizeof descriptors / sizeof *descriptors == FIRST_CONTROL + CH_COUNT, "port descriptors");

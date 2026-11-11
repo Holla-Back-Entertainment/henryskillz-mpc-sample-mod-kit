@@ -34,12 +34,13 @@ struct distressor {
     struct biquad det_hp, det_band, aud_hp;
     float gr, tail, hp1_x[2], hp1_y[2], dc_x[2], dc_y[2];
     int ready, ratio, det_mode, aud_hp_on, brit, bypass, key, send;
+    struct hs_mod mod;
 };
 
 #ifndef OUT_MAKEUP_DB
 #define OUT_MAKEUP_DB 4
 #endif
-static const float defaults[] = {5, 5, 5, 7.5f, 4, 0, 0, 0, 100, 0, 0, 0};
+static const float defaults[] = {5, 5, 5, 7.5f, 4, 0, 0, 0, 100, 0, 0, 0, HS_MOD_DEFAULTS};
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
 #define TOG (B | LADSPA_HINT_TOGGLED | LADSPA_HINT_DEFAULT_0)
 #define STEP (B | LADSPA_HINT_INTEGER)
@@ -55,7 +56,8 @@ static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+DS_MIX] = {B|LADSPA_HINT_DEFAULT_MAXIMUM,0,100},
     [FIRST+DS_BYPASS] = {TOG,0,1},
     [FIRST+DS_KEY] = {B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_0,0,HS_ENV_BUSES},
-    [FIRST+DS_SEND] = {B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_0,0,HS_ENV_BUSES}
+    [FIRST+DS_SEND] = {B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_0,0,HS_ENV_BUSES},
+    HS_MOD_HINTS(FIRST+DS_MOD, DS_MOD)
 };
 #undef B
 #undef TOG
@@ -180,6 +182,7 @@ static void run(LADSPA_Handle h, unsigned long frames)
         const LADSPA_PortRangeHint *r = &hints[FIRST+i];
         v[i] = p && isfinite(*p) ? fminf(r->UpperBound, fmaxf(r->LowerBound, *p)) : defaults[i];
     }
+    hs_mod_apply(&s->mod, v, DS_MOD, hints + FIRST, frames, s->rate);
     if (!s->ready || memcmp(v, s->values, sizeof v)) configure(s, v);
 
     float gr = s->gr, tail = s->tail, sent = 0;
@@ -245,12 +248,12 @@ float hs_distressor_gr(const void *handle)
 #define AI (LADSPA_PORT_INPUT | LADSPA_PORT_AUDIO)
 #define AO (LADSPA_PORT_OUTPUT | LADSPA_PORT_AUDIO)
 #define C (LADSPA_PORT_INPUT | LADSPA_PORT_CONTROL)
-static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C,C,C};
+static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C,C,C,HS_MOD_TYPES};
 static const char *const names[] = {
     "Input L", "Input R", "Output L", "Output R", "Input", "Attack", "Release", "Output",
     "Ratio (1,2,3,4,6,10 Opto,20,Max)", "Detector (Norm,HP,Band,HP+Band)",
     "Audio (Clean,HP,Dist 2,Dist 3,HP+D2,HP+D3)", "British Mode", "Mix (%)", "Bypass",
-    "Key In (Own,A,B,C,D)", "Key Send (Off,A,B,C,D)"
+    "Key In (Own,A,B,C,D)", "Key Send (Off,A,B,C,D)", HS_MOD_NAMES
 };
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == DS_COUNT, "Crush port count");

@@ -1,5 +1,5 @@
 /* HS Tube Strip behaviour check.
- * cc -O2 -I. check-tube-strip.c hs_tube_strip.c -lm -o /tmp/cts && /tmp/cts */
+ * cc -O2 -I. check-tube-strip.c hs_tube_strip.c hs_env.c -lm -o /tmp/cts && /tmp/cts */
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>

@@ -28,6 +28,7 @@ struct tube_strip {
     float drive, hpf_coef, out_gain, threshold, slope, attack, release;
     float hp_x[2], hp_y[2], dc_x[2], dc_y[2], dc_coef, gr;
     int ready, hpf_on, eq_first, sc_on, bypass;
+    struct hs_mod mod;
 };
 
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
@@ -35,7 +36,7 @@ struct tube_strip {
 #define TOG (B | LADSPA_HINT_TOGGLED | LADSPA_HINT_DEFAULT_0)
 #define STEP (B | LADSPA_HINT_INTEGER)
 /* SampQOL loads the hint defaults: the strip comes in with the compressor idle and the EQ flat. */
-static const float defaults[TS_COUNT] = {2.5f, 20, 0, 20, 5.75f, 20, 707.1f, 0, 0, 1, 0, 0, 367.4f, 2000, 0, 1, 0, 0, 0};
+static const float defaults[TS_COUNT] = {2.5f, 20, 0, 20, 5.75f, 20, 707.1f, 0, 0, 1, 0, 0, 367.4f, 2000, 0, 1, 0, 0, 0, HS_MOD_DEFAULTS};
 static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+TS_DRIVE] = {B|LADSPA_HINT_DEFAULT_LOW, 0, 10},
     [FIRST+TS_HPF] = {B|LADSPA_HINT_DEFAULT_MINIMUM, 20, 140},
@@ -55,7 +56,8 @@ static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+TS_TREBLE_HZ] = {STEP|LADSPA_HINT_DEFAULT_1, 0, 3},
     [FIRST+TS_TREBLE_DB] = {B|LADSPA_HINT_DEFAULT_MIDDLE, -20, 20},
     [FIRST+TS_Q] = {TOG, 0, 1},
-    [FIRST+TS_BYPASS] = {TOG, 0, 1}
+    [FIRST+TS_BYPASS] = {TOG, 0, 1},
+    HS_MOD_HINTS(FIRST+TS_MOD, TS_MOD)
 };
 #undef B
 #undef LOG
@@ -169,6 +171,7 @@ static void run(LADSPA_Handle h, unsigned long frames)
         const LADSPA_PortRangeHint *r = &hints[FIRST+i];
         v[i] = p && isfinite(*p) ? fminf(r->UpperBound, fmaxf(r->LowerBound, *p)) : defaults[i];
     }
+    hs_mod_apply(&s->mod, v, TS_MOD, hints + FIRST, frames, (unsigned long)s->rate);
     if (!s->ready || memcmp(v, s->values, sizeof v)) configure(s, v);
 
     float gr = s->gr;
@@ -219,12 +222,12 @@ float hs_tube_strip_gr(const void *handle)
 #define AI (LADSPA_PORT_INPUT | LADSPA_PORT_AUDIO)
 #define AO (LADSPA_PORT_OUTPUT | LADSPA_PORT_AUDIO)
 #define C (LADSPA_PORT_INPUT | LADSPA_PORT_CONTROL)
-static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C};
+static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,C,HS_MOD_TYPES};
 static const char *const names[] = {
     "Input L", "Input R", "Output L", "Output R", "Drive", "HPF (Hz, <30 off)", "Output (dB)",
     "Threshold (dB)", "Ratio", "Attack (ms)", "Release (ms)", "EQ Before Comp", "SC EQ",
     "Bass Hz (15,30,60,150)", "Bass (dB)", "Low Mid (dB)", "Low Mid (Hz)", "High Mid (Hz)", "High Mid (dB)",
-    "Treble Hz (10k,15k,20k,32k)", "Treble (dB)", "High Q", "Bypass"
+    "Treble Hz (10k,15k,20k,32k)", "Treble (dB)", "High Q", "Bypass", HS_MOD_NAMES
 };
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS,
                "Tube Strip port count");

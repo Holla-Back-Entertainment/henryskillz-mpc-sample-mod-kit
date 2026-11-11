@@ -420,7 +420,8 @@ static const uint32_t *draw_stock_rack(struct effect_page *page)
         }
         rect(p, x+5, 137, 88, 14, 0x0a0f12);
         frame(p, x+5, 137, 88, 14, 0x323d43);
-        const char *marked = page->kind == HS_BUS ? bus_marking(i, page->values[i])
+        const char *marked = mod_page(page->kind) ? mod_marking(i)
+            : page->kind == HS_BUS ? bus_marking(i, page->values[i])
             : page->kind == HS_PUMP ? pump_marking(i, page->values[i])
             : page->kind == HS_HEAT ? heat_marking(i, page->values[i])
             : page->kind == HS_DISTRESSOR ? dist_marking(i, page->values[i])
