@@ -15,6 +15,8 @@
 #include "hs_eq2.h"
 #include "hs_pump.h"
 #include "hs_heat.h"
+#include "hs_distressor.h"
+#include "hs_bass_focus.h"
 
 enum {
     HS_SATURATOR = 0x485301,
@@ -43,7 +45,9 @@ static const struct fx_row hs_rows[] = {
     {HS_BUS_ID, -1, DYNAMICS, "HS Bus Compressor"},
     {HS_EQ2_ID, -1, EQ_FILTER, "HS Para EQ"},
     {HS_PUMP_ID, -1, DYNAMICS, "HS Pump"},
-    {HS_HEAT_ID, -1, HARMONIC, "HS Heat"}
+    {HS_HEAT_ID, -1, HARMONIC, "HS Heat"},
+    {HS_DISTRESSOR_ID, -1, DYNAMICS, "HS Crush"},
+    {HS_BASS_FOCUS_ID, -1, EQ_FILTER, "HS Bass Focus"}
 };
 enum { FX_COUNT = sizeof hs_rows / sizeof *hs_rows };
 

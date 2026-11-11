@@ -10,8 +10,10 @@
 #include "hs_eq2.h"
 #include "hs_pump.h"
 #include "hs_heat.h"
+#include "hs_distressor.h"
+#include "hs_bass_focus.h"
 
-extern const LADSPA_Descriptor hs_channel_descriptor, hs_xsat_descriptor, hs_bus_descriptor, hs_eq2_descriptor, hs_pump_descriptor, hs_heat_descriptor;
+extern const LADSPA_Descriptor hs_channel_descriptor, hs_xsat_descriptor, hs_bus_descriptor, hs_eq2_descriptor, hs_pump_descriptor, hs_heat_descriptor, hs_distressor_descriptor, hs_bass_focus_descriptor;
 #include "hs_saturator.h"
 
 enum { INPUT_L, INPUT_R, OUTPUT_L, OUTPUT_R, CONTROL_1, CONTROL_2, CONTROL_3, PORT_COUNT };
@@ -154,6 +156,8 @@ const LADSPA_Descriptor *ladspa_descriptor(unsigned long index)
     if (index == HS_EQ2_ID) return &hs_eq2_descriptor;
     if (index == HS_PUMP_ID) return &hs_pump_descriptor;
     if (index == HS_HEAT_ID) return &hs_heat_descriptor;
+    if (index == HS_DISTRESSOR_ID) return &hs_distressor_descriptor;
+    if (index == HS_BASS_FOCUS_ID) return &hs_bass_focus_descriptor;
 #endif
     if (index == sizeof effects / sizeof *effects) return &hs_channel_descriptor;
     if (index == sizeof effects / sizeof *effects + 1) return &hs_xsat_descriptor;
@@ -161,5 +165,7 @@ const LADSPA_Descriptor *ladspa_descriptor(unsigned long index)
     if (index == sizeof effects / sizeof *effects + 3) return &hs_eq2_descriptor;
     if (index == sizeof effects / sizeof *effects + 4) return &hs_pump_descriptor;
     if (index == sizeof effects / sizeof *effects + 5) return &hs_heat_descriptor;
+    if (index == sizeof effects / sizeof *effects + 6) return &hs_distressor_descriptor;
+    if (index == sizeof effects / sizeof *effects + 7) return &hs_bass_focus_descriptor;
     return index < sizeof effects / sizeof *effects ? &effects[index] : NULL;
 }

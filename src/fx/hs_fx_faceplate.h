@@ -74,7 +74,9 @@ static const struct faceplate faceplates[] = {
     [HS_BUS] = {0x283039, 0x9baac0, "BUS COMPRESSOR"},
     [HS_EQ2] = {0x252e36, 0x77bcb0, "PARA EQ"},
     [HS_PUMP] = {0x060708, 0x2fa8e8, "PUMP"},
-    [HS_HEAT] = {0x0c0c0d, 0xe8e6e0, "HEAT"}
+    [HS_HEAT] = {0x0c0c0d, 0xe8e6e0, "HEAT"},
+    [HS_DISTRESSOR] = {0x0a0a0b, 0xd8d8d4, "CRUSH"},
+    [HS_BASS_FOCUS] = {0x0b0e0f, 0x48c8a0, "BASS FOCUS"}
 };
 
 static void fx_line(uint32_t *p, int x, int y, int ex, int ey, uint32_t color)
@@ -585,6 +587,166 @@ static void eq2_panel(uint32_t *p)
     }
 }
 
+/* HS Crush: black face, white print, a red gain-reduction LED row, the ratio LEDs laid flat,
+   and lamps for the Detector, Audio and British buttons. The GR
+   row reads the open instance (dist_gr_db, set in effect_knobs); -1 means it could not be read. */
+static float dist_gr_db = -1;
+static int dist_ratio = 4, dist_det, dist_audio, dist_brit;
+
+static int dist_section(const char **name)
+{
+    typedef const char *(*bank_fn)(int *);
+    static bank_fn active_bank;
+    if (!active_bank) active_bank = (bank_fn)dlsym(RTLD_DEFAULT, "hs_distressor_bank");
+    int section = 0;
+    const char *title = active_bank ? active_bank(&section) : NULL;
+    if (name) *name = title ? title : "COMPRESS";
+    return section >= 0 && section < 3 ? section : 0;
+}
+
+static void dist_note(int knob, int value)
+{
+    int section = dist_section(NULL);
+    if (value < 0) return;
+    if (section == 0 && knob == 1) dist_ratio = (value*7+36)/73;
+    if (section == 1 && knob == 2) dist_det = (value*3+36)/73;
+    if (section == 2 && knob == 0) dist_audio = (value*5+36)/73;
+    if (section == 2 && knob == 1) dist_brit = value >= 37;
+}
+
+static const char *dist_marking(int knob, int value)
+{
+    static const char *const ratio[] = {"1:1","2:1","3:1","4:1","6:1","10:1 OPTO","20:1","MAX"};
+    static const char *const det[] = {"NORM","HP","BAND","HP + BAND"};
+    static const char *const audio[] = {"CLEAN","HP","DIST 2","DIST 3","HP + DIST 2","HP + DIST 3"};
+    static char s[3][16];
+    if (value < 0) return NULL;
+    int section = dist_section(NULL);
+    float k = value*10.0f/73;
+    if (section == 0 && knob == 1) return ratio[(value*7+36)/73];
+    if (section == 1 && knob == 2) return det[(value*3+36)/73];
+    if (section == 2 && knob == 0) return audio[(value*5+36)/73];
+    if (section == 2 && knob == 1) return value >= 37 ? "ON" : "OFF";
+    if (section == 2) return NULL;
+    if (section == 1 && knob == 0) {
+        float ms = .05f*powf(600, k*.1f);
+        snprintf(s[0], sizeof s[0], ms < 1 ? "%.1f  %.0f US" : "%.1f  %.1f MS", k, ms < 1 ? ms*1000 : ms);
+    } else if (section == 1 && knob == 1) {
+        float sec = .05f*powf(dist_ratio == 5 ? 400 : 70, k*.1f);
+        snprintf(s[1], sizeof s[1], "%.1f  %.2f S", k, sec);
+    } else {
+        snprintf(s[2], sizeof s[2], "%.1f", k);
+        return s[2];
+    }
+    return s[knob];
+}
+
+static void dist_panel(uint32_t *p, const int *values)
+{
+    for (int i = 0; i < 3; ++i) dist_note(i, values[i]);
+    static const char *const ratios[] = {"1","2","3","4","6","OPT","20","MAX"};
+    static const int gr_steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
+    const uint32_t ink = 0xeeeeea, dim = 0x8a8a86;
+    const char *name;
+    dist_section(&name);
+    rect(p, 8, 34, 304, 42, 0x0a0a0b);
+    frame(p, 8, 34, 304, 42, 0x4a4a4c);
+    text(p, 15, 38, "HS CRUSH", 8, ink);
+    rect(p, 15, 45, 31, 1, 0xe8382c);
+    text(p, 56, 38, name, 19, ink);
+    text(p, 282, 38, "2 PAGE", 6, dim);
+    /* gain reduction, red LEDs */
+    text(p, 15, 50, "GR DB", 5, dim);
+    for (int i = 0; i < 10; ++i) {
+        int x = 19 + i*9;
+        pump_led(p, x, 59, 0xe8382c, dist_gr_db >= gr_steps[i]);
+        if (i == 0 || i == 4 || i == 9) {
+            char n[3]; snprintf(n, sizeof n, "%d", gr_steps[i]);
+            text(p, x - 2*(int)strlen(n) + 1, 64, n, 2, dim);
+        }
+    }
+    if (dist_gr_db < 0) text(p, 45, 50, "NO METER", 8, 0x6a6a68);
+    /* ratio LEDs; British mode lights its own lamp instead */
+    text(p, 116, 50, "RATIO", 5, dim);
+    for (int i = 0; i < 8; ++i) {
+        int x = 121 + i*17;
+        uint32_t c = i < 4 ? 0x46c84a : i < 6 ? 0xe2d23a : 0xe8382c;
+        pump_led(p, x, 59, c, !dist_brit && i == dist_ratio);
+        text(p, x - 2*(int)strlen(ratios[i]) + 1, 64, ratios[i], 3, dim);
+    }
+    rect(p, 113, 70, 140, 1, 0x2a2a2c);
+    /* buttons: detector and audio lamps, British */
+    text(p, 15, 70, "DET", 3, dim);
+    pump_led(p, 34, 72, 0x46c84a, dist_det & 1);   text(p, 39, 70, "HP", 2, ink);
+    pump_led(p, 54, 72, 0xe2d23a, dist_det & 2);   text(p, 59, 70, "BAND", 4, ink);
+    int a = dist_audio;
+    text(p, 262, 50, "AUDIO", 5, dim);
+    pump_led(p, 266, 59, 0x46c84a, a == 1 || a >= 4); text(p, 271, 57, "HP", 2, ink);
+    pump_led(p, 266, 66, 0xe2d23a, a == 2 || a == 4); text(p, 271, 64, "D2", 2, ink);
+    pump_led(p, 288, 59, 0xe8382c, a == 3 || a == 5); text(p, 293, 57, "D3", 2, ink);
+    pump_led(p, 288, 66, 0xf08a2c, dist_brit);       text(p, 293, 64, "BRIT", 4, ink);
+}
+
+/* HS Bass Focus: the response it applies, drawn live from the knobs. Log frequency 20 Hz - 20 kHz,
+   +8 to -24 dB. The LR4 bands are in phase, so the magnitude is (g + t)/(1 + t) with t = (f/fc)^4. */
+static const uint32_t bf_green = 0x48c8a0;
+static float bf_freq(int v) { return 30*powf(500/30.0f, v/73.0f); }
+static float bf_bass(int v) { return roundf(2*(-24 + 32*v/73.0f))*.5f + 0.0f; }   /* the panel sees 74 steps: show 0.5 dB */
+static const char *bf_marking(int knob, int value)
+{
+    static char s[2][12];
+    if (value < 0) return NULL;
+    if (knob == 2) return value >= 37 ? "MONO" : "STEREO";
+    if (knob == 0) snprintf(s[0], sizeof s[0], "%d HZ", (int)lroundf(bf_freq(value)));
+    else { float b = bf_bass(value); snprintf(s[1], sizeof s[1], b ? "%+.1f DB" : "0.0 DB", b); }
+    return s[knob];
+}
+static void bf_panel(uint32_t *p, const int *values)
+{
+    float fc = bf_freq(values[0] < 0 ? 37 : values[0]), bass = bf_bass(values[1] < 0 ? 55 : values[1]);
+    int mono = values[2] < 0 || values[2] >= 37;
+    const uint32_t ink = 0xeef2f0, dim = 0x7e8a88;
+    char n[16];
+    rect(p, 8, 34, 304, 42, 0x0b0e0f);
+    frame(p, 8, 34, 304, 42, 0x3c4846);
+    text(p, 15, 38, "HS BASS FOCUS", 13, ink);
+    rect(p, 15, 45, 51, 1, bf_green);
+    text(p, 15, 50, "XOVER", 5, dim);
+    snprintf(n, sizeof n, "%d HZ", (int)lroundf(fc));   text(p, 42, 50, n, 7, ink);
+    text(p, 15, 58, "BASS", 4, dim);
+    snprintf(n, sizeof n, bass ? "%+.1f DB" : "0.0 DB", bass);           text(p, 42, 58, n, 8, ink);
+    pump_led(p, 19, 68, bf_green, mono);               text(p, 24, 66, "MONO", 4, mono ? ink : dim);
+    pump_led(p, 51, 68, 0xe2d23a, !mono);              text(p, 56, 66, "STEREO", 6, mono ? dim : ink);
+    /* response graph */
+    enum { GX0 = 98, GX1 = 306, GY0 = 38, GY1 = 66 };
+    rect(p, GX0, GY0, GX1 - GX0, GY1 - GY0 + 1, 0x050707);
+    float span = log10f(1000);                                    /* 20 Hz .. 20 kHz */
+    #define BF_X(f) (GX0 + (int)lroundf((log10f((f)/20) / span) * (GX1 - GX0 - 1)))
+    #define BF_Y(db) (GY0 + (int)lroundf((8 - (db)) * (GY1 - GY0) / 32))
+    static const int grid[] = {50, 100, 200, 500, 1000, 2000, 5000, 10000};
+    for (unsigned i = 0; i < sizeof grid / sizeof *grid; ++i) rect(p, BF_X(grid[i]), GY0, 1, GY1 - GY0 + 1, 0x141a1a);
+    for (int db = 0; db >= -24; db -= 12) rect(p, GX0, BF_Y(db), GX1 - GX0, 1, db ? 0x141a1a : 0x2c3634);
+    text(p, BF_X(100) - 5, GY1 + 3, "100", 3, dim);
+    text(p, BF_X(1000) - 3, GY1 + 3, "1K", 2, dim);
+    text(p, BF_X(10000) - 5, GY1 + 3, "10K", 3, dim);
+    float g = powf(10, bass/20);
+    int y0 = BF_Y(0), prev = -1;
+    for (int x = GX0; x < GX1; ++x) {
+        float f = 20*powf(10, span*(x - GX0)/(GX1 - GX0 - 1)), t = powf(f/fc, 4);
+        float db = 20*log10f(fmaxf(1e-4f, (g + t)/(1 + t)));
+        int y = BF_Y(fmaxf(-24, fminf(8, db)));
+        if (f < fc) { int a = y < y0 ? y : y0, b = y < y0 ? y0 : y; rect(p, x, a, 1, b - a + 1, 0x153a30); }
+        if (prev >= 0) { int a = prev < y ? prev : y, b = prev < y ? y : prev; rect(p, x, a, 1, b - a + 1, bf_green); }
+        else rect(p, x, y, 1, 1, bf_green);
+        prev = y;
+    }
+    int xc = BF_X(fc);
+    for (int y = GY0; y <= GY1; y += 2) rect(p, xc, y, 1, 1, ink);
+    text(p, GX0 + 3, GY0 + 2, mono ? "M" : "S", 1, mono ? bf_green : 0xe2d23a);
+    #undef BF_X
+    #undef BF_Y
+}
+
 static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
 {
     enum effect kind = page->kind;
@@ -592,7 +754,7 @@ static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
     uint32_t accent = face->accent;
     rect(p,8,34,304,42,0x101719);
     frame(p,8,34,304,42,0x465259);
-    if (kind != TAPE_DELAY && kind != TAPE && kind != AIR_FLAVOR && kind != HS_CHANNEL && kind != HS_XSAT && kind != HS_BUS && kind != HS_EQ2 && kind != HS_PUMP && kind != HS_HEAT)
+    if (kind != TAPE_DELAY && kind != TAPE && kind != AIR_FLAVOR && kind != HS_CHANNEL && kind != HS_XSAT && kind != HS_BUS && kind != HS_EQ2 && kind != HS_PUMP && kind != HS_HEAT && kind != HS_DISTRESSOR && kind != HS_BASS_FOCUS)
         text(p,17,38,face->legend,24,0xaebfc2);
 
     switch (kind) {
@@ -647,6 +809,12 @@ static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
         break;
     case HS_PUMP:
         pump_panel(p, page->values);
+        break;
+    case HS_DISTRESSOR:
+        dist_panel(p, page->values);
+        break;
+    case HS_BASS_FOCUS:
+        bf_panel(p, page->values);
         break;
     case HS_HEAT:
         heat_panel(p, page->values);

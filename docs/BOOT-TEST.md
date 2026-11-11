@@ -36,7 +36,9 @@ Open the insert effects list and test each effect with audio playing. Load one e
 - [ ] **HS Para EQ** loads and passes audio.
 - [ ] **HS Pump** loads and passes audio. On its first page, turning **K2** lights the ratio lamps from 1 to 20.
 - [ ] **HS Heat** loads and passes audio. On its first page, turning **K1** moves the amber lamp across the 8 circuits; on its second page, **K1** moves the lamp across the 7 filter shapes.
-- [ ] On HS Pump and HS Heat, the **middle screen button** moves through their pages (3 on Pump, 6 on Heat).
+- [ ] **HS Crush** loads and passes audio near the same level. On its first page, turning **K2** lights the ratio lamps from 1 to MAX, and the red GR DB lamps move with the music (they show NO METER if they cannot read it: note that).
+- [ ] **HS Bass Focus** loads and passes audio at the same level with Bass at 0 dB. Turning **K2** down moves the curve below the crossover marker; **K3** switches the lamp between MONO and STEREO.
+- [ ] On HS Pump, HS Heat and HS Crush, the **middle screen button** moves through their pages (3 on Pump, 6 on Heat, 3 on Crush).
 - [ ] The EQ page shows the dB/Hz grid.
 - [ ] The controls respond without a crash, freeze or unexpected silence.
 

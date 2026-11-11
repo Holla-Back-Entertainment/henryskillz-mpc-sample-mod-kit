@@ -9,6 +9,8 @@ typedef int (*eq2_response_fn)(int, int, float *);
 typedef const float *(*eq2_values_fn)(unsigned *);
 static eq2_response_fn eq2_response;
 static eq2_values_fn eq2_values;
+static const void *dist_descriptor;
+static float (*dist_gr)(const void *);
 
 static int find_ladspa(struct dl_phdr_info *info, size_t size, void *out)
 {
@@ -29,7 +31,27 @@ static int eq2_link(void)
     if (!lib) return 0;
     eq2_response = (eq2_response_fn)dlsym(lib, "hs_eq2_response");
     eq2_values = (eq2_values_fn)dlsym(lib, "hs_eq2_values");
+    dist_descriptor = dlsym(lib, "hs_distressor_descriptor");
+    dist_gr = (float (*)(const void *))dlsym(lib, "hs_distressor_gr");
     return eq2_response && eq2_values;
+}
+
+/* SampQOL 0.2.0 (pinned build): the insert editor object at qol+0x16333a0 holds the open insert at
+ * +0xd0; the insert keeps its LADSPA descriptor at +0x128 and handle at +0x130 (read live on the
+ * device 11 Nov 2026 with two X-EQ 2s open). The descriptor check keeps a wrong read harmless. */
+static void *open_handle(const void *descriptor)
+{
+    if (!qol_base || !descriptor) return NULL;
+    const char *editor = *(char *const *)(qol_base + 0x16333a0);
+    const char *insert = editor ? *(char *const *)(editor + 0xd0) : NULL;
+    return insert && *(const void *const *)(insert + 0x128) == descriptor ? *(void *const *)(insert + 0x130) : NULL;
+}
+
+/* Gain reduction of the open HS Crush, or -1 when it cannot be read. */
+static float dist_open_gr(void)
+{
+    void *h = eq2_link() && dist_gr ? open_handle(dist_descriptor) : NULL;
+    return h ? dist_gr(h) : -1;
 }
 
 static unsigned eq2_seq(void)

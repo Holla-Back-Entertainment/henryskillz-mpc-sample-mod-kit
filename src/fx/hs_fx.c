@@ -2,6 +2,7 @@
 #include <dlfcn.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -14,6 +15,8 @@ enum { W = 320, H = 160 };
 #include "hs_eq2.h"
 #include "hs_pump.h"
 #include "hs_heat.h"
+#include "hs_distressor.h"
+#include "hs_bass_focus.h"
 
 typedef void (*overlay_fn)(int, const void *, int);
 typedef void (*overlay_rect_fn)(int, const void *, int, int, int, int);
@@ -71,7 +74,7 @@ enum effect {
     OTHER, DUCKER, COMPRESSOR, WIDTH, TUBE_DRIVE, SOFT_CLIPPER, HS_SATURATOR, HS_AIR_EXCITER,
     DELAY, DIFF_DELAY, TAPE_DELAY, SAMPLE_DELAY, REVERB, SPRING_REVERB, FILTER, BUS_COMP,
     DUCKER_INPUT, LIMITER, PUMPER, TRANSIENT, GATE, AMP_SIM, ENSEMBLE, CHORUS, PHASER,
-    FLANGER, WAH, AUTO_PAN, VINTAGE, VINYL, TAPE, AIR_FLAVOR, HS_CHANNEL, HS_XSAT, HS_BUS, HS_EQ2, HS_PUMP, HS_HEAT
+    FLANGER, WAH, AUTO_PAN, VINTAGE, VINYL, TAPE, AIR_FLAVOR, HS_CHANNEL, HS_XSAT, HS_BUS, HS_EQ2, HS_PUMP, HS_HEAT, HS_DISTRESSOR, HS_BASS_FOCUS
 };
 enum { KNOBS = 3 };
 
@@ -167,6 +170,8 @@ static enum effect identify_effect(const uint32_t *p)
     case HS_EQ2_ID: return HS_EQ2;
     case HS_PUMP_ID: return HS_PUMP;
     case HS_HEAT_ID: return HS_HEAT;
+    case HS_DISTRESSOR_ID: return HS_DISTRESSOR;
+    case HS_BASS_FOCUS_ID: return HS_BASS_FOCUS;
     default: return OTHER;
     }
 }
@@ -348,9 +353,9 @@ static const uint32_t *draw_stock_rack(struct effect_page *page)
     for (int i = 0; i < KNOBS; ++i) {
         int x = 8 + 103 * i, cx = x + 49;
         int flavor = page->kind == AIR_FLAVOR;
-        int pump = page->kind == HS_PUMP, heat = page->kind == HS_HEAT;
+        int pump = page->kind == HS_PUMP || page->kind == HS_DISTRESSOR, heat = page->kind == HS_HEAT;
         rect(p, x, 81, 98, 72, flavor ? 0x444749 : pump ? 0x08090b : heat ? 0x111112 : 0x192227);
-        frame(p, x, 81, 98, 72, flavor ? 0x9e9984 : pump ? 0x2fa8e8 : heat ? 0x4a4a4c : 0x465157);
+        frame(p, x, 81, 98, 72, flavor ? 0x9e9984 : page->kind == HS_DISTRESSOR ? 0x4a4a4c : pump ? 0x2fa8e8 : heat ? 0x4a4a4c : 0x465157);
         if (!row_has_label(src, rows[bank + i])) {
             rect(p, x+15, 116, 68, 1, 0x344147);
             continue;
@@ -368,10 +373,12 @@ static const uint32_t *draw_stock_rack(struct effect_page *page)
         } else if (page->kind == HS_BUS) {
             static const uint32_t accents[] = {0xb5bcc2,0x7ba5c1,0xa6bf9e};
             rack_knob(p, cx, 116, page->values[i], page->bypassed[i], accents[bus_section(NULL)]);
-        } else if (page->kind == HS_PUMP) {
+        } else if (page->kind == HS_PUMP || page->kind == HS_DISTRESSOR) {
             pump_knob(p, cx, 116, page->values[i], page->bypassed[i]);
         } else if (page->kind == HS_HEAT) {
             heat_knob(p, cx, 116, page->values[i], page->bypassed[i]);
+        } else if (page->kind == HS_BASS_FOCUS) {
+            rack_knob(p, cx, 116, page->values[i], page->bypassed[i], bf_green);
         } else if (page->kind == HS_XSAT) {
             rack_knob(p, cx, 116, page->values[i], page->bypassed[i], 0xd3a164);
         } else if (page->kind == HS_CHANNEL) {
@@ -384,10 +391,13 @@ static const uint32_t *draw_stock_rack(struct effect_page *page)
         const char *marked = page->kind == HS_BUS ? bus_marking(i, page->values[i])
             : page->kind == HS_PUMP ? pump_marking(i, page->values[i])
             : page->kind == HS_HEAT ? heat_marking(i, page->values[i])
+            : page->kind == HS_DISTRESSOR ? dist_marking(i, page->values[i])
+            : page->kind == HS_BASS_FOCUS ? bf_marking(i, page->values[i])
             : page->kind == HS_EQ2 ? eq2_marking(i,page->values[i]) : NULL;
         if (marked)
             text(p, cx - 2*(int)strlen(marked), 142, marked, 22,
-                 page->kind == HS_PUMP ? 0xf0f0ec : page->kind == HS_HEAT ? 0xd8f040 : 0xb7e0ce);
+                 page->kind == HS_PUMP || page->kind == HS_DISTRESSOR ? 0xf0f0ec : page->kind == HS_HEAT ? 0xd8f040
+                 : page->kind == HS_BASS_FOCUS ? bf_green : 0xb7e0ce);
         else
             center_ink(p, src, 205, 309, rows[bank+i], cx, 137);
     }
@@ -553,6 +563,15 @@ static void effect_knobs(uint32_t *p)
         static unsigned drawn;
         unsigned seq = eq2_seq();
         if (seq != drawn) { drawn = seq; changed = 1; }
+    }
+    if (page->kind == HS_DISTRESSOR) {
+        /* GR row: redraw only when the lit LED count changes, not every frame */
+        static int drawn = -2;
+        dist_gr_db = dist_open_gr();
+        static const int steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
+        int lit = dist_gr_db < 0 ? -1 : 0;
+        for (int k = 0; k < 10 && lit >= 0; ++k) lit += dist_gr_db >= steps[k];
+        if (lit != drawn) { drawn = lit; changed = 1; }
     }
     if (changed) {
         if (!next_rect)
