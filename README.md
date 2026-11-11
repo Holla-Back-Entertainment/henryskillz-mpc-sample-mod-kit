@@ -95,6 +95,8 @@ The HS Pump, HS Heat, HS Crush, HS Bass Focus and HS Tube Strip panels above are
 - A **Mac or Windows** computer with a web browser
 - **SampQOL OS 0.2.0**, downloaded free from [Snare Bes's official page](https://github.com/snarebes/SampQOL-OS/releases)
 
+**Not on SampQOL?** HS Tools runs on stock firmware 1.3.0: on-device stems, browser key and BPM tags, and the SEQ desk with LUFS meters. Download `henryskillz-mpc-sample-hs-tools.zip` from the [latest release](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/releases/latest), copy its `autorun` folder to an exFAT SD card and power on. The effects and track chains need SampQOL.
+
 ## Install in 5 steps
 
 1. **Back up** everything on your SD card to your computer.
