@@ -32,6 +32,10 @@ It refuses to run if `mpcqol.so` isn't a supported version, if any pinned file w
 | `tools/` | Command-line helpers: sign an autorun folder, make a splash |
 | `installer/` | Page template, `make_installer.py` (embeds the add-ons), and `test_installer.mjs` (self-check) |
 
+## The eight-row menu limit
+
+SampQOL 0.2.0 builds the insert menu in a fixed list of 40 rows, and 32 are stock effects. The picker (`src/fx/hs_fx_picker.c`) adds its rows only when they all fit, so more than eight HS rows hides the whole HS menu. Every effect stays in the library and the catalog, so saved projects reopen them by UniqueID; `in_menu()` picks which eight get a menu row, and `check-picker.sh` fails if that count isn't `MENU_ROWS`.
+
 ## Build
 
 Needs Docker (on Apple Silicon the `gcc:12` image runs natively, and it's the same Debian 12 / GCC 12 the MPC uses).

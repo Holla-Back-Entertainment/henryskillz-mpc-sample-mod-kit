@@ -1,6 +1,6 @@
 # HenrySkillz MPC Sample Mod Kit
 
-**Ten studio effects for the Akai MPC Sample, installed from a web page in about 15 minutes.**
+**Eight studio effects for the Akai MPC Sample, installed from a web page in about 15 minutes.**
 No coding, no terminal, no apps to install, no AI tools. Free.
 
 Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top of [SampQOL OS](https://github.com/snarebes/SampQOL-OS) by **Snare Bes**.
@@ -22,15 +22,15 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 | Effect | Category | What it does |
 |---|---|---|
 | **HS Saturator** | Harmonic | Saturation for drums and bass |
-| **HS Air Exciter** | Harmonic | Adds brightness to the top end |
 | **HS Channel Strip** | Harmonic | Console-style channel: filters, 4-band EQ, compressor, gate |
-| **HS Drive Sat** | Harmonic | Saturation with drive and shape controls |
 | **HS Bus Compressor** | Dynamics | Bus compressor with a sidechain high-pass |
 | **HS Pump** | Dynamics | Stepped feedback compressor, 1:1 to 20:1, with an Opto release, attack modifier and output saturation |
 | **HS Heat** | Harmonic | Eight drive circuits into a multimode filter, with dirt, a 2-band EQ, an envelope follower and an LFO |
 | **HS Para EQ** | EQ / Filter | Parametric EQ with a response-curve display |
 | **HS Crush** | Dynamics | Character compressor: eight curves from 1:1 to Max, an Opto mode, detector filters, two distortion modes, a British-style mode and a gain-reduction meter |
 | **HS Bass Focus** | EQ / Filter | Splits at a crossover (30 to 500 Hz), makes the lows mono and sets their level. The highs pass untouched |
+
+**Where did HS Air Exciter and HS Drive Sat go?** SampQOL's insert menu has room for eight add-on effects, so HS Crush and HS Bass Focus took their places in the menu. They are still installed: a project that already uses them opens with them, as before.
 
 Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, and the HenrySkillz start screen (after SampQOL's own).
 

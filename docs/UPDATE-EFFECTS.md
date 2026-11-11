@@ -17,7 +17,7 @@ Already installed the kit? You only need the new effect files. No SampQOL downlo
 5. **Copy those four files** into `autorun/hs` on the SD card. Say yes to replace. Replace all four together: a mix of old and new files can hide the HS effects list.
 6. **Eject** the card, put it in the MPC, switch on and press **B1**.
 
-The new effects are in the insert effects list with the others.
+The new effects are in the insert effects list with the others. The menu has room for eight add-on effects, so HS Air Exciter and HS Drive Sat leave the menu when HS Crush and HS Bass Focus arrive. Projects that already use them still open with them.
 
 ## Why this is safe to do
 

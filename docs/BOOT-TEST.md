@@ -28,9 +28,7 @@ If the unit hangs or stays black, hold power to switch it off, remove the card a
 Open the insert effects list and test each effect with audio playing. Load one effect at a time and confirm that audio still passes.
 
 - [ ] **HS Saturator** loads and passes audio.
-- [ ] **HS Air Exciter** loads and passes audio.
 - [ ] **HS Channel Strip** loads and passes audio.
-- [ ] **HS Drive Sat** loads and passes audio.
 - [ ] **HS Bus Compressor** loads and passes audio.
 - [ ] On HS Bus Compressor, turning **K2** steps the Ratio through 1.5:1, 2:1, 3:1, 4:1, 10:1, 20:1 and X (X = limiting). Note what Ratio and Threshold show when it first loads: the emulator showed X and 20 dB, but the intended default ratio is 2:1.
 - [ ] **HS Para EQ** loads and passes audio.
@@ -39,6 +37,8 @@ Open the insert effects list and test each effect with audio playing. Load one e
 - [ ] **HS Crush** loads and passes audio near the same level. On its first page, turning **K2** lights the ratio lamps from 1 to MAX, and the red GR DB lamps move with the music (they show NO METER if they cannot read it: note that).
 - [ ] **HS Bass Focus** loads and passes audio at the same level with Bass at 0 dB. Turning **K2** down moves the curve below the crossover marker; **K3** switches the lamp between MONO and STEREO.
 - [ ] On HS Pump, HS Heat and HS Crush, the **middle screen button** moves through their pages (3 on Pump, 6 on Heat, 3 on Crush).
+- [ ] The insert list shows exactly eight HS effects: Saturator, Channel Strip, Heat (Harmonic); Bus Compressor, Pump, Crush (Dynamics); Para EQ, Bass Focus (EQ/Filter). HS Air Exciter and HS Drive Sat are not listed.
+- [ ] A project saved with **HS Drive Sat** or **HS Air Exciter** on an insert (from v0.3.0) still opens with that effect loaded and passing audio.
 - [ ] The EQ page shows the dB/Hz grid.
 - [ ] The controls respond without a crash, freeze or unexpected silence.
 
