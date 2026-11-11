@@ -1,13 +1,13 @@
-# Stems (roadmap #8)
+# Stems
 
-Splits a WAV into Vocals / Drums / Bass / Other on the MPC Sample itself, from the browser or from a pad.
+Splits a WAV or MP3 into Vocals / Drums / Bass / Other on the MPC Sample itself, from the browser or from a pad.
 
 ## Use
 Two places to start it:
-- **Browser** (SAMPLE SELECT), Preview on (the stock default): highlight a WAV so it previews, hold
-  SHIFT: B1 reads **Stems** (it only repeats Back there in stock). With Preview off no path is known
+- **Browser** (SAMPLE SELECT), Preview on (the stock default): highlight a WAV or MP3 so it previews, hold
+  SHIFT: B1 reads **Stems**; keep SHIFT and hold B1 for 1.5 s to open it (a quick press keeps its stock job) (it only repeats Back there in stock). With Preview off no path is known
   and SHIFT+B1 stays stock Back. Stock SHIFT+B2 Eject and SHIFT+B3 Delete are untouched.
-- **Sample screen** (any tab): hold SHIFT: B3 reads **Stems** (stock SHIFT+B1 is Loop Lock, SHIFT+B2
+- **Sample screen** (any tab): hold SHIFT: B3 reads **Stems**; keep SHIFT and hold B3 for 1.5 s to open it (stock SHIFT+B1 is Loop Lock, SHIFT+B2
   Normalize, SHIFT+B3 does nothing). It stems the selected pad's sample.
 
 Either opens the chooser: the wheel (or -/+) moves, a wheel push ticks a stem, B2 switches
@@ -37,7 +37,7 @@ show "Waiting for the autosave..." for up to 13 s. Stems come from the whole sam
 start/end, tune and other pad settings are not applied. A pad with layers uses its first layer. A
 track that isn't a drum program says so.
 
-Input: 44.1 kHz WAV, 16/24/32-bit or float, mono or stereo. Other rates show an error in the box.
+Input: WAV (16/24/32-bit or float) or MP3, mono or stereo, any sample rate (converted to 44.1 kHz).
 Speed on the real Sample: about real time (30 s of audio in ~29 s on 2 cores, SCHED_IDLE), ~320 MB RAM.
 Sum costs the same as Separate (all four nets always run). Quality: Spleeter 4stems; nothing above
 11 kHz in any stem. For HQ stems use the Mac chop.py (htdemucs_ft).

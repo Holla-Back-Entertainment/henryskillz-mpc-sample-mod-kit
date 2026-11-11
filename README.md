@@ -5,7 +5,7 @@ No coding, no terminal, no apps to install, no AI tools. Free.
 
 Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top of [SampQOL OS](https://github.com/snarebes/SampQOL-OS) by **Snare Bes**.
 
-### [Open the installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) · [Step-by-step guide](docs/INSTALL-GUIDE.md) · [Update just the effects](docs/UPDATE-EFFECTS.md) · [FAQ](docs/FAQ.md) · [Undo it](docs/RECOVERY.md)
+### [Open the installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) · [How to use it](docs/USER-GUIDE.md) · [Step-by-step guide](docs/INSTALL-GUIDE.md) · [Update just the effects](docs/UPDATE-EFFECTS.md) · [FAQ](docs/FAQ.md) · [Undo it](docs/RECOVERY.md)
 
 <img src="assets/henryskillz-splash-preview.png" width="320" alt="HenrySkillz start screen on the MPC Sample: DRUMS SAMPLE BASS">
 
@@ -17,6 +17,8 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 ---
 
 ## What you get
+
+For how to use every feature, button by button, see the [user guide](docs/USER-GUIDE.md).
 
 | Effect | Category | What it does |
 |---|---|---|
