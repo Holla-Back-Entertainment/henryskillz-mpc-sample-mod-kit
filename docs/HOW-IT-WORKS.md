@@ -8,7 +8,7 @@
 2. **SampQOL's `autorun.sh`** checks its own files against a `PINS` list of sha256 hashes, then starts `qol-run.sh`.
 3. **`qol-run.sh`** restarts the MPC app with `LD_PRELOAD=mpcqol.so`. It falls back to stock after two quick crashes.
 4. **These add-ons** are more `LD_PRELOAD` libraries. Most go ahead of `mpcqol.so` (`HS_PRELOAD`). Two go after it (`HS_POSTLOAD`): `hs-chains.so`, so its "Chain loaded" box draws on top of SampQOL's screens, then `hs-stems-ui.so`, so its screen copy sees every other drawing.
-   Most of them hook symbols that SampQOL exports (`overlay_update`, `mixview_frame`, `fxmap_get_row`, `eq_spectrum_draw`), which is why they're tied to one SampQOL version. Each one that does checks the symbol's offset in `mpcqol.so` and steps aside on any other build.
+   Most of them hook symbols that SampQOL exports (`overlay_update`, `mixview_frame`, `fxmap_get_row`, `eq_spectrum_draw`), which is why they're tied to one SampQOL version. The effect picker, `hs-chrome.so` and `hs-mixer.so` check the symbol's offset in `mpcqol.so` and step aside on any other build.
 
 ## What the installer changes
 
