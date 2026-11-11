@@ -168,7 +168,7 @@ const fromDir = fileList => async () =>
 
 document.getElementById("fx").onclick = async () => {
   const zip = new JSZip();
-  for (const [path, data] of Object.entries(ADDON)) if (path.endsWith(".so")) zip.file(path, b64(data), { unixPermissions: 0o644 });
+  for (const [path, data] of Object.entries(ADDON)) if (path.endsWith(".so") || path.endsWith("/hs-addons.sh")) zip.file(path, b64(data), { unixPermissions: 0o644 });
   const blob = await zip.generateAsync({ type: "blob", platform: "UNIX" });
   Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "hs-effects-update.zip" }).click();
 };
