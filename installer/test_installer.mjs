@@ -25,7 +25,7 @@ if (src) {
 const page = src ? "../docs/install/index.html" : "./template.html";
 let core = fs.readFileSync(new URL(page, import.meta.url), "utf8").match(/<script id="core">([\s\S]*?)<\/script>/)[1];
 core = core.replace("__SAMPQOL_HASHES__", "{}")
-           .replace("__ADDON_FILES__", JSON.stringify({ "hs/hs-addons.sh": Buffer.from("HS_PRELOAD=\n").toString("base64") }));
+           .replace("__STEMS_FILES__", "{}").replace("__ADDON_FILES__", JSON.stringify({ "hs/hs-addons.sh": Buffer.from("HS_PRELOAD=\n").toString("base64") }));
 // Also accept the given SampQOL build, so older downloads can exercise the patch path (official 0.2.0 is already listed).
 core += `\nSAMPQOL[${JSON.stringify(sha(files.get("mpcqol.so")))}] ??= "test";`;
 const patch = new Function(core + "; return patch;")();
@@ -37,7 +37,7 @@ assert.equal(text("autorun.check"), sha(Buffer.concat([out.get("autorun.json"), 
 for (const [, hash, name] of text("autorun.sh").matchAll(/([0-9a-f]{64})  ([^\n"]+)/g))
   if (out.has(name)) assert.equal(sha(out.get(name)), hash, `${name} pin`);
 assert.match(text("qol-run.sh"), /\. "\$DIR\/hs\/hs-addons.sh"/);
-assert.match(text("qol-run.sh"), /LD_PRELOAD="\$HS_PRELOAD\$SO"/);
+assert.match(text("qol-run.sh"), /LD_PRELOAD="\$HS_PRELOAD\$SO\$HS_POSTLOAD"/);
 assert.match(text("qol-run.sh"), /cat "\$DIR\/qol-splash.raw" > \/dev\/fb0\n.*hs-splash.raw/, "SampQOL splash stays first");
 assert.equal(spawnSync("sh", ["-n"], { input: text("qol-run.sh") }).status, 0, "qol-run.sh syntax");
 await assert.rejects(patch(out), /already installed/);

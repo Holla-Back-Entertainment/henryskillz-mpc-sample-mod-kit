@@ -12,10 +12,17 @@ missing = need - files.keys()
 if missing:
     raise SystemExit(f"missing add-on files (run ./build.sh): {sorted(missing)}")
 
+# Stems is optional and too big to embed: the online installer fetches these from docs/install/stems/
+# (same origin on GitHub Pages) and checks each against this sha256 before adding it.
+import hashlib
+stems_dir = ROOT / "docs/install/stems"
+stems = {f"stems/{n}": hashlib.sha256((stems_dir / n).read_bytes()).hexdigest() for n in ("hs-stems", "hs-stems-ui.so", "spl4h.bin")}
+
 html = (ROOT / "installer/template.html").read_text()
 html = (html.replace("__SAMPQOL_HASHES__", json.dumps(SAMPQOL))
             .replace("__SAMPQOL_VERSION__", "/".join(SAMPQOL.values()))
-            .replace("__ADDON_FILES__", json.dumps(files)))
+            .replace("__ADDON_FILES__", json.dumps(files))
+            .replace("__STEMS_FILES__", json.dumps(stems)))
 # dist/ = the release download; docs/install/ = the online installer (GitHub Pages)
 for out in (ROOT / "dist/henryskillz-mpc-sample-installer.html", ROOT / "docs/install/index.html"):
     out.parent.mkdir(parents=True, exist_ok=True)
