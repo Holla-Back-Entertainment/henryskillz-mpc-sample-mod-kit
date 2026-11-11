@@ -115,7 +115,6 @@ static void eq2_graph(uint32_t *p, int selected)
         text(p, GX + GW / 2 - 30, GY + 8, "PLAY TO SHOW CURVE", 18, 0x6f8288);
         return;
     }
-    int bypass = v[EQ_BYPASS] >= .5f;
     const float *sb = selected ? v + EQ_FIRST + (selected - 1) * EB_COUNT : NULL;
     int sel_live = sb && sb[EB_ON] >= .5f && sb[EB_BYPASS] < .5f;
 
@@ -130,7 +129,7 @@ static void eq2_graph(uint32_t *p, int selected)
     }
     int stereo_split = 0;
     for (int k = 0; k < GW; ++k) stereo_split |= fabsf(main[k] - side[k]) > .05f;
-    uint32_t curve = bypass ? 0x66767c : 0xe6eee9;
+    uint32_t curve = 0xe6eee9;
     for (int pass = stereo_split ? 0 : 1; pass < 2; ++pass) {
         const float *c = pass ? main : side;
         uint32_t color = pass ? curve : 0x5f7d8a;
@@ -138,7 +137,6 @@ static void eq2_graph(uint32_t *p, int selected)
             fx_line(p, GX + k - 1, db_y(c[k - 1]), GX + k, db_y(c[k]), color);
     }
     if (stereo_split) text(p, GX + GW - 30, GY + 3, "R/S DIM", 7, 0x5f7d8a);
-    if (bypass) text(p, GX + GW / 2 - 12, GY + 3, "BYPASS", 6, 0xc8a46a);
 
     /* Nodes sit on the curve of the channel they act on; the selected one draws last. */
     for (int pass = 0; pass < 2; ++pass)

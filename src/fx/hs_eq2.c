@@ -22,7 +22,7 @@ struct eq {
     struct band *active[EQ_BANDS];
     unsigned long rate;
     double in_gain, out_gain;
-    int active_count, mid_side, parallel, bypass, ready;
+    int active_count, mid_side, parallel, ready;
 };
 
 #define BAND_LIST(X) X(1) X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12)                      X(13) X(14) X(15) X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24)
@@ -270,7 +270,7 @@ static void configure(struct eq *s)
         memcpy(s->values,globals,sizeof globals);
         s->in_gain=pow(10,globals[EQ_INPUT]*.05);
         s->out_gain=pow(10,globals[EQ_OUTPUT]*.05);
-        s->bypass=globals[EQ_BYPASS]>=.5f;
+        /* EQ_BYPASS stays a port so old projects load, but is ignored: the one Bypass is SampQOL's B3. */
         int mid_side=globals[EQ_MIDSIDE]>=.5f, parallel=globals[EQ_PARALLEL]>=.5f;
         if (mid_side!=s->mid_side || parallel!=s->parallel)
             for (int i=0;i<EQ_BANDS;++i) s->bands[i].count=0;
@@ -313,7 +313,7 @@ static void run(LADSPA_Handle handle,unsigned long frames)
     float *il=s->port[IL], *ir=s->port[IR], *ol=s->port[OL], *orr=s->port[OR];
     if (!il||!ir||!ol||!orr) return;
     configure(s);
-    if (s->bypass || (!s->active_count && s->in_gain*s->out_gain==1)) {
+    if (!s->active_count && s->in_gain*s->out_gain==1) {
         for (unsigned long i=0;i<frames;++i) {
             float l=il[i],r=ir[i]; ol[i]=l; orr[i]=r;
         }

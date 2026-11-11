@@ -7,7 +7,7 @@
 #include "hs_channel_cal.h"
 
 enum { LEFT_IN, RIGHT_IN, LEFT_OUT, RIGHT_OUT, FIRST_CONTROL };
-enum { HP_1, HP_2, LP, LOW, LOW_MID, HIGH_MID, HIGH, FILTER_COUNT };
+enum { HP_1, HP_2, LP, LOW, LOW_MID, HIGH_MID, HIGH, DS_HP, DS_SHELF, FILTER_COUNT };
 
 struct biquad {
     float b0, b1, b2, a1, a2;
@@ -23,6 +23,8 @@ struct channel {
     float comp_env, gate_env, comp_reduction, gate_reduction, comp_g1, comp_g2, comp_charge;
     int gate_open, gate_hold_left, gate_hold;
     float gate_depth;
+    float ds_env, ds_reduction, ds_attack, ds_release, ds_shelf_db;
+    int ds_tick, ds_band;
     float input, drive, output;
     float comp_attack1, comp_attack2, comp_offset, comp_knee;
     float comp_charge_on, comp_charge_off, comp_release_dial_ms;
@@ -36,7 +38,8 @@ static const float defaults[CH_COUNT] = {
     [CH_LF_HZ] = 100, [CH_LM_HZ] = 700, [CH_LM_Q] = 1,
     [CH_HM_HZ] = 2500, [CH_HM_Q] = 1, [CH_HF_HZ] = 8000,
     [CH_COMP_THRESHOLD] = 10, [CH_COMP_RATIO] = 1, [CH_COMP_RELEASE] = 632.4555f,
-    [CH_GATE_THRESHOLD] = -30, [CH_GATE_RELEASE] = 632.4555f
+    [CH_GATE_THRESHOLD] = -30, [CH_GATE_RELEASE] = 632.4555f,
+    [CH_DS_FREQ] = 6000, [CH_DS_THRESHOLD] = -25
 };
 
 static const char *const names[] = {
@@ -45,7 +48,8 @@ static const char *const names[] = {
     "LF Hz", "LF dB", "LF Bell", "LM Hz", "LM dB", "LM Q",
     "HM Hz", "HM dB", "HM Q", "HF Hz", "HF dB", "HF Bell",
     "Comp Thresh", "Comp Ratio", "Make-Up dB", "Fast Attack", "Release ms",
-    "Hard Knee", "Gate Thresh", "Gate Range", "Release ms", "Fast Attack", "Expand"
+    "Hard Knee", "Gate Thresh", "Gate Range", "Release ms", "Fast Attack", "Expand",
+    "DS Freq Hz", "DS Thresh dB", "DS Range dB", "DS Mode"
 };
 
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
@@ -84,7 +88,11 @@ static const LADSPA_PortRangeHint hints[] = {
     PORT(CH_GATE_RANGE) = {B | D0, 0, 40},
     PORT(CH_GATE_RELEASE) = {B | L | MID, 100, 4000},
     PORT(CH_GATE_FAST) = {B | LADSPA_HINT_TOGGLED | D0, 0, 1},
-    PORT(CH_GATE_EXPAND) = {B | LADSPA_HINT_TOGGLED | D0, 0, 1}
+    PORT(CH_GATE_EXPAND) = {B | LADSPA_HINT_TOGGLED | D0, 0, 1},
+    PORT(CH_DS_FREQ) = {B | L | MID, 3000, 12000},
+    PORT(CH_DS_THRESHOLD) = {B | MID, -50, 0},
+    PORT(CH_DS_RANGE) = {B | D0, 0, 18},
+    PORT(CH_DS_MODE) = {B | D0, 0, 3}    /* thirds of the turn: split, wide, listen (hs-fx labels them) */
 };
 #undef PORT
 #undef B
@@ -281,6 +289,12 @@ static void configure(struct channel *s, const float *p)
     s->gate_hold = (int)(lerp(gate_hold_ms[i], gate_hold_ms[i + 1], t) * rate / 1000);
     s->gate_release = time_coefficient(lerp(gate_tau_ms[i], gate_tau_ms[i + 1], t), rate);
     s->gate_depth = GATE_DEPTH_PER_RANGE * p[CH_GATE_RANGE];
+    tune(&s->filters[DS_HP], HIGH_PASS, p[CH_DS_FREQ], 0, .7071f, rate, 1);
+    s->ds_attack = time_coefficient(.5f, rate);
+    s->ds_release = time_coefficient(60, rate);
+    if (p[CH_DS_RANGE] == 0) s->ds_reduction = 0;
+    tune(&s->filters[DS_SHELF], HIGH_SHELF, p[CH_DS_FREQ], -s->ds_reduction, .7071f, rate, 1);
+    s->ds_shelf_db = s->ds_reduction;
     if (s->comp_slope == 0) s->comp_reduction = s->comp_g1 = s->comp_g2 = 0;
     if (p[CH_GATE_RANGE] == 0) {
         s->gate_open = 0;
@@ -335,6 +349,33 @@ static float dynamics(struct channel *s, float peak)
     return db_gain(-(s->comp_reduction + s->gate_reduction));
 }
 
+/* De-esser: a 12 dB/oct high-pass at DS Freq feeds a peak detector; above DS Thresh it turns down
+ * at 6:1, never more than DS Range. Split pulls a high shelf at DS Freq down by that much (retuned every
+ * 16 samples), Wide turns down everything. Listen plays the detector band. Mode picks one of the three. */
+static void deess(struct channel *s, const float *p, float *left, float *right)
+{
+    float hl = filter(&s->filters[DS_HP], 0, *left), hr = filter(&s->filters[DS_HP], 1, *right);
+    if (p[CH_DS_MODE] >= 2) { *left = hl; *right = hr; return; }
+    s->ds_env = fmaxf(fmaxf(fabsf(hl), fabsf(hr)), s->ds_env * s->detector_decay);
+    float over = s->ds_env > 1e-9f ? 20 * log10f(s->ds_env) - p[CH_DS_THRESHOLD] : 0;
+    float target = fminf(p[CH_DS_RANGE], fmaxf(over, 0) * (5.0f / 6));
+    s->ds_reduction += (target - s->ds_reduction) * (target > s->ds_reduction ? s->ds_attack : s->ds_release);
+    if (p[CH_DS_MODE] >= 1) {
+        float g = db_gain(-s->ds_reduction);
+        *left *= g; *right *= g;
+        return;
+    }
+    if (++s->ds_tick >= 16) {
+        s->ds_tick = 0;
+        if (fabsf(s->ds_reduction - s->ds_shelf_db) > .02f) {
+            tune(&s->filters[DS_SHELF], HIGH_SHELF, p[CH_DS_FREQ], -s->ds_reduction, .7071f, s->rate, 1);
+            s->ds_shelf_db = s->ds_reduction;
+        }
+    }
+    *left = filter(&s->filters[DS_SHELF], 0, *left);
+    *right = filter(&s->filters[DS_SHELF], 1, *right);
+}
+
 static LADSPA_Handle instantiate(const LADSPA_Descriptor *descriptor, unsigned long rate)
 {
     (void)descriptor;
@@ -360,6 +401,7 @@ static void activate(LADSPA_Handle handle)
     s->comp_env = s->gate_env = 0;
     s->comp_reduction = s->gate_reduction = s->comp_g1 = s->comp_g2 = s->comp_charge = 0;
     s->gate_open = s->gate_hold_left = 0;
+    s->ds_env = s->ds_reduction = 0;
     s->configured = 0;
 }
 
@@ -378,6 +420,17 @@ static void run(LADSPA_Handle handle, unsigned long frames)
 
     int eq_first = p[CH_EQ_FIRST] >= .5f;
     int dynamics_on = p[CH_COMP_RATIO] > 1.0001f || p[CH_GATE_RANGE] > 0;
+    int deess_on = p[CH_DS_RANGE] > 0 || p[CH_DS_MODE] >= 2;
+    int ds_band = deess_on ? (int)fminf(p[CH_DS_MODE], 2) : -1;
+    if (ds_band != s->ds_band) {          /* off, or a new mode: start clean, no stale filter tail or envelope */
+        s->ds_band = ds_band;
+        for (int f = DS_HP; f <= DS_SHELF; ++f) {
+            memset(s->filters[f].z1, 0, sizeof s->filters[f].z1);
+            memset(s->filters[f].z2, 0, sizeof s->filters[f].z2);
+        }
+        s->ds_env = s->ds_reduction = s->ds_shelf_db = 0;
+        tune(&s->filters[DS_SHELF], HIGH_SHELF, p[CH_DS_FREQ], 0, .7071f, s->rate, 1);
+    }
     for (unsigned long i = 0; i < frames; ++i) {
         float left = preamp(s->ports[LEFT_IN][i] * s->input, s->drive);
         float right = preamp(s->ports[RIGHT_IN][i] * s->input, s->drive);
@@ -392,6 +445,7 @@ static void run(LADSPA_Handle handle, unsigned long frames)
             right *= gain;
         }
         if (!eq_first) { left = equalize(s, 0, left); right = equalize(s, 1, right); }
+        if (deess_on) deess(s, p, &left, &right);
         s->ports[LEFT_OUT][i] = left * s->output;
         s->ports[RIGHT_OUT][i] = right * s->output;
     }
@@ -401,6 +455,8 @@ static void run(LADSPA_Handle handle, unsigned long frames)
     if (!(s->comp_charge >= 1e-20f && isfinite(s->comp_charge))) s->comp_charge = 0;
     if (!(s->comp_reduction >= 1e-20f && isfinite(s->comp_reduction))) s->comp_reduction = s->comp_g1 = s->comp_g2 = 0;
     if (!(s->gate_reduction >= 1e-20f && isfinite(s->gate_reduction))) s->gate_reduction = 0;
+    if (!(s->ds_env >= 1e-20f && isfinite(s->ds_env))) s->ds_env = 0;
+    if (!(s->ds_reduction >= 1e-20f && isfinite(s->ds_reduction))) s->ds_reduction = 0;
     for (int i = 0; i < FILTER_COUNT; ++i)
         for (int c = 0; c < 2; ++c) {
             if (!(fabsf(s->filters[i].z1[c]) >= 1e-20f && isfinite(s->filters[i].z1[c]))) s->filters[i].z1[c] = 0;
@@ -417,7 +473,8 @@ static const LADSPA_PortDescriptor descriptors[] = {
     CONTROL, CONTROL, CONTROL, CONTROL, CONTROL, CONTROL,
     CONTROL, CONTROL, CONTROL, CONTROL, CONTROL, CONTROL,
     CONTROL, CONTROL, CONTROL, CONTROL, CONTROL, CONTROL,
-    CONTROL, CONTROL, CONTROL, CONTROL, CONTROL
+    CONTROL, CONTROL, CONTROL, CONTROL, CONTROL,
+    CONTROL, CONTROL, CONTROL, CONTROL
 };
 _Static_assert(sizeof names / sizeof *names == FIRST_CONTROL + CH_COUNT, "parameter names");
 _Static_assert(sizeof descriptors / sizeof *descriptors == FIRST_CONTROL + CH_COUNT, "port descriptors");

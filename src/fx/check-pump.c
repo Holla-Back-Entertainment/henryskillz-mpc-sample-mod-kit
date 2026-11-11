@@ -1,11 +1,13 @@
 /* HS Pump behaviour check: static curve, timing, AtMod, Sat, mix, bypass.
- * cc -O2 -I. check-pump.c hs_pump.c -lm -o /tmp/check-pump && /tmp/check-pump */
+ * cc -O2 -I. check-pump.c hs_pump.c hs_env.c -lm -o /tmp/check-pump && /tmp/check-pump */
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include "ladspa.h"
 #include "hs_pump.h"
+#include "hs_env.h"
+#include <unistd.h>
 extern const LADSPA_Descriptor hs_pump_descriptor;
 
 enum { RATE = 48000, N = 3*RATE };
@@ -25,7 +27,7 @@ static void tone(float amp, float hz, int from, int to)
 }
 static void go(void) { for (int i = 0; i < N; i += 256) {
     for (int c = 0; c < 2; ++c) { d->connect_port(h, c, in[c]+i); d->connect_port(h, 2+c, out[c]+i); }
-    d->run(h, 256); } }
+    d->run(h, N - i < 256 ? N - i : 256); } }
 static float rms_db(int c, int from, int to)
 {
     double a = 0, b = 0;
@@ -100,6 +102,19 @@ int main(void)
         tone(.5f, 1000, 0, N); go();
         for (int i = 0; i < N; ++i) assert(out[0][i] == in[0][i]);
     }
+    /* Key bus: Send publishes the input peak; Key In ducks from bus A and ignores its own signal. */
+    reset(); ctl[PU_RATIO] = 0; ctl[PU_SEND] = 2; tone(.5f, 1000, 0, N); go();
+    printf("send B: %.3f\n", hs_env_read(2));
+    assert(fabsf(hs_env_read(2) - .5f) < .01f && hs_env_read(1) == 0);
+    reset(); ctl[PU_RATIO] = 8; ctl[PU_KEY] = 1; tone(.03f, 1000, 0, N);
+    hs_env_send(1, 1); go();
+    printf("keyed from A (0 dBFS key, -30 dBFS in, 20:1): %.2f dB\n", rms_db(0, N/2, N));
+    assert(rms_db(0, N/2, N) < -8);
+    reset(); ctl[PU_RATIO] = 8; ctl[PU_KEY] = 3; tone(.9f, 1000, 0, N); go();   /* nothing on C: no ducking */
+    printf("keyed from silent C: %.2f dB\n", rms_db(0, N/2, N));
+    assert(fabsf(rms_db(0, N/2, N)) < .5f);
+    usleep(150000);
+    assert(hs_env_read(1) == 0);   /* a stopped sender goes quiet */
     puts("check-pump: OK");
     return 0;
 }

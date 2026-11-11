@@ -12,6 +12,9 @@
 #include "hs_eq2.h"
 #include "hs_pump.h"
 #include "hs_heat.h"
+#include "hs_distressor.h"
+#include "hs_bass_focus.h"
+#include "hs_tube_strip.h"
 static LADSPA_Descriptor_Function load_descriptor;
 
 enum { BLOCK = 128, RATE = 44100, SETTLE = 170, MEASURE = 100 };
@@ -135,7 +138,16 @@ int main(int argc, char **argv)
     assert(load_descriptor(7)->UniqueID == HS_HEAT_ID);
     assert(load_descriptor(7) == load_descriptor(HS_HEAT_ID));
     assert(load_descriptor(7)->PortCount == HE_COUNT + 4);
-    assert(!load_descriptor(8));
+    assert(load_descriptor(8)->UniqueID == HS_DISTRESSOR_ID);
+    assert(load_descriptor(8) == load_descriptor(HS_DISTRESSOR_ID));
+    assert(load_descriptor(8)->PortCount == DS_COUNT + 4);
+    assert(load_descriptor(9)->UniqueID == HS_BASS_FOCUS_ID);
+    assert(load_descriptor(9) == load_descriptor(HS_BASS_FOCUS_ID));
+    assert(load_descriptor(9)->PortCount == BF_COUNT + 4);
+    assert(load_descriptor(10)->UniqueID == HS_TUBE_STRIP_ID);
+    assert(load_descriptor(10) == load_descriptor(HS_TUBE_STRIP_ID));
+    assert(load_descriptor(10)->PortCount == TS_COUNT + 4);
+    assert(!load_descriptor(11));
     f.handle = f.plugin->instantiate(f.plugin, RATE);
     assert(f.handle);
     for (int i = 0; i < 2; ++i) {
@@ -190,6 +202,18 @@ int main(int argc, char **argv)
     assert(fabsf(response(&f, 997, .04f)) < .1f);
     float expand = response(&f, 997, .02f);
     assert(NEAR(expand, -4.46f, 1.5f));
+    neutral(&f);                         /* de-esser: range 0 was the bit-exact pass-through above */
+    f.controls[CH_DS_FREQ] = 6000; f.controls[CH_DS_THRESHOLD] = -25; f.controls[CH_DS_RANGE] = 12;
+    float ds_low = response(&f, 200, .5f), ds_ess = response(&f, 8000, .5f);
+    f.controls[CH_DS_MODE] = 1.5f;
+    float ds_wide = response(&f, 8000, .5f);
+    f.controls[CH_DS_MODE] = 2.5f;
+    float ds_listen = response(&f, 200, .5f);
+    fprintf(stderr, "de-ess: 200 Hz %+.2f, 8k split %+.2f wide %+.2f, listen 200 Hz %+.1f\n", ds_low, ds_ess, ds_wide, ds_listen);
+    assert(fabsf(ds_low) < .05f && ds_ess < -6 && ds_ess > -13 && NEAR(ds_wide, -12, 1) && ds_listen < -40);
+    f.controls[CH_DS_MODE] = 0; f.controls[CH_DS_THRESHOLD] = 0;
+    assert(fabsf(response(&f, 8000, .1f)) < .05f);   /* below threshold: untouched */
+    neutral(&f);
     float slow_attack = attack_time(&f, 0);
     float fast_attack = attack_time(&f, 1);
     printf("EQ vs real: LF %+.2f (7.68) LM %+.2f (5.78) HM %+.2f (-6.41) HF %+.2f (7.14), comp %.2f (-4.74)\n", lf, bell, hm, hf, comp);

@@ -16,7 +16,7 @@ struct bus {
     float makeup, mix, hp, reduction, slow, balance, fixed_offset, auto_offset;
     float auto_fast_attack, auto_fast_release, auto_slow_release, auto_slow_lo, auto_slow_hi, auto_voicing;
     struct biquad sc;
-    int ready, bypass, automatic;
+    int ready, automatic;
 };
 
 static const float defaults[] = {20, 1, 0, 0, 0, 0, 100, 0};
@@ -97,7 +97,7 @@ static void configure(struct bus *s, const float *v)
     s->auto_offset = -.004f*(attack-4);
     s->makeup = powf(10, v[BUS_MAKEUP]*.05f);
     s->mix = .01f*v[BUS_MIX];
-    s->bypass = v[BUS_BYPASS] >= .5f;
+    /* BUS_BYPASS stays a port so old projects load, but is ignored: the one Bypass is SampQOL's B3. */
     float hp = v[BUS_HPF] < 10.0f ? 0 : fmaxf(20.0f, v[BUS_HPF]);
     if (!s->ready || hp != s->hp) {
         /* The reference detector rejects bass at about 12 dB/oct. */
@@ -180,7 +180,7 @@ static void run(LADSPA_Handle handle, unsigned long frames)
             amount = gr;
         }
         float wet_gain = amount < .00001f ? 1 : exp2f(-.166096405f*amount);
-        float gain = s->bypass ? 1 : 1-s->mix+s->mix*s->makeup*wet_gain;
+        float gain = 1-s->mix+s->mix*s->makeup*wet_gain;
         s->port[OL][i] = l*gain;
         s->port[OR][i] = r*gain;
     }

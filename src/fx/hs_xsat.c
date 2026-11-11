@@ -13,7 +13,7 @@ struct xsat {
     float table[2][XS_STEPS + 1];
     float gain_in, gain_out, drive, mix, dc_coefficient;
     float previous[2], dc[2];
-    int ready, bypass;
+    int ready;
 };
 
 static const float defaults[] = {0, 0, 50, 50, 100, 0, 0, 0, 0};
@@ -87,7 +87,7 @@ static void configure(struct xsat *s, const float *v)
     s->gain_in = powf(10, v[XS_INPUT]/20);
     s->gain_out = powf(10, v[XS_OUTPUT]/20);
     s->mix = v[XS_MIX] * .01f;
-    s->bypass = v[XS_BYPASS] >= .5f;
+    /* XS_BYPASS stays a port so old projects load, but is ignored: the one Bypass is SampQOL's B3. */
     memcpy(s->values, v, sizeof s->values);
     s->ready = 1;
 }
@@ -124,8 +124,7 @@ static void run(LADSPA_Handle instance, unsigned long frames)
             s->previous[c] = d;
             s->dc[c] += (wet-s->dc[c])*s->dc_coefficient;
             if (!(fabsf(s->dc[c]) >= 1.e-24f && isfinite(s->dc[c]))) s->dc[c] = 0;
-            s->port[OL+c][i] = s->bypass ? in[c]
-                : s->gain_out*(input*(1-s->mix) + (wet-s->dc[c])*s->mix);
+            s->port[OL+c][i] = s->gain_out*(input*(1-s->mix) + (wet-s->dc[c])*s->mix);
         }
     }
 }

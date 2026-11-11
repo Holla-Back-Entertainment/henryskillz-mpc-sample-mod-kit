@@ -176,8 +176,24 @@ static void fx_plot(uint32_t *p, enum effect kind, const int *values, uint32_t a
             rect(p,x,59+(int)lroundf(7*cosf(x*.044f)),1,1,0x658594);
 }
 
+/* The one page indicator on HS panels, as stock: a tab per section, the active one lit. A section
+   with more than one page (only AIR Flavor's modules) adds dots under its tab. */
+struct tab_style { uint32_t on, on_edge, on_ink, off, off_edge, off_ink; };
+
+static void page_tabs(uint32_t *p, int x, int y, int w, int h, const char *const *tabs, int n,
+                      int active, const struct tab_style *s)
+{
+    for (int i = 0; i < n; ++i) {
+        int tx = x + i * w, lit = i == active;
+        rect(p, tx, y, w - 3, h, lit ? s->on : s->off);
+        frame(p, tx, y, w - 3, h, lit ? s->on_edge : s->off_edge);
+        text(p, tx + (w - 3 - text_width(tabs[i], 12) + 1) / 2, y + (h - 4) / 2, tabs[i], 12,
+             lit ? s->on_ink : s->off_ink);
+    }
+}
+
 static const uint32_t channel_colors[] = {
-    0xa1adb1, 0xe0a353, 0xa58d63, 0x69a9d1, 0x70b982, 0xd66c61, 0xddbd68, 0x7cb6a7
+    0xa1adb1, 0xe0a353, 0xa58d63, 0x69a9d1, 0x70b982, 0xd66c61, 0xddbd68, 0x7cb6a7, 0xc48fc9
 };
 
 static int channel_section(const char **name)
@@ -188,27 +204,27 @@ static int channel_section(const char **name)
     int section = 0;
     const char *title = active_bank ? active_bank(&section) : NULL;
     if (name) *name = title ? title : "INPUT / OUTPUT";
-    return section >= 0 && section < 8 ? section : 0;
+    return section >= 0 && section < 9 ? section : 0;
 }
 
 static void channel_panel(uint32_t *p)
 {
-    static const char *const tabs[] = {"I/O", "FILT", "LF", "LM", "HM", "HF", "COMP", "GATE"};
+    static const char *const tabs[] = {"I/O", "FILT", "LF", "LM", "HM", "HF", "COMP", "GATE", "DESS"};
     const char *name;
     int section = channel_section(&name);
     uint32_t accent = channel_colors[section];
     text(p, 15, 39, name, 19, 0xd9e0de);
     if (section >= 6) text(p, 207, 39, "SHIFT", 5, 0xc3b793);
-    for (int i = 0; i < 8; ++i) {
-        int x = 12 + i * 37;
+    for (int i = 0; i < 9; ++i) {
+        int x = 12 + i * 33;
         int selected = i == section;
-        rect(p, x, 52, 35, 20, selected ? channel_colors[i] : 0x242b31);
-        frame(p, x, 52, 35, 20, selected ? 0xdfe6e5 : 0x505b62);
-        rect(p, x + 1, 53, 33, 2, channel_colors[i]);
-        text(p, x + (35 - 4*(int)strlen(tabs[i])) / 2, 60, tabs[i], 5,
+        rect(p, x, 52, 31, 20, selected ? channel_colors[i] : 0x242b31);
+        frame(p, x, 52, 31, 20, selected ? 0xdfe6e5 : 0x505b62);
+        rect(p, x + 1, 53, 29, 2, channel_colors[i]);
+        text(p, x + (31 - 4*(int)strlen(tabs[i])) / 2, 60, tabs[i], 5,
              selected ? 0x182028 : 0xd7dfe0);
     }
-    rect(p, 12, 48, 294, 1, accent);
+    rect(p, 12, 48, 295, 1, accent);       /* spans all 9 tabs: 12 + 8*33 + 31 */
 }
 
 static void rack_knob(uint32_t *p, int x, int y, int value, int bypass, uint32_t accent)
@@ -238,6 +254,13 @@ static void channel_knob(uint32_t *p, int x, int y, int value, int bypass)
     rack_knob(p, x, y, value, bypass, channel_colors[channel_section(NULL)]);
 }
 
+static const char *channel_marking(int knob, int shifted, int value)
+{
+    static const char *const mode[] = {"SPLIT", "WIDE", "LISTEN"};
+    int m = value * 3 / 73;               /* thirds of the turn, as the plugin reads it */
+    return channel_section(NULL) == 8 && shifted && knob == 0 && value >= 0 ? mode[m > 2 ? 2 : m] : NULL;
+}
+
 static void xsat_panel(uint32_t *p)
 {
     static const char *const tabs[] = {"DRIVE", "HARMONICS", "I/O"};
@@ -246,16 +269,10 @@ static void xsat_panel(uint32_t *p)
     if (!active_bank) active_bank = (bank_fn)dlsym(RTLD_DEFAULT, "hs_xsat_bank");
     int section = 0;
     const char *title = active_bank ? active_bank(&section) : NULL;
+    static const struct tab_style style = {0xd3a164, 0xffd894, 0x201b17, 0x242b31, 0x6b6053, 0xe3d9c7};
     text(p, 15, 39, title ? title : "DRIVE", 19, 0xe2ddca);
     rect(p, 12, 48, 294, 1, 0xd3a164);
-    for (int i = 0; i < 3; ++i) {
-        int x = 12 + i * 99;
-        int active = i == section;
-        rect(p, x, 52, 96, 20, active ? 0xd3a164 : 0x242b31);
-        frame(p, x, 52, 96, 20, active ? 0xffd894 : 0x6b6053);
-        text(p, x + (96 - 4*(int)strlen(tabs[i])) / 2, 60, tabs[i], 9,
-             active ? 0x201b17 : 0xe3d9c7);
-    }
+    page_tabs(p, 12, 52, 99, 20, tabs, 3, section, &style);
 }
 
 static int bus_section(const char **name)
@@ -282,7 +299,6 @@ static const char *bus_marking(int knob, int value)
     if (section == 1 && knob == 1) return release[step];
     if (section == 1 && knob == 2 && value <= 3) return "OFF";
     if (section == 1 && knob == 2 && value <= 7) return "20 HZ";
-    if (section == 2 && knob == 1) return value >= 37 ? "ON" : "OFF";
     return NULL;
 }
 
@@ -291,15 +307,10 @@ static void bus_panel(uint32_t *p)
     static const char *const tabs[] = {"COMPRESS", "TIMING", "PARALLEL"};
     const char *name;
     int section = bus_section(&name);
+    static const struct tab_style style = {0x9baac0, 0xc4d0dc, 0x182028, 0x202931, 0x596672, 0xd7dfe0};
     text(p, 15, 39, name, 19, 0xd9e0de);
     rect(p, 12, 48, 294, 1, 0x9baac0);
-    for (int i = 0; i < 3; ++i) {
-        int x = 12 + i*99, active = i == section;
-        rect(p, x, 52, 96, 20, active ? 0x9baac0 : 0x202931);
-        frame(p, x, 52, 96, 20, active ? 0xc4d0dc : 0x596672);
-        text(p, x+(96-4*(int)strlen(tabs[i]))/2, 60, tabs[i], 9,
-             active ? 0x182028 : 0xd7dfe0);
-    }
+    page_tabs(p, 12, 52, 99, 20, tabs, 3, section, &style);
 }
 
 static int pump_section(const char **name)
@@ -310,14 +321,32 @@ static int pump_section(const char **name)
     int section = 0;
     const char *title = active_bank ? active_bank(&section) : NULL;
     if (name) *name = title ? title : "COMPRESS";
-    return section >= 0 && section < 3 ? section : 0;
+    return section >= 0 && section < 4 ? section : 0;
 }
 
 /* Panel styled after the hardware's look: black face, blue print, black knobs with white
    pointers, the ratio LED column (laid flat) and the Det/Sat lamps. Ratio, Det and Sat are
    only visible on their own page, so the last values seen are remembered for the lamps. */
 static const uint32_t pump_blue = 0x2fa8e8;
-static int pump_ratio = 3, pump_det, pump_sat;
+static int pump_ratio = 3, pump_det, pump_sat, pump_key, pump_send;
+
+/* KEY page (Pump and Crush): knob 0 Key In Own/A-D, knob 1 Send Off/A-D, 5 steps each. */
+static int key_step(int value) { return (value*4+36)/73; }
+static const char *key_marking(int knob, int value)
+{
+    static const char *const in[] = {"OWN","BUS A","BUS B","BUS C","BUS D"};
+    static const char *const send[] = {"OFF","BUS A","BUS B","BUS C","BUS D"};
+    return knob == 0 ? in[key_step(value)] : knob == 1 ? send[key_step(value)] : NULL;
+}
+/* "KEY A" / "SEND B" lamps so the routing shows on every page. */
+static void key_lamps(uint32_t *p, int x, int y, int key, int send, uint32_t ink, uint32_t dim)
+{
+    char t[8];
+    snprintf(t, sizeof t, key ? "KEY %c" : "KEY", 'A' + key - 1);
+    text(p, x, y, t, 5, key ? 0xf2a23a : dim);
+    snprintf(t, sizeof t, send ? "SEND %c" : "SEND", 'A' + send - 1);
+    text(p, x + 26, y, t, 6, send ? ink : dim);
+}
 
 static void pump_note(int knob, int value)
 {
@@ -326,6 +355,8 @@ static void pump_note(int knob, int value)
     if (section == 0 && knob == 1) pump_ratio = (value*8+36)/73;
     if (section == 2 && knob == 0) pump_sat = value >= 37;
     if (section == 2 && knob == 1) pump_det = value >= 37;
+    if (section == 3 && knob == 0) pump_key = key_step(value);
+    if (section == 3 && knob == 1) pump_send = key_step(value);
 }
 
 static const char *pump_marking(int knob, int value)
@@ -340,6 +371,7 @@ static const char *pump_marking(int knob, int value)
     if (section == 1 && knob == 1) return release[(value*7+36)/73];
     if (section == 1 && knob == 2 && value == 0) return "OFF";
     if (section == 2 && knob < 2) return value >= 37 ? "ON" : "OFF";
+    if (section == 3) return key_marking(knob, value);
     return NULL;
 }
 
@@ -377,7 +409,7 @@ static void pump_knob(uint32_t *p, int x, int y, int value, int bypass)
 static void pump_panel(uint32_t *p, const int *values)
 {
     for (int i = 0; i < 3; ++i) pump_note(i, values[i]);
-    static const char *const tabs[] = {"COMP", "TIME", "COLOUR"};
+    static const char *const tabs[] = {"COMP", "TIME", "COLOUR", "KEY"};
     static const char *const ratios[] = {"1","2","3","4","6","8","10","12","20"};
     static const uint32_t colors[] = {0x46c84a,0x46c84a,0x46c84a,0x46c84a,0xe2d23a,0xe2d23a,0xf08a2c,0xf08a2c,0xe8382c};
     const char *name;
@@ -400,13 +432,9 @@ static void pump_panel(uint32_t *p, const int *values)
     pump_led(p, 225, 55, 0x46c84a, pump_det);
     text(p, 236, 52, "SAT", 3, 0xf0f0ec);
     pump_led(p, 255, 55, 0xe8382c, pump_sat);
-    /* page lamps (B2 flips pages) */
-    for (int i = 0; i < 3; ++i) {
-        int x = 206 + i*35, active = i == section;
-        rect(p, x, 63, 32, 9, active ? pump_blue : 0x101317);
-        frame(p, x, 63, 32, 9, active ? 0xbfe6fa : 0x2a5f7e);
-        text(p, x + (32 - 4*(int)strlen(tabs[i]))/2 + 1, 65, tabs[i], 6, active ? 0x050608 : 0xb8d8ea);
-    }
+    key_lamps(p, 250, 39, pump_key, pump_send, 0xf0f0ec, 0x4a6878);
+    static const struct tab_style style = {pump_blue, 0xbfe6fa, 0x050608, 0x101317, 0x2a5f7e, 0xb8d8ea};
+    page_tabs(p, 202, 63, 27, 9, tabs, 4, section, &style);
 }
 
 /* HS Heat: black face, light grey knobs with white dots, amber lamps for the 8 circuits and
@@ -495,15 +523,16 @@ static void heat_panel(uint32_t *p, const int *values)
     for (int i = 0; i < 3; ++i) heat_note(i, values[i]);
     const char *name;
     int section = heat_section(&name);
+    static const char *const tabs[] = {"CHR", "FLT", "DRT", "ENV", "LFO", "OUT"};
+    static const struct tab_style style = {heat_lcd, heat_lcd, 0x0b0d02, 0x0b0d02, 0x3a440c, 0x9fb030};
     rect(p, 8, 34, 304, 42, 0x0c0c0d);
     frame(p, 8, 34, 304, 42, 0x3c3c3e);
     text(p, 14, 38, "HS HEAT", 7, 0xf2f2ee);
-    /* yellow-green screen with the page name and position */
-    rect(p, 100, 36, 206, 11, 0x0b0d02);
-    frame(p, 100, 36, 206, 11, 0x5d6a14);
-    char pos[8] = {(char)('1'+section), '/', '6', 0};
-    text(p, 104, 39, name, 19, heat_lcd);
-    text(p, 286, 39, pos, 3, heat_lcd);
+    /* yellow-green screen with the page name and the page tabs */
+    rect(p, 58, 36, 248, 11, 0x0b0d02);
+    frame(p, 58, 36, 248, 11, 0x5d6a14);
+    text(p, 62, 39, name, 19, heat_lcd);
+    page_tabs(p, 141, 37, 27, 9, tabs, 6, section, &style);
     /* CHARACTER: one lamp per circuit */
     rect(p, 14, 50, 160, 1, 0x5a5a5c);
     for (int i = 0; i < 8; ++i) {
@@ -550,7 +579,7 @@ static const char *eq2_marking(int knob,int value)
     if (value<0) return NULL;
     int page,band=eq2_position(&page);
     const char *sw=value>=37 ? "ON" : "OFF";
-    if (!band) return (page==0 ? knob==2 : knob<=1) ? sw : NULL;
+    if (!band) return (page==0 ? knob==2 : knob==0) ? sw : NULL;
     if (page==1) return knob==0 ? type[(value*4+36)/73] : sw;
     if (page==2) {
         if (knob==0) return family[(value*5+36)/73];
@@ -588,7 +617,7 @@ static void eq2_panel(uint32_t *p)
    and lamps for the Detector, Audio and British buttons. The GR
    row reads the open instance (dist_gr_db, set in effect_knobs); -1 means it could not be read. */
 static float dist_gr_db = -1;
-static int dist_ratio = 4, dist_det, dist_audio, dist_brit;
+static int dist_ratio = 4, dist_det, dist_audio, dist_brit, dist_key, dist_send;
 
 static int dist_section(const char **name)
 {
@@ -598,7 +627,7 @@ static int dist_section(const char **name)
     int section = 0;
     const char *title = active_bank ? active_bank(&section) : NULL;
     if (name) *name = title ? title : "COMPRESS";
-    return section >= 0 && section < 3 ? section : 0;
+    return section >= 0 && section < 4 ? section : 0;
 }
 
 static void dist_note(int knob, int value)
@@ -609,6 +638,8 @@ static void dist_note(int knob, int value)
     if (section == 1 && knob == 2) dist_det = (value*3+36)/73;
     if (section == 2 && knob == 0) dist_audio = (value*5+36)/73;
     if (section == 2 && knob == 1) dist_brit = value >= 37;
+    if (section == 3 && knob == 0) dist_key = key_step(value);
+    if (section == 3 && knob == 1) dist_send = key_step(value);
 }
 
 static const char *dist_marking(int knob, int value)
@@ -625,6 +656,7 @@ static const char *dist_marking(int knob, int value)
     if (section == 2 && knob == 0) return audio[(value*5+36)/73];
     if (section == 2 && knob == 1) return value >= 37 ? "ON" : "OFF";
     if (section == 2) return NULL;
+    if (section == 3) return key_marking(knob, value);
     if (section == 1 && knob == 0) {
         float ms = .05f*powf(600, k*.1f);
         snprintf(s[0], sizeof s[0], ms < 1 ? "%.1f  %.0f US" : "%.1f  %.1f MS", k, ms < 1 ? ms*1000 : ms);
@@ -644,13 +676,14 @@ static void dist_panel(uint32_t *p, const int *values)
     static const char *const ratios[] = {"1","2","3","4","6","OPT","20","MAX"};
     static const int gr_steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
     const uint32_t ink = 0xeeeeea, dim = 0x8a8a86;
-    const char *name;
-    dist_section(&name);
+    static const char *const tabs[] = {"COMP", "TIME", "AUDIO", "KEY"};
+    static const struct tab_style style = {0xd8d8d4, 0xffffff, 0x0a0a0b, 0x141416, 0x4a4a4c, 0xb8b8b4};
+    int section = dist_section(NULL);
     rect(p, 8, 34, 304, 42, 0x0a0a0b);
     frame(p, 8, 34, 304, 42, 0x4a4a4c);
     text(p, 15, 38, "HS CRUSH", 8, ink);
     rect(p, 15, 45, 31, 1, 0xe8382c);
-    text(p, 56, 38, name, 19, ink);
+    page_tabs(p, 56, 36, 27, 9, tabs, 4, section, &style);
     /* gain reduction, red LEDs */
     text(p, 15, 50, "GR DB", 5, dim);
     for (int i = 0; i < 10; ++i) {
@@ -675,6 +708,7 @@ static void dist_panel(uint32_t *p, const int *values)
     text(p, 15, 70, "DET", 3, dim);
     pump_led(p, 34, 72, 0x46c84a, dist_det & 1);   text(p, 39, 70, "HP", 2, ink);
     pump_led(p, 54, 72, 0xe2d23a, dist_det & 2);   text(p, 59, 70, "BAND", 4, ink);
+    key_lamps(p, 182, 38, dist_key, dist_send, ink, 0x4a4a4c);
     int a = dist_audio;
     text(p, 262, 50, "AUDIO", 5, dim);
     pump_led(p, 266, 59, 0x46c84a, a == 1 || a >= 4); text(p, 271, 57, "HP", 2, ink);
@@ -946,6 +980,12 @@ static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
             text(p, x+4, 66, modules[i], 7, i == selected ? 0x303737 : 0xe7e5db);
             if (i == selected) frame(p, x, 48, 49, 26, 0xf6edce);
         }
+        /* dots under the lit module for its pages (VINYL has 3), as stock marks a tab's pages */
+        static int (*subpage)(int *);
+        if (!subpage) subpage = (int (*)(int *))dlsym(RTLD_DEFAULT, "hs_flavor_subpage");
+        int pages = 0, at = subpage && selected >= 0 ? subpage(&pages) : -1;
+        for (int i = 0; at >= 0 && pages > 1 && i < pages; ++i)
+            rect(p, 12 + 49*selected + 24 - (pages*4 - 2)/2 + i*4, 77, 2, 2, i == at ? 0xf6edce : 0x5d6266);
         break;
     }
     case TAPE:

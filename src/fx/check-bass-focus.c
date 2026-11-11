@@ -17,7 +17,7 @@ static void reset(void) { ctl[BF_FREQ] = sqrtf(30*500); ctl[BF_BASS] = .25f*-24 
 static void tone(float hz, float r_sign) { for (int i = 0; i < N; ++i) { in[0][i] = .25f*sinf(6.2831853f*hz*i/RATE); in[1][i] = r_sign*in[0][i]; } }
 static void go(void) { for (int i = 0; i < N; i += 256) {
     for (int c = 0; c < 2; ++c) { d->connect_port(h, c, in[c]+i); d->connect_port(h, 2+c, out[c]+i); }
-    d->run(h, 256); } }
+    d->run(h, N - i < 256 ? N - i : 256); } }
 static float db(int c) { double a = 0, b = 0; for (int i = N/2; i < N; ++i) { a += out[c][i]*out[c][i]; b += in[c][i]*in[c][i]; } return 10*log10(a/b + 1e-30); }
 
 int main(void)
