@@ -29,5 +29,28 @@ int main(void)
     run(&L, 0, 1000, 1.5); assert(fabs(L.i + 23) < .1);
     run(&L, 0, 1000, 1); assert(isinf(L.i));
     run(&L, pow(10, -14 / 20.), 1000, 5); printf("after reset: I %.2f\n", L.i); assert(fabs(L.i + 14) < .2);  /* first blocks overlap the silence, as the spec does */
+    /* 3341 case 2: -33 dBFS -> -33 LUFS */
+    lufs_init(&L, 48000); run(&L, pow(10, -33 / 20.), 1000, 20);
+    assert(fabs(L.m + 33) < .1 && fabs(L.s + 33) < .1 && fabs(L.i + 33) < .1);
+    /* 3341 case 4: -72 / -36 / -23 / -36 / -72 dBFS, 10/10/60/10/10 s -> I -23 (absolute gate drops -72) */
+    lufs_init(&L, 48000);
+    double lv[] = {-72, -36, -23, -36, -72}, ln[] = {10, 10, 60, 10, 10};
+    for (int k = 0; k < 5; ++k) run(&L, pow(10, lv[k] / 20.), 1000, ln[k]);
+    printf("case 4: I %.2f\n", L.i); assert(fabs(L.i + 23) < .1);
+    /* 3341 case 5: -26 dBFS 20 s, -20 dBFS 20.1 s, -26 dBFS 20 s -> I -23 */
+    lufs_init(&L, 48000);
+    run(&L, pow(10, -26 / 20.), 1000, 20); run(&L, pow(10, -20 / 20.), 1000, 20.1); run(&L, pow(10, -26 / 20.), 1000, 20);
+    printf("case 5: I %.2f\n", L.i); assert(fabs(L.i + 23) < .1);
+    /* one channel: -23 dBFS on the left only is half the energy: -26 LUFS */
+    lufs_init(&L, 48000);
+    for (long i = 0; i < 10L * 48000; ++i) lufs_frame(&L, (float)(pow(10, -23 / 20.) * sin(2 * M_PI * 1000 * i / 48000)), 0);
+    printf("left only: M %.2f\n", L.m); assert(fabs(L.m + 26.01) < .1);
+    /* ballistics: 10 s at -36, then -23: after 0.5 s M is there (400 ms window), S (3 s) is still well below */
+    lufs_init(&L, 48000); run(&L, pow(10, -36 / 20.), 1000, 10); run(&L, pow(10, -23 / 20.), 1000, .5);
+    printf("step: M %.2f S %.2f\n", L.m, L.s); assert(fabs(L.m + 23) < .1 && L.s < -26);
+    run(&L, pow(10, -23 / 20.), 1000, 3); assert(fabs(L.s + 23) < .1);
+    /* peak: a -6 dBFS sine holds -6.0 */
+    lufs_init(&L, 48000); run(&L, pow(10, -6 / 20.), 997, 2);
+    printf("peak %.2f dBFS\n", 20 * log10(L.peak)); assert(fabs(20 * log10(L.peak) + 6) < .05);
     puts("lufs: OK");
 }
