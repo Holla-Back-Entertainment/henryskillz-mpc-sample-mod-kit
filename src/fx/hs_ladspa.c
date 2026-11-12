@@ -14,7 +14,7 @@
 #include "hs_bass_focus.h"
 #include "hs_tube_strip.h"
 
-extern const LADSPA_Descriptor hs_channel_descriptor, hs_xsat_descriptor, hs_bus_descriptor, hs_eq2_descriptor, hs_pump_descriptor, hs_heat_descriptor, hs_distressor_descriptor, hs_bass_focus_descriptor, hs_tube_strip_descriptor;
+extern LADSPA_Descriptor hs_channel_descriptor, hs_xsat_descriptor, hs_bus_descriptor, hs_eq2_descriptor, hs_pump_descriptor, hs_heat_descriptor, hs_distressor_descriptor, hs_bass_focus_descriptor, hs_tube_strip_descriptor;
 #include "hs_saturator.h"
 
 enum { INPUT_L, INPUT_R, OUTPUT_L, OUTPUT_R, CONTROL_1, CONTROL_2, CONTROL_3, PORT_COUNT };
@@ -124,7 +124,7 @@ static const LADSPA_PortRangeHint exciter_hints[] = {
 };
 #undef BOUNDS
 
-static const LADSPA_Descriptor effects[] = {
+static LADSPA_Descriptor effects[] = {
     {
         .UniqueID = SATURATOR_ID, .Label = "hs_saturator", .Name = "HS Saturator",
         .Maker = "Henry Skillz", .Copyright = "Prototype",

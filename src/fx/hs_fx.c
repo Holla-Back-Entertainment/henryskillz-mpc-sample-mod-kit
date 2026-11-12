@@ -447,7 +447,7 @@ static int has_shift_bank(enum effect kind)
     return kind != TUBE_DRIVE && kind != HS_SATURATOR && kind != HS_AIR_EXCITER;
 }
 
-static const uint32_t *draw_gear(struct effect_page *page)
+static const uint32_t *draw_gear_base(struct effect_page *page)
 {
     if (page->kind >= DELAY) return draw_stock_rack(page);
     const uint32_t *src = page->stock;
@@ -505,6 +505,54 @@ static const uint32_t *draw_gear(struct effect_page *page)
         center_ink(p, src, 207, 309, rows[alt + i], cx, 143);
     }
     return p;
+}
+
+/* PRESETS is a pseudo-page supplied by hs-flavor. Keep the normal faceplate header and replace
+ * its body with the eight persistent slots. The dynamic lookups let hs-fx remain optional. */
+static void preset_text(uint32_t *p, int x, int y, const char *s, uint32_t color)
+{
+    for (; *s; ++s, x += 8) {
+        uint16_t g = glyph(*s);
+        for (int yy = 0; yy < 5; ++yy)
+            for (int xx = 0; xx < 3; ++xx)
+                if ((g >> (yy * 3)) & (4 >> xx)) rect(p, x + 2 * xx, y + 2 * yy, 2, 2, color);
+    }
+}
+
+static void preset_panel(uint32_t *p, int slot, const unsigned char used[8], const char *message)
+{
+    rect(p, 4, 34, 312, 124, 0x11171b);
+    frame(p, 4, 34, 312, 124, rail);
+    rect(p, 8, 39, 304, 3, 0x343f45);
+    rect(p, 8, 39, 34, 3, orbit_red);
+    preset_text(p, 12, 46, "PRESETS", 0xc6d4db);
+    if (message && *message) preset_text(p, 308 - 8 * (int)strlen(message), 46, message, cyan);
+    static const char *(*name_of)(int);
+    if (!name_of) name_of = (const char *(*)(int))dlsym(RTLD_DEFAULT, "hs_preset_name");
+    for (int i = 0; i < 8; ++i) {
+        int x = 12 + (i % 4) * 75, y = 62 + (i / 4) * 40, selected = i == slot;
+        rect(p, x, y, 71, 34, selected ? 0x15424d : 0x192227);
+        frame(p, x, y, 71, 34, selected ? cyan : 0x465157);
+        char number[2] = {(char)('1' + i), 0};
+        preset_text(p, x + 6, y + 6, number, selected ? 0xc9f5ff : 0xa6b6bb);
+        const char *name = used[i] && name_of ? name_of(i) : NULL;
+        text(p, x + 6, y + 23, name ? name : used[i] ? "SAVED" : "EMPTY", 14,
+             used[i] ? (selected ? 0xc9f5ff : 0xc6d4db) : 0x5d6a70);
+    }
+    text(p, 12, 146, "K1 SLOT    SHIFT+B3 LOAD    HOLD B3 SAVE", 44, 0x7fa3ab);
+}
+
+static const uint32_t *draw_gear(struct effect_page *page)
+{
+    const uint32_t *base = draw_gear_base(page);
+    static int (*view)(int *, unsigned char *, const char **);
+    if (!view) view = (int (*)(int *, unsigned char *, const char **))dlsym(RTLD_DEFAULT, "hs_preset_view");
+    int slot;
+    unsigned char used[8];
+    const char *message = "";
+    if (!view || !view(&slot, used, &message)) return base;
+    preset_panel(page->rendered, slot, used, message);
+    return page->rendered;
 }
 
 static const void *effect_overlay(const uint32_t *p)

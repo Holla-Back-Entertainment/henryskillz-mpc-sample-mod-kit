@@ -10,7 +10,8 @@ const [src, outDir] = process.argv.slice(2);
 
 let files;
 if (src) {
-  files = new Map(fs.readdirSync(src).filter(f => !f.startsWith(".")).map(f => [f, new Uint8Array(fs.readFileSync(path.join(src, f)))]));
+  files = new Map(fs.readdirSync(src).filter(f => !f.startsWith(".") && fs.statSync(path.join(src, f)).isFile())
+    .map(f => [f, new Uint8Array(fs.readFileSync(path.join(src, f)))]));
 } else {
   const run = 'DIR="$1"\nSO=/tmp/mpcqol.so\nsplash() {\n    if [ -f "$DIR/qol-splash.raw" ]; then\n' +
               '        cat "$DIR/qol-splash.raw" > /dev/fb0\n    fi 2>/dev/null\n}\n( export LD_PRELOAD="$SO"\n  true )\n';
@@ -45,7 +46,7 @@ const bad = new Map(files); bad.set("qol-run.sh", new Uint8Array([1]));
 await assert.rejects(patch(bad), /changed/);
 const wrong = new Map(files); wrong.set("mpcqol.so", new Uint8Array([2]));
 await assert.rejects(patch(wrong), /not SampQOL/);
-if (src) for (const f of ["hs-addons.sh", "hs-splash.raw", "hs-flavor.so", "hs-eq.so", "hs-fx.so", "hs-seq.so", "hs-pro-fx-ladspa.so"])
+if (src) for (const f of ["BASS.xfx", "DRUMS.xfx", "VOX.xfx", "hs-addons.sh", "hs-browser.so", "hs-chains.so", "hs-chrome.so", "hs-eq.so", "hs-flavor.so", "hs-fx.so", "hs-mixer.so", "hs-pro-fx-ladspa.so", "hs-seq.so", "hs-splash.raw"])
   assert.ok(out.get("hs/" + f)?.length > 100, `real mode must carry the built hs/${f}`);
 
 if (outDir) for (const [p, d] of out) { fs.mkdirSync(path.dirname(path.join(outDir, p)), { recursive: true }); fs.writeFileSync(path.join(outDir, p), d); }

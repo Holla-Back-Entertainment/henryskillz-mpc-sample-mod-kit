@@ -376,7 +376,7 @@ static const char *const names[] = {
 #undef BAND_NAMES
 #undef BAND_LIST
 _Static_assert(sizeof names/sizeof *names==PORTS && sizeof types/sizeof *types==PORTS, "EQ2 port count");
-const LADSPA_Descriptor hs_eq2_descriptor = {
+LADSPA_Descriptor hs_eq2_descriptor = {
     .UniqueID=HS_EQ2_ID,.Label="hs_para_eq",.Name="HS Para EQ",.Maker="Henry Skillz",.Copyright="Prototype",
     .Properties=LADSPA_PROPERTY_HARD_RT_CAPABLE,.PortCount=PORTS,.PortDescriptors=types,
     .PortNames=names,.PortRangeHints=hints,.instantiate=instantiate,.connect_port=connect,

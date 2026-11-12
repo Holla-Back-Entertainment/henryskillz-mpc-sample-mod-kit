@@ -484,7 +484,7 @@ static const LADSPA_PortDescriptor descriptors[] = {
 _Static_assert(sizeof names / sizeof *names == FIRST_CONTROL + CH_COUNT, "parameter names");
 _Static_assert(sizeof descriptors / sizeof *descriptors == FIRST_CONTROL + CH_COUNT, "port descriptors");
 
-const LADSPA_Descriptor hs_channel_descriptor = {
+LADSPA_Descriptor hs_channel_descriptor = {
     .UniqueID = HS_CHANNEL_ID, .Label = "hs_channel_strip", .Name = "HS Channel Strip",
     .Maker = "Henry Skillz", .Copyright = "Original DSP",
     .Properties = LADSPA_PROPERTY_HARD_RT_CAPABLE,

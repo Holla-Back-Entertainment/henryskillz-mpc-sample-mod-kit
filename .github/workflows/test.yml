@@ -20,3 +20,12 @@ jobs:
           node-version: "22"
       - run: python -m unittest discover -s tests -v
       - run: node installer/test_installer.mjs
+      - name: Build and check LADSPA registry
+        working-directory: src/fx
+        run: |
+          gcc -O2 -Wall -Wextra -Werror -I. -DHS_MPC_LADSPA_RECALL \
+            check-registry.c hs_ladspa.c hs_registry.c hs_eq2.c hs_pump.c hs_heat.c \
+            hs_distressor.c hs_bass_focus.c hs_tube_strip.c hs_bus.c hs_xsat.c \
+            hs_channel.c hs_saturator.c hs_air_exciter.c hs_env.c \
+            -o /tmp/check-registry -lm -pthread
+          /tmp/check-registry
