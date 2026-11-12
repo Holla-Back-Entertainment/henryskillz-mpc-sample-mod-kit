@@ -197,6 +197,7 @@ static void follow_instance()
     unsigned *pages[] = {&xsat_bank, &bus_bank, &pump_bank, &dist_bank, &tube_bank, &heat_bank, &channel_bank, &bank};
     for (unsigned *s : pages) __atomic_store_n(s, 0u, __ATOMIC_RELAXED);
     __atomic_store_n(&eq_selection, 4u, __ATOMIC_RELAXED);
+    __atomic_store_n(&eq_preset, 0u, __ATOMIC_RELAXED);
     mod_seen_source = mod_seen_target = -1;     /* hs_mod_view: MOD knobs not seen on this insert */
 }
 
@@ -325,7 +326,7 @@ extern "C" int hs_bank_position(int *count)
     if (uid == HS_EQ2_ID) {
         unsigned sel = __atomic_load_n(&eq_selection, __ATOMIC_RELAXED);
         *count = sel/4 ? 4 : 2;
-        return static_cast<int>(sel%4);
+        return preset_open() ? -1 : static_cast<int>(sel%4);
     }
     const unsigned *selection = uid == flavor_uid ? &bank : uid == HS_XSAT_ID ? &xsat_bank : uid == HS_BUS_ID ? &bus_bank
         : uid == HS_PUMP_ID ? &pump_bank : uid == HS_DISTRESSOR_ID ? &dist_bank : uid == HS_TUBE_STRIP_ID ? &tube_bank : uid == HS_HEAT_ID ? &heat_bank
@@ -376,13 +377,7 @@ extern "C" int padmix_note(int note, int value, int shift)
     unsigned uid = insert_open();
     if (preset_open() && !question_active() && preset_note(note, value, shift)) return 1;
     if (note == 13 && uid == HS_EQ2_ID && !question_active()) {
-        if (value>0) {
-            unsigned sel=__atomic_load_n(&eq_selection,__ATOMIC_RELAXED);
-            unsigned count=sel/4 ? 4 : 2;
-            unsigned page=(sel%4+(shift ? count-1 : 1))%count;
-            __atomic_store_n(&eq_selection,sel/4*4+page,__ATOMIC_RELAXED);
-            refresh();
-        }
+        b2_paged(uid, value, shift);
         return 1;
     }
     if (note == 13 && (uid == flavor_uid || uid == HS_CHANNEL_ID || uid == HS_XSAT_ID || uid == HS_BUS_ID || uid == HS_PUMP_ID || uid == HS_HEAT_ID || uid == HS_DISTRESSOR_ID || uid == HS_TUBE_STRIP_ID) && !question_active()) {
@@ -409,6 +404,13 @@ extern "C" int fxmap_get_row(void *context, int id, void *output)
         unsigned band=sel/4;
         const auto &page=band ? eq_band[sel%4] : eq_global[sel%4];
         memset(row,0,sizeof *row);
+        if (preset_open()) {
+            snprintf(row->name, sizeof row->name, "HS Para EQ PRESETS");
+            for (int &parameter : row->parameters) parameter = -1;
+            snprintf(row->labels[0], sizeof row->labels[0], "Slot %u", __atomic_load_n(&preset_slot, __ATOMIC_RELAXED) + 1);
+            snprintf(row->labels[1], sizeof row->labels[1], "#%u", __atomic_load_n(&preset_gen, __ATOMIC_RELAXED));
+            return 1;
+        }
         /* Band in the title: bands 5-24 share default settings, so without it their frames are
            pixel-identical and SampQOL's duplicate skip never redraws the band change. */
         snprintf(row->name,sizeof row->name,band ? "HS Para EQ BAND %02u" : "HS Para EQ GLOBAL",band);

@@ -32,7 +32,7 @@ static int64_t m_read(const clap_istream_t *i, void *b, uint64_t n) {
 
 /* preset discovery: a fake indexer and receiver that record what the provider declares */
 static int n_locations, n_presets;
-static char preset_key[16][64], preset_plugin[16][96];
+static char preset_key[64][64], preset_plugin[64][96];
 static bool ix_location(const clap_preset_discovery_indexer_t *ix, const clap_preset_discovery_location_t *l) {
     (void)ix; n_locations += l->kind == CLAP_PRESET_DISCOVERY_LOCATION_PLUGIN; return true;
 }
@@ -41,7 +41,7 @@ static bool ix_pack(const clap_preset_discovery_indexer_t *ix, const clap_preset
 static const void *ix_ext(const clap_preset_discovery_indexer_t *ix, const char *id) { (void)ix; (void)id; return NULL; }
 static bool rx_begin(const clap_preset_discovery_metadata_receiver_t *r, const char *name, const char *key) {
     (void)r; (void)name;
-    if (n_presets >= 16) return false;
+    if (n_presets >= 64) return false;
     snprintf(preset_key[n_presets++], 64, "%s", key); return true;
 }
 static void rx_plugin(const clap_preset_discovery_metadata_receiver_t *r, const clap_universal_plugin_id_t *id) {

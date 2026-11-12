@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -616,6 +617,64 @@ static void header(uint32_t *p)
     rect(p, 0, 30, W, 1, rail);
 }
 
+/* Live readouts (Para EQ spectrum, Crush and Tube Strip gain-reduction lamps). The host only calls
+   our hooks when a knob moves, so nothing animated on its own. SampQOL's own EQ screen runs a detached
+   thread that sleeps, checks its screen is up and pushes a frame; this does the same with our
+   faceplates: every 40 ms, while padmix is open on one of these three editors (the last full layer-27
+   draw was an effect page), tick the readout and repaint only when it moved. The UI thread hands over
+   its page (pages are per thread); page_draw keeps the two threads from rendering it at once.
+   Never repaint from inside an overlay hook instead: that froze the device (card, 12 Nov 2026). */
+static pthread_mutex_t page_draw = PTHREAD_MUTEX_INITIALIZER;
+static pthread_once_t fx_ui_once = PTHREAD_ONCE_INIT;
+static struct effect_page *fx_ui_page;
+static int fx_on_screen;
+
+/* 1 when the open editor's readout changed enough to redraw. Call with page_draw held. */
+static int live_tick(enum effect kind)
+{
+    if (kind == HS_EQ2) return eq2_spectrum_tick();
+    if (kind != HS_DISTRESSOR && kind != HS_TUBE_STRIP) return 0;
+    static const int steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
+    static int drawn[2] = {-2, -2};
+    int tube = kind == HS_TUBE_STRIP;
+    float db = tube ? tube_open_gr() : dist_open_gr();
+    if (tube) tube_gr_db = db; else dist_gr_db = db;
+    int lit = db < 0 ? -1 : 0;                     /* redraw only when the lit LED count changes */
+    for (int k = 0; k < 10 && lit >= 0; ++k) lit += db >= steps[k];
+    if (lit == drawn[tube]) return 0;
+    drawn[tube] = lit;
+    return 1;
+}
+
+static void *fx_ui_loop(void *arg)
+{
+    (void)arg;
+    int (*padmix_open)(void) = (int (*)(void))dlsym(RTLD_DEFAULT, "padmix_open");
+    for (;;) {
+        usleep(40000);
+        struct effect_page *page = __atomic_load_n(&fx_ui_page, __ATOMIC_ACQUIRE);
+        if (!padmix_open || !padmix_open() || !__atomic_load_n(&fx_on_screen, __ATOMIC_RELAXED) || !page)
+            continue;
+        /* Render under page_draw into our own frame, then push with the lock released: the UI thread
+           may already hold the overlay's lock when it takes page_draw, so never wait on both here. */
+        static uint32_t live_frame[W * H];
+        pthread_mutex_lock(&page_draw);
+        int moved = live_tick(page->kind);
+        if (moved) memcpy(live_frame, draw_gear(page), sizeof live_frame);
+        pthread_mutex_unlock(&page_draw);
+        if (!moved) continue;
+        if (!next_rect) next_rect = (overlay_rect_fn)dlsym(RTLD_NEXT, "overlay_update_rect");
+        if (next_rect) next_rect(27, live_frame, 0, 40, W, H);
+    }
+    return NULL;
+}
+
+static void fx_ui_start(void)
+{
+    pthread_t t;
+    if (pthread_create(&t, NULL, fx_ui_loop, NULL) == 0) pthread_detach(t);
+}
+
 static void effect_knobs(uint32_t *p)
 {
     struct effect_page *page = get_effect_page(0);
@@ -650,27 +709,19 @@ static void effect_knobs(uint32_t *p)
         unsigned seq = eq2_seq();
         if (seq != drawn) { drawn = seq; changed = 1; }
     }
-    if (page->kind == HS_DISTRESSOR) {
-        /* GR row: redraw only when the lit LED count changes, not every frame */
-        static int drawn = -2;
-        dist_gr_db = dist_open_gr();
-        static const int steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
-        int lit = dist_gr_db < 0 ? -1 : 0;
-        for (int k = 0; k < 10 && lit >= 0; ++k) lit += dist_gr_db >= steps[k];
-        if (lit != drawn) { drawn = lit; changed = 1; }
-    }
-    if (page->kind == HS_TUBE_STRIP) {
-        static int drawn = -2;
-        tube_gr_db = tube_open_gr();
-        static const int steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
-        int lit = tube_gr_db < 0 ? -1 : 0;
-        for (int k = 0; k < 10 && lit >= 0; ++k) lit += tube_gr_db >= steps[k];
-        if (lit != drawn) { drawn = lit; changed = 1; }
+    if (page->kind == HS_EQ2 || page->kind == HS_DISTRESSOR || page->kind == HS_TUBE_STRIP) {
+        __atomic_store_n(&fx_ui_page, page, __ATOMIC_RELEASE);
+        pthread_once(&fx_ui_once, fx_ui_start);
+        pthread_mutex_lock(&page_draw);
+        if (live_tick(page->kind)) changed = 1;
+        pthread_mutex_unlock(&page_draw);
     }
     if (changed) {
         if (!next_rect)
             next_rect = (overlay_rect_fn)dlsym(RTLD_NEXT, "overlay_update_rect");
+        pthread_mutex_lock(&page_draw);
         if (next_rect) next_rect(27, draw_gear(page), 0, 40, W, H);
+        pthread_mutex_unlock(&page_draw);
     }
 }
 
@@ -680,6 +731,7 @@ void overlay_update(int mode, const void *buf, int flag)
     if (!next) next = (overlay_fn)dlsym(RTLD_NEXT, "overlay_update");
     if (buf && flag && (mode >= 26 && mode <= 28)) {
         uintptr_t site = return_site(__builtin_return_address(0));
+        if (mode == 27) __atomic_store_n(&fx_on_screen, site == 0xada58, __ATOMIC_RELAXED);
         if (mode == 27 && (site == 0xac2f0 || site == 0xad460)) {
             struct effect_page *page = get_effect_page(0);
             if (page) page->kind = OTHER;
@@ -731,6 +783,7 @@ void overlay_update_rect(int mode, const void *buf, int x, int y, int w, int h)
     if (!next_rect) next_rect = (overlay_rect_fn)dlsym(RTLD_NEXT, "overlay_update_rect");
     if (buf && mode == 27 && x == 0 && y == 40 && w == W && h == H) {
         uintptr_t site = return_site(__builtin_return_address(0));
+        __atomic_store_n(&fx_on_screen, site == 0xaca6c, __ATOMIC_RELAXED);
         if (site == 0xaca6c)
             buf = effect_overlay(buf);
         else if (site == 0xabb98)

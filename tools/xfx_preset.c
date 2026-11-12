@@ -122,6 +122,7 @@ int main(int argc, char **argv) {
     if (argc == 3 && !strcmp(argv[1], "--all")) {          /* every factory preset, as DIR/FILE.xfx */
         for (int i = 0; i < HS_FACTORY_PRESET_COUNT; ++i) {
             const hs_factory_preset *fp = &hs_factory_presets[i];
+            if (!fp->file) continue;                     /* a slot and CLAP preset only, no chain */
             char path[512]; snprintf(path, sizeof path, "%s/%s.xfx", argv[2], fp->file);
             FILE *f = fopen(path, "w");
             if (!f) { perror(path); return 1; }

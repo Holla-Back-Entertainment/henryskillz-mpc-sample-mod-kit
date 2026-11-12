@@ -90,7 +90,9 @@ If it doesn't work: make sure the effect page itself is open (you pressed **B3**
 
 ## Save and load effect presets
 
-Channel Strip, Drive Sat, Bus Compressor, Pump, Heat, Crush and Tube Strip each have eight preset slots. They store the complete effect, including its MOD and key-bus controls, on the SD card. Saturator, Para EQ and Bass Focus do not have this preset page.
+Channel Strip, Drive Sat, Bus Compressor, Pump, Heat, Crush, Tube Strip and Para EQ each have eight preset slots. They store the complete effect, including its MOD and key-bus controls, on the SD card. Saturator and Bass Focus have three knobs and no preset page.
+
+The first few slots of each effect hold named **starter presets** (for example VOCAL, DRUM BUS and BASS on Channel Strip; VOCAL CLEAN, KICK, BASS TIGHT, AIR MASTER and PHONE on Para EQ). They are built in, so they are there on a new card. Tube Strip's first two, KICK and BASSLINE, are the same settings as the KICK and BASSLINE track chains, and the CLAP build of the effects lists all of them in the host's preset browser. Saving into a starter slot replaces it with your own settings for that card; the other slots start EMPTY.
 
 1. Open the effect, then hold **B2** for half a second. A quick B2 press still changes page.
 2. Turn **K1** or **DATA** to choose slot 1 to 8.

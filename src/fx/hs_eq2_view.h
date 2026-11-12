@@ -3,16 +3,21 @@
 /* Para EQ editor: response curve with band nodes, like the desktop plugin.
  * Included by hs_fx.c after hs_fx_faceplate.h. The curve comes from hs_eq2_response() in
  * hs-pro-fx-ladspa.so, i.e. the same biquads the audio runs, not a redrawn approximation. */
+#include <complex.h>
 #include <link.h>
+#include <time.h>
 
 typedef int (*eq2_response_fn)(int, int, float *);
 typedef const float *(*eq2_values_fn)(unsigned *);
 static eq2_response_fn eq2_response;
 static eq2_values_fn eq2_values;
-static const void *dist_descriptor;
+static const void *eq2_descriptor, *dist_descriptor;
 static float (*dist_gr)(const void *);
 static const void *tube_descriptor;
 static float (*tube_gr)(const void *);
+static unsigned (*eq2_tap)(const void *, float *, unsigned, unsigned long *);
+static int (*live_lock)(const void *);      /* hs_registry.c: holds a live instance while it is read */
+static void (*live_unlock)(void);
 
 static int find_ladspa(struct dl_phdr_info *info, size_t size, void *out)
 {
@@ -33,6 +38,10 @@ static int eq2_link(void)
     if (!lib) return 0;
     eq2_response = (eq2_response_fn)dlsym(lib, "hs_eq2_response");
     eq2_values = (eq2_values_fn)dlsym(lib, "hs_eq2_values");
+    eq2_descriptor = dlsym(lib, "hs_eq2_descriptor");
+    eq2_tap = (unsigned (*)(const void *, float *, unsigned, unsigned long *))dlsym(lib, "hs_eq2_tap");
+    live_lock = (int (*)(const void *))dlsym(lib, "hs_ladspa_lock_live");
+    live_unlock = (void (*)(void))dlsym(lib, "hs_ladspa_unlock");
     dist_descriptor = dlsym(lib, "hs_distressor_descriptor");
     dist_gr = (float (*)(const void *))dlsym(lib, "hs_distressor_gr");
     tube_descriptor = dlsym(lib, "hs_tube_strip_descriptor");
@@ -51,18 +60,27 @@ static void *open_handle(const void *descriptor)
     return insert && *(const void *const *)(insert + 0x128) == descriptor ? *(void *const *)(insert + 0x130) : NULL;
 }
 
+/* The meters are read from the UI thread and from the 40 ms animation thread, so the instance is
+   held in the registry while its meter is read: its cleanup cannot free it mid-read. */
+static float live_gr(float (*gr)(const void *), const void *descriptor)
+{
+    void *h = eq2_link() && gr && live_lock && live_unlock ? open_handle(descriptor) : NULL;
+    if (!h || !live_lock(h)) return -1;
+    float db = gr(h);
+    live_unlock();
+    return db;
+}
+
 /* Gain reduction of the open HS Crush, or -1 when it cannot be read. */
 static float dist_open_gr(void)
 {
-    void *h = eq2_link() && dist_gr ? open_handle(dist_descriptor) : NULL;
-    return h ? dist_gr(h) : -1;
+    return live_gr(dist_gr, dist_descriptor);
 }
 
 /* Gain reduction of the open HS Tube Strip, or -1 when it cannot be read. */
 static float tube_open_gr(void)
 {
-    void *h = eq2_link() && tube_gr ? open_handle(tube_descriptor) : NULL;
-    return h ? tube_gr(h) : -1;
+    return live_gr(tube_gr, tube_descriptor);
 }
 
 static unsigned eq2_seq(void)
@@ -91,6 +109,79 @@ static int db_y(float db)
 
 static int hz_x(double hz) { return GX + (int)lround(log(hz / 20) / log(1000) * (GW - 1)); }
 
+/* Live spectrum of the open Para EQ's output: a 2048-point Hann FFT of hs_eq2_tap, one value per
+   graph column on the same log axis as the curve, falling 1.5 dB per frame. -72..0 dBFS fills the
+   graph bottom to top. The maths runs here on the UI thread; the audio side only stores samples. */
+enum { SPEC_N = 2048, SPEC_FLOOR = -72 };
+static float eq2_spec[GW];
+static int eq2_spec_live;
+
+static void spec_fft(float complex *x)
+{
+    for (int i = 1, j = 0; i < SPEC_N; ++i) {
+        int bit = SPEC_N >> 1;
+        for (; j & bit; bit >>= 1) j ^= bit;
+        j |= bit;
+        if (i < j) { float complex t = x[i]; x[i] = x[j]; x[j] = t; }
+    }
+    for (int len = 2; len <= SPEC_N; len <<= 1) {
+        float complex w = cexpf(-2 * 3.14159265f * I / len);
+        for (int i = 0; i < SPEC_N; i += len) {
+            float complex u = 1;
+            for (int k = 0; k < len / 2; ++k, u *= w) {
+                float complex a = x[i + k], b = x[i + k + len / 2] * u;
+                x[i + k] = a + b; x[i + k + len / 2] = a - b;
+            }
+        }
+    }
+}
+
+/* Called every UI poll; returns 1 when the spectrum moved enough to redraw (at most every 40 ms). */
+static int eq2_spectrum_tick(void)
+{
+    static struct timespec last;
+    static unsigned seen;
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    if ((now.tv_sec - last.tv_sec) * 1000 + (now.tv_nsec - last.tv_nsec) / 1000000 < 40) return 0;
+    last = now;
+    void *h = eq2_link() && eq2_tap ? open_handle(eq2_descriptor) : NULL;
+    static float buf[SPEC_N];
+    static float complex x[SPEC_N];
+    unsigned long rate = 0;
+    unsigned w = h ? eq2_tap(h, buf, SPEC_N, &rate) : seen;
+    int fresh = h && rate && w != seen;
+    seen = w;
+    float mag[SPEC_N / 2];
+    if (fresh) {
+        for (int i = 0; i < SPEC_N; ++i) x[i] = buf[i] * (.5f - .5f * cosf(2 * 3.14159265f * i / (SPEC_N - 1)));
+        spec_fft(x);
+        for (int i = 0; i < SPEC_N / 2; ++i) mag[i] = cabsf(x[i]) * (4.0f / SPEC_N);   /* sine -> its peak level */
+    }
+    int moved = 0;
+    if (!eq2_spec_live) for (int k = 0; k < GW; ++k) eq2_spec[k] = SPEC_FLOOR;   /* fresh open: start empty */
+    for (int k = 0; k < GW; ++k) {
+        float db = SPEC_FLOOR;
+        if (fresh) {
+            double lo = 20 * pow(1000, (k - .5) / (GW - 1)), hi = 20 * pow(1000, (k + .5) / (GW - 1));
+            double b0 = lo * SPEC_N / rate, b1 = hi * SPEC_N / rate;
+            float m = 0;
+            if (b1 - b0 < 1) {                              /* narrower than a bin: interpolate */
+                double c = .5 * (b0 + b1);
+                int i = (int)c;
+                if (i + 1 < SPEC_N / 2) m = mag[i] + (float)(c - i) * (mag[i + 1] - mag[i]);
+            } else
+                for (int i = (int)b0; i <= (int)b1 && i < SPEC_N / 2; ++i) m = fmaxf(m, mag[i]);
+            db = m > 0 ? 20 * log10f(m) : SPEC_FLOOR;
+        }
+        float fall = eq2_spec[k] - 1.5f, v = fmaxf(fmaxf(db, fall), SPEC_FLOOR);
+        if (fabsf(v - eq2_spec[k]) > .5f) moved = 1;
+        eq2_spec[k] = v;
+    }
+    eq2_spec_live = h != NULL;
+    return moved;
+}
+
 static const uint32_t band_colors[] = {0xe0503c, 0xd7dc5a, 0x45c16f, 0x3d8fe3, 0xec923c, 0xb56fdc};
 static uint32_t band_color(int band) { return band_colors[(band - 1) % 6]; }
 
@@ -99,6 +190,14 @@ static void eq2_graph(uint32_t *p, int selected)
     const uint32_t bg = 0x0c1215, grid = 0x1f2a2f, zero = 0x3a4950;
     rect(p, GX - 1, GY - 1, GW + 2, GH + 2, bg);
     frame(p, GX - 1, GY - 1, GW + 2, GH + 2, 0x465259);
+    /* live spectrum underneath everything else */
+    for (int k = 0; eq2_spec_live && k < GW; ++k) {
+        if (eq2_spec[k] <= SPEC_FLOOR + .5f) continue;
+        int top = GY + GH - 1 - (int)lroundf((eq2_spec[k] - SPEC_FLOOR) * (GH - 1) / -SPEC_FLOOR);
+        rect(p, GX + k, top, 1, GY + GH - top, mix(bg, 0x77bcb0, 46));
+        rect(p, GX + k, top, 1, 1, mix(bg, 0x77bcb0, 110));
+    }
+
     static const int lines[] = {50, 100, 200, 500, 1000, 2000, 5000, 10000};
     for (int i = 0; i < 8; ++i) rect(p, hz_x(lines[i]), GY, 1, GH, grid);
     for (int db = -15; db <= 15; db += 5) rect(p, GX, db_y(db), GW, 1, db ? grid : zero);

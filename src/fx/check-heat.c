@@ -87,6 +87,15 @@ int main(void)
     reset(); ctl[HE_CIRCUIT] = 7; ctl[HE_FTYPE] = 1; ctl[HE_ENV_DEPTH] = 100; ctl[HE_LFO_DEPTH] = 100; tone(.5f, 100);
     clock_t t0 = clock(); for (int k = 0; k < 20; ++k) go();
     printf("speed: %.0fx realtime (Mac)\n", 20.0/((double)(clock()-t0)/CLOCKS_PER_SEC));
+    /* host default on a fresh insert is 1.75 (DEFAULT_LOW on 0..7): it must sound as Saturation (1),
+       not Enhancement (2), and every whole step must still be itself */
+    static float ref[3][N];
+    const float circ[3] = {1, 1.75f, 2};
+    for (int k = 0; k < 3; ++k) { reset(); ctl[HE_CIRCUIT] = circ[k]; ctl[HE_DRIVE] = 90; tone(.5f, 220); go(); memcpy(ref[k], out[0], sizeof ref[k]); }
+    assert(!memcmp(ref[0], ref[1], sizeof ref[0]) && memcmp(ref[1], ref[2], sizeof ref[1]));
+    for (int i = 0; i <= 73; ++i) { int c = (35*i + 73)/365; assert(c >= 0 && c <= 7); }
+    for (int c = 0; c <= 7; ++c) assert((35*(int)lroundf(c*73/7.0f) + 73)/365 == c);   /* faceplate rule, whole steps */
+    assert((35*18 + 73)/365 == 1);                                                     /* 1.75 -> 18 px -> Saturation */
     puts("check-heat: OK");
     return 0;
 }

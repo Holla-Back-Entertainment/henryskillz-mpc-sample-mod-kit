@@ -56,7 +56,7 @@ static const float defaults[] = {1, 40, 0, 0, 100, 0, 0, 0, 0, 0, 20, 60, 0, 64,
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
 #define INT (B | LADSPA_HINT_INTEGER)
 static const LADSPA_PortRangeHint hints[PORTS] = {
-    [FIRST+HE_CIRCUIT] = {INT|LADSPA_HINT_DEFAULT_1,0,7},
+    [FIRST+HE_CIRCUIT] = {INT|LADSPA_HINT_DEFAULT_LOW,0,7},
     [FIRST+HE_DRIVE] = {B|LADSPA_HINT_DEFAULT_LOW,0,127},
     [FIRST+HE_WET] = {B|LADSPA_HINT_DEFAULT_0,-24,6},
     [FIRST+HE_FTYPE] = {INT|LADSPA_HINT_DEFAULT_0,0,7},
@@ -151,7 +151,10 @@ static void connect(LADSPA_Handle h, unsigned long port, LADSPA_Data *p)
 static void configure(struct heat *s, const float *v)
 {
     float rate = s->rate;
-    int c = (int)lroundf(v[HE_CIRCUIT]);
+    /* The knob only ever sends whole numbers. The one fraction is the host's default on a fresh insert
+       (DEFAULT_LOW = 1.75 on 0..7; it has no hint that lands on 1), and that must be Saturation, so
+       fractions below .8 go down. hs_fx_faceplate.h heat_circuit_of() mirrors this for the lamps. */
+    int c = (int)floorf(v[HE_CIRCUIT] + .2f);
     const struct circuit *cc = &circuits[c];
     if (c != s->circuit || !s->ready) {
         design(&s->pre[0], 0, 150, cc->lo_db, .707f, rate);
