@@ -1,5 +1,6 @@
 /* xfx_preset: write a one-effect chain (.xfx) that opens an HS effect at set values.
  *   xfx_preset LABEL "Port name prefix=value" ... > NAME.xfx
+ *   xfx_preset --all DIR                    (every preset in src/chains/factory_presets.h)
  *   xfx_preset --decode LABEL DATA          (prints each control's value, to check a file)
  * Values are in the knob's own units; ports not given keep the effect's default. The MPC stores
  * each control input as a float scaled 0..1 across its LADSPA range: linear, but along the log
@@ -12,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ladspa.h"
+#include "../src/chains/factory_presets.h"
 
 const LADSPA_Descriptor *ladspa_descriptor(unsigned long index);
 static const char B64[] = ".ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+";
@@ -53,9 +55,6 @@ static const LADSPA_Descriptor *find(const char *label) {
     fprintf(stderr, "no effect with label %s\n", label);
     exit(2);
 }
-static int is_ctl_in(const LADSPA_Descriptor *d, unsigned long p) {
-    return LADSPA_IS_PORT_CONTROL(d->PortDescriptors[p]) && LADSPA_IS_PORT_INPUT(d->PortDescriptors[p]);
-}
 
 static void encode(const unsigned char *b, size_t n, char *out) {
     out += sprintf(out, "%zu.", n);
@@ -86,49 +85,17 @@ static size_t decode(const char *s, unsigned char *b, size_t cap) {
     return n;
 }
 
-int main(int argc, char **argv) {
-    if (argc >= 4 && !strcmp(argv[1], "--decode")) {
-        const LADSPA_Descriptor *d = find(argv[2]);
-        unsigned char b[4096]; size_t n = decode(argv[3], b, sizeof b), k = 0;
-        for (unsigned long p = 0; p < d->PortCount; ++p) if (is_ctl_in(d, p)) {
-            if ((k + 1) * 4 > n) break;
-            float x; memcpy(&x, b + 4 * k++, 4);
-            const LADSPA_PortRangeHint *r = &d->PortRangeHints[p];
-            printf("%-30s %8.3f  (%.4f)\n", d->PortNames[p], from_norm(r, x), x);
-        }
-        return 0;
-    }
-    if (argc < 2) { fprintf(stderr, "usage: xfx_preset LABEL \"Port=value\"... | --decode LABEL DATA\n"); return 2; }
-    const LADSPA_Descriptor *d = find(argv[1]);
-    float norm[512]; size_t k = 0;
-    for (unsigned long p = 0; p < d->PortCount && k < 512; ++p) if (is_ctl_in(d, p)) {
-        const LADSPA_PortRangeHint *r = &d->PortRangeHints[p];
-        float v = def_value(r);
-        size_t plen = strlen(d->PortNames[p]);
-        for (int a = 2; a < argc; ++a) {
-            const char *eq = strrchr(argv[a], '=');
-            size_t n = eq ? (size_t)(eq - argv[a]) : 0;
-            if (n && n <= plen && !strncmp(argv[a], d->PortNames[p], n)) {
-                v = strtof(eq + 1, NULL);
-                if (v < r->LowerBound || v > r->UpperBound) {
-                    fprintf(stderr, "%s=%g is outside %g..%g\n", d->PortNames[p], v, r->LowerBound, r->UpperBound);
-                    return 2;
-                }
-            }
-        }
-        norm[k++] = to_norm(r, v);
-    }
-    for (int a = 2; a < argc; ++a) {                      /* every argument must name a port */
-        const char *eq = strrchr(argv[a], '=');
-        size_t n = eq ? (size_t)(eq - argv[a]) : 0; int hit = 0;
-        for (unsigned long p = 0; p < d->PortCount && n; ++p)
-            if (is_ctl_in(d, p) && n <= strlen(d->PortNames[p]) && !strncmp(argv[a], d->PortNames[p], n)) ++hit;
-        if (hit != 1) { fprintf(stderr, "\"%s\" matches %d ports, needs exactly 1\n", argv[a], hit); return 2; }
-    }
+/* Print one chain for d with args applied over the defaults. Returns 0, or 2 on a bad argument. */
+static int write_xfx(FILE *f, const LADSPA_Descriptor *d, const char *const *args) {
+    float vals[512] = {0}, norm[512]; size_t k = 0; char err[200];
+    if (d->PortCount > 512) { fprintf(stderr, "%s: too many ports\n", d->Label); return 2; }
+    for (unsigned long p = 0; p < d->PortCount; ++p) if (hs_is_ctl_in(d, p)) vals[p] = def_value(&d->PortRangeHints[p]);
+    if (hs_preset_apply(d, args, vals, err, sizeof err)) { fprintf(stderr, "%s: %s\n", d->Label, err); return 2; }
+    for (unsigned long p = 0; p < d->PortCount; ++p) if (hs_is_ctl_in(d, p)) norm[k++] = to_norm(&d->PortRangeHints[p], vals[p]);
     unsigned char bytes[2048]; char data[4096];
     memcpy(bytes, norm, k * 4);
     encode(bytes, k * 4, data);
-    printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<MPCVObject>\n  <Version>\n    <File_Version>2.1</File_Version>\n"
+    fprintf(f, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<MPCVObject>\n  <Version>\n    <File_Version>2.1</File_Version>\n"
            "    <Application>MPC-V</Application>\n    <Application_Version>0.0.0.495</Application_Version>\n"
            "    <Platform>Linux</Platform>\n  </Version>\n  <InsertEffectStrip>\n    <Insert1>\n      <Is64Bits>1</Is64Bits>\n"
            "      <Name>%s</Name>\n      <DescriptiveName>%s</DescriptiveName>\n      <FormatName>LADSPA</FormatName>\n"
@@ -139,4 +106,31 @@ int main(int argc, char **argv) {
            "    <InsertEnable1>True</InsertEnable1>\n  </InsertEffectStrip>\n</MPCVObject>\n",
            d->Label, d->Name, d->UniqueID, data);
     return 0;
+}
+
+int main(int argc, char **argv) {
+    if (argc >= 4 && !strcmp(argv[1], "--decode")) {
+        const LADSPA_Descriptor *d = find(argv[2]);
+        unsigned char b[4096]; size_t n = decode(argv[3], b, sizeof b), k = 0;
+        for (unsigned long p = 0; p < d->PortCount; ++p) if (hs_is_ctl_in(d, p)) {
+            if ((k + 1) * 4 > n) break;
+            float x; memcpy(&x, b + 4 * k++, 4);
+            printf("%-30s %8.3f  (%.4f)\n", d->PortNames[p], from_norm(&d->PortRangeHints[p], x), x);
+        }
+        return 0;
+    }
+    if (argc == 3 && !strcmp(argv[1], "--all")) {          /* every factory preset, as DIR/FILE.xfx */
+        for (int i = 0; i < HS_FACTORY_PRESET_COUNT; ++i) {
+            const hs_factory_preset *fp = &hs_factory_presets[i];
+            char path[512]; snprintf(path, sizeof path, "%s/%s.xfx", argv[2], fp->file);
+            FILE *f = fopen(path, "w");
+            if (!f) { perror(path); return 1; }
+            int r = write_xfx(f, find(fp->label), fp->args);
+            if (fclose(f) || r) return r ? r : 1;
+            printf("wrote %s\n", path);
+        }
+        return 0;
+    }
+    if (argc < 2) { fprintf(stderr, "usage: xfx_preset LABEL \"Port=value\"... | --all DIR | --decode LABEL DATA\n"); return 2; }
+    return write_xfx(stdout, find(argv[1]), (const char *const *)argv + 2);
 }

@@ -1,14 +1,18 @@
 /* HS effects as CLAP plugins: wraps every LADSPA descriptor that hs_ladspa.c exports, so the DSP
  * is the exact code the MPC runs. One stereo in, one stereo out; each control input port becomes a
  * CLAP parameter whose id is the LADSPA port index.
- * ponytail: parameter events are applied at the start of each block (not sample-accurate) and
- * there is no state save yet; add both when a host that keeps projects needs them. */
+ * State is the control values as text, "port value" per line. Factory presets come from
+ * ../chains/factory_presets.h (the same table the MPC chains are built from).
+ * ponytail: parameter events are applied at the start of each block (not sample-accurate), and a
+ * state or preset load writes the control floats from the main thread while audio may run; each
+ * float lands whole, so the worst case is one block with half the knobs moved. */
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <clap/clap.h>
 #include "../fx/ladspa.h"
+#include "../chains/factory_presets.h"
 
 const LADSPA_Descriptor *ladspa_descriptor(unsigned long index);
 
@@ -116,6 +120,69 @@ static bool a_get(const clap_plugin_t *p, uint32_t i, bool is_input, clap_audio_
 }
 static const clap_plugin_audio_ports_t ports_ext = {a_count, a_get};
 
+static const void *host_ext(fx_t *s, const char *id) {
+    return s->host->get_extension ? s->host->get_extension(s->host, id) : NULL;
+}
+static void rescan_values(fx_t *s) {
+    const clap_host_params_t *hp = host_ext(s, CLAP_EXT_PARAMS);
+    if (hp) hp->rescan(s->host, CLAP_PARAM_RESCAN_VALUES);
+}
+
+/* state: "HSCLAP 1" then "port value" per control input */
+static bool st_save(const clap_plugin_t *p, const clap_ostream_t *os) {
+    fx_t *s = p->plugin_data;
+    char line[64]; int n = snprintf(line, sizeof line, "HSCLAP 1\n");
+    if (os->write(os, line, (uint64_t)n) != n) return false;
+    for (uint32_t i = 0; i < s->nparams; ++i) {
+        n = snprintf(line, sizeof line, "%u %.9g\n", s->param_port[i], s->ctl[s->param_port[i]]);
+        if (os->write(os, line, (uint64_t)n) != n) return false;
+    }
+    return true;
+}
+static bool st_load(const clap_plugin_t *p, const clap_istream_t *is) {
+    fx_t *s = p->plugin_data;
+    char buf[8192]; size_t len = 0;
+    for (int64_t r; len < sizeof buf - 1 && (r = is->read(is, buf + len, sizeof buf - 1 - len)) != 0; len += (size_t)r)
+        if (r < 0) return false;
+    buf[len] = 0;
+    if (strncmp(buf, "HSCLAP 1\n", 9)) return false;
+    for (char *line = strtok(buf + 9, "\n"); line; line = strtok(NULL, "\n")) {
+        unsigned port; float v;
+        /* ports this build doesn't have, or out of range, are skipped: an older or newer save still opens */
+        if (sscanf(line, "%u %f", &port, &v) != 2 || port >= s->d->PortCount || !hs_is_ctl_in(s->d, port)) continue;
+        double lo, hi; range(&s->d->PortRangeHints[port], &lo, &hi);
+        if (v >= lo && v <= hi) s->ctl[port] = v;
+    }
+    rescan_values(s);
+    return true;
+}
+static const clap_plugin_state_t state_ext = {st_save, st_load};
+
+/* preset-load: load_key is the factory preset's name */
+static bool pl_from_location(const clap_plugin_t *p, uint32_t kind, const char *location, const char *key) {
+    (void)location;
+    fx_t *s = p->plugin_data;
+    const clap_host_preset_load_t *hl = host_ext(s, CLAP_EXT_PRESET_LOAD);
+    for (int i = 0; kind == CLAP_PRESET_DISCOVERY_LOCATION_PLUGIN && key && i < HS_FACTORY_PRESET_COUNT; ++i) {
+        const hs_factory_preset *fp = &hs_factory_presets[i];
+        if (strcmp(fp->name, key) || strcmp(fp->label, s->d->Label)) continue;
+        float *v = malloc(s->d->PortCount * sizeof *v); char err[200];
+        if (!v) return false;
+        for (unsigned long q = 0; q < s->d->PortCount; ++q)
+            v[q] = hs_is_ctl_in(s->d, q) ? ladspa_default(&s->d->PortRangeHints[q], 48000) : 0;
+        bool ok = !hs_preset_apply(s->d, fp->args, v, err, sizeof err);
+        if (ok) for (unsigned long q = 0; q < s->d->PortCount; ++q) if (hs_is_ctl_in(s->d, q)) s->ctl[q] = v[q];
+        free(v);
+        if (!ok) { if (hl) hl->on_error(s->host, kind, location, key, -1, err); return false; }
+        rescan_values(s);
+        if (hl) hl->loaded(s->host, kind, location, key);
+        return true;
+    }
+    if (hl) hl->on_error(s->host, kind, location, key, -1, "no such preset");
+    return false;
+}
+static const clap_plugin_preset_load_t preset_load_ext = {pl_from_location};
+
 /* plugin */
 static bool fx_init(const clap_plugin_t *p) {
     fx_t *s = p->plugin_data;
@@ -177,6 +244,8 @@ static const void *fx_ext(const clap_plugin_t *p, const char *id) {
     (void)p;
     if (!strcmp(id, CLAP_EXT_PARAMS)) return &params_ext;
     if (!strcmp(id, CLAP_EXT_AUDIO_PORTS)) return &ports_ext;
+    if (!strcmp(id, CLAP_EXT_STATE)) return &state_ext;
+    if (!strcmp(id, CLAP_EXT_PRESET_LOAD) || !strcmp(id, CLAP_EXT_PRESET_LOAD_COMPAT)) return &preset_load_ext;
     return NULL;
 }
 static void fx_main_thread(const clap_plugin_t *p) { (void)p; }
@@ -204,6 +273,49 @@ static const clap_plugin_t *f_create(const clap_plugin_factory_t *f, const clap_
 }
 static const clap_plugin_factory_t factory = {f_count, f_desc, f_create};
 
+/* preset discovery: one provider, the factory presets, stored inside the plugin */
+static const clap_preset_discovery_provider_descriptor_t prov_desc = {
+    CLAP_VERSION_INIT, "com.henryskillz.hs_effects.factory_presets", "HS Effects factory presets", "Henry Skillz"};
+static const char *clap_id_for(const char *label) {
+    for (uint32_t i = 0; i < fx_count; ++i) if (!strcmp(ladspa_descriptor(i)->Label, label)) return ids[i];
+    return NULL;
+}
+static bool pv_init(const clap_preset_discovery_provider_t *pv) {
+    const clap_preset_discovery_indexer_t *ix = pv->provider_data;
+    clap_preset_discovery_location_t loc = {CLAP_PRESET_DISCOVERY_IS_FACTORY_CONTENT, "HS Effects",
+                                            CLAP_PRESET_DISCOVERY_LOCATION_PLUGIN, NULL};
+    return ix->declare_location(ix, &loc);
+}
+static void pv_destroy(const clap_preset_discovery_provider_t *pv) { free((void *)pv); }
+static bool pv_metadata(const clap_preset_discovery_provider_t *pv, uint32_t kind, const char *location,
+                        const clap_preset_discovery_metadata_receiver_t *rx) {
+    (void)pv; (void)location;
+    if (kind != CLAP_PRESET_DISCOVERY_LOCATION_PLUGIN) return false;
+    for (int i = 0; i < HS_FACTORY_PRESET_COUNT; ++i) {
+        const char *id = clap_id_for(hs_factory_presets[i].label);
+        if (!id || !rx->begin_preset(rx, hs_factory_presets[i].name, hs_factory_presets[i].name)) continue;
+        clap_universal_plugin_id_t uid = {"clap", id};
+        rx->add_plugin_id(rx, &uid);
+        rx->set_flags(rx, CLAP_PRESET_DISCOVERY_IS_FACTORY_CONTENT);
+        rx->add_creator(rx, "Henry Skillz");
+    }
+    return true;
+}
+static const void *pv_ext(const clap_preset_discovery_provider_t *pv, const char *id) { (void)pv; (void)id; return NULL; }
+static uint32_t pf_count(const clap_preset_discovery_factory_t *f) { (void)f; return 1; }
+static const clap_preset_discovery_provider_descriptor_t *pf_desc(const clap_preset_discovery_factory_t *f, uint32_t i) {
+    (void)f; return i ? NULL : &prov_desc;
+}
+static const clap_preset_discovery_provider_t *pf_create(const clap_preset_discovery_factory_t *f,
+                                                         const clap_preset_discovery_indexer_t *ix, const char *id) {
+    (void)f;
+    if (strcmp(id, prov_desc.id)) return NULL;
+    clap_preset_discovery_provider_t *pv = malloc(sizeof *pv);
+    if (pv) *pv = (clap_preset_discovery_provider_t){&prov_desc, (void *)ix, pv_init, pv_destroy, pv_metadata, pv_ext};
+    return pv;
+}
+static const clap_preset_discovery_factory_t preset_factory = {pf_count, pf_desc, pf_create};
+
 static bool e_init(const char *path) {
     (void)path;
     fx_count = 0;
@@ -221,6 +333,11 @@ static bool e_init(const char *path) {
     return fx_count > 0;
 }
 static void e_deinit(void) {}
-static const void *e_factory(const char *id) { return strcmp(id, CLAP_PLUGIN_FACTORY_ID) ? NULL : &factory; }
+static const void *e_factory(const char *id) {
+    if (!strcmp(id, CLAP_PLUGIN_FACTORY_ID)) return &factory;
+    if (!strcmp(id, CLAP_PRESET_DISCOVERY_FACTORY_ID) || !strcmp(id, CLAP_PRESET_DISCOVERY_FACTORY_ID_COMPAT))
+        return &preset_factory;
+    return NULL;
+}
 
 CLAP_EXPORT const clap_plugin_entry_t clap_entry = {CLAP_VERSION_INIT, e_init, e_deinit, e_factory};
