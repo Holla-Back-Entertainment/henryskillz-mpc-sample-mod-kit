@@ -113,7 +113,7 @@ static const char *const names[] = {"Input L", "Input R", "Output L", "Output R"
                                     "Crossover (Hz)", "Bass (dB)", "Mono bass"};
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS, "Bass Focus port count");
 
-const LADSPA_Descriptor hs_bass_focus_descriptor = {
+LADSPA_Descriptor hs_bass_focus_descriptor = {
     .UniqueID = HS_BASS_FOCUS_ID, .Label = "hs_bass_focus", .Name = "HS Bass Focus",
     .Maker = "Henry Skillz", .Copyright = "Prototype",
     .Properties = LADSPA_PROPERTY_HARD_RT_CAPABLE,

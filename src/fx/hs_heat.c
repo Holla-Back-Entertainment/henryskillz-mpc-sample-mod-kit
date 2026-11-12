@@ -310,7 +310,7 @@ static const char *const names[] = {
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == HE_COUNT, "Heat port count");
 
-const LADSPA_Descriptor hs_heat_descriptor = {
+LADSPA_Descriptor hs_heat_descriptor = {
     .UniqueID = HS_HEAT_ID, .Label = "hs_heat", .Name = "HS Heat",
     .Maker = "SampQOL Lab", .Copyright = "Prototype",
     .Properties = LADSPA_PROPERTY_HARD_RT_CAPABLE,

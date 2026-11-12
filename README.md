@@ -5,14 +5,14 @@ No coding, no terminal, no apps to install, no AI tools. Free.
 
 Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top of [SampQOL OS](https://github.com/snarebes/SampQOL-OS) by **Snare Bes**.
 
-### [Open the installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) · [How to use it](docs/USER-GUIDE.md) · [Step-by-step guide](docs/INSTALL-GUIDE.md) · [Update just the effects](docs/UPDATE-EFFECTS.md) · [FAQ](docs/FAQ.md) · [Undo it](docs/RECOVERY.md)
+### [Open the installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) · [How to use it](docs/USER-GUIDE.md) · [Compatibility](docs/COMPATIBILITY.md) · [Step-by-step guide](docs/INSTALL-GUIDE.md) · [Update just the effects](docs/UPDATE-EFFECTS.md) · [FAQ](docs/FAQ.md) · [Undo it](docs/RECOVERY.md)
 
 <img src="assets/henryskillz-splash-preview.png" width="320" alt="HenrySkillz start screen on the MPC Sample: DRUMS SAMPLE BASS">
 
 > **Unofficial.** Not made, endorsed or supported by Akai Professional, inMusic or the SampQOL author.
 > Everything runs from the SD card. Switch off and take the card out, and the MPC is stock again.
 
-> **Tested:** the installer on the official SampQOL 0.2.0 download (Chrome and Safari). The v0.5 build passed a hardware boot test on Henry's own MPC Sample. Anything new in v0.6 (Stems onto pads, the chain boxes, the SampQOL screen styling and the graphic mixer) has passed the MPC Sample emulator and stays emulator-tested until Henry's v0.6 hardware boot test passes. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
+> **Tested:** the installer on a pristine official SampQOL 0.2.0 package (Chrome and Safari), including a virtual-MPC boot of the generated output. The v0.5 build passed a hardware boot test on Henry's own MPC Sample. Changes since then—including Stems onto pads, chain boxes, screen styling, the graphic mixer and effect presets—remain emulator-tested until the current [hardware checklist](docs/BOOT-TEST.md) passes. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
 
 ---
 
@@ -39,6 +39,8 @@ Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid 
 **SEQ page as a mixing desk.** The SEQ page (tempo, bars, Rec Quant) is redrawn as a desk panel with a VU meter and output LEDs that move with what the MPC is playing, and the **K1 BPM** label stays clear. Every stock control works as before. **B2** switches to the **METERS** page: left and right VU meters, loudness Momentary, Short-term and Integrated (EBU R128) and a peak hold. Integrated and peak restart after 2 seconds of silence. **B2** again goes back to the desk.
 
 **De-esser.** HS Channel Strip has a **DESS** page: Freq, Thresh, Range and Mode (split, wide, or listen to hear just what it removes).
+
+**Per-effect presets.** On Channel Strip, Drive Sat, Bus Compressor, Pump, Heat, Crush and Tube Strip, hold **B2** for half a second to open **PRESETS**. Choose one of eight slots with **K1** or **DATA**, use **SHIFT+B3** to load, and hold **B3** to save. Presets live on the SD card under `MPC-Sample/Presets`, so they are available in other projects.
 
 **MOD and the key bus.** HS Pump and HS Crush have a **KEY** page that sends their input to bus A, B, C or D, or keys their compressor from one. Seven HS effects (Pump, Crush, Tube Strip, Heat, Channel Strip, Drive Sat, Bus Compressor) have a **MOD** page: pick a bus as the Source, a knob as the Target and a Depth, and that knob moves with the level on the bus. **MOD TIME** sets the attack and release. Off by default, so old projects sound the same.
 
@@ -68,6 +70,10 @@ Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid 
 |---|---|---|
 | ![Pad insert page with the red top bar, the dark blue palette and a cyan edge on the selected slot](assets/screens/sampqol-styling.png) | ![Ch. Mixer as a console: strips with pan, mute, solo, fader, stereo meter and output](assets/screens/graphic-mixer.png) | ![Browser row for Leroys C#Min 75bpm.wav tagged C# MIN 112.9 BPM](assets/screens/browser-key-tag.png) |
 
+| Preset slots | Channel Strip de-esser |
+|---|---|
+| ![Eight per-effect preset slots with slot 5 selected and the load and save controls shown](assets/screens/hs-presets.png) | ![HS Channel Strip DESS page showing Frequency, Threshold and Range, plus the shifted Mode row](assets/screens/hs-channel-deesser.png) |
+
 These are real 320×240 captures from the MPC Sample emulator running the public installer output:
 
 ![Insert effects list showing the HS effects](assets/screens/hs-effects-list.png)
@@ -84,7 +90,7 @@ These are real 320×240 captures from the MPC Sample emulator running the public
 |---|---|---|
 | ![HS Crush compress page: gain-reduction LEDs, ratio lamps, input, ratio and output knobs](assets/screens/hs-crush.png) | ![HS Bass Focus: live response curve with the crossover marker, crossover, bass and mono knobs](assets/screens/hs-bass-focus.png) | ![HS Tube Strip tube page: gain-reduction LEDs, signal path, drive, HPF and output knobs](assets/screens/hs-tube-strip.png) |
 
-The HS Pump, HS Heat, HS Crush, HS Bass Focus and HS Tube Strip panels above are rendered at 3× from the panel drawing code in `src/fx/` (`panel-render.c` for the last three), not captured from the emulator yet.
+The HS Pump, HS Heat, HS Crush, HS Bass Focus, HS Tube Strip, presets and de-esser panels above are rendered from the same panel drawing code in `src/fx/`, not captured from the emulator yet. All other pictures in this section are emulator captures.
 
 ![MPC EQ page with the dB and frequency grid](assets/screens/eq-page-grid.png)
 

@@ -181,6 +181,8 @@ static unsigned *paged(unsigned uid, unsigned *count)
     return nullptr;
 }
 
+#include "presets.inc"
+
 /* MOD knobs last seen on the open insert (hs_mod_view), -1 = not yet. */
 static int mod_seen_source = -1, mod_seen_target = -1;
 
@@ -201,6 +203,7 @@ static void follow_instance()
 extern "C" const char *hs_xsat_bank(int *section)
 {
     if (insert_open() != HS_XSAT_ID) return nullptr;
+    if (__atomic_load_n(&xsat_bank, __ATOMIC_RELAXED) >= xsat_count) { *section = -1; return "PRESETS"; }
     const auto &page = xsat_banks[__atomic_load_n(&xsat_bank, __ATOMIC_RELAXED)];
     *section = page.module;
     return page.title;
@@ -209,6 +212,7 @@ extern "C" const char *hs_xsat_bank(int *section)
 extern "C" const char *hs_bus_bank(int *section)
 {
     if (insert_open() != HS_BUS_ID) return nullptr;
+    if (__atomic_load_n(&bus_bank, __ATOMIC_RELAXED) >= bus_count) { *section = -1; return "PRESETS"; }
     const auto &page = bus_banks[__atomic_load_n(&bus_bank, __ATOMIC_RELAXED)];
     *section = page.module;
     return page.title;
@@ -217,6 +221,7 @@ extern "C" const char *hs_bus_bank(int *section)
 extern "C" const char *hs_pump_bank(int *section)
 {
     if (insert_open() != HS_PUMP_ID) return nullptr;
+    if (__atomic_load_n(&pump_bank, __ATOMIC_RELAXED) >= pump_count) { *section = -1; return "PRESETS"; }
     const auto &page = pump_banks[__atomic_load_n(&pump_bank, __ATOMIC_RELAXED)];
     *section = page.module;
     return page.title;
@@ -225,6 +230,7 @@ extern "C" const char *hs_pump_bank(int *section)
 extern "C" const char *hs_distressor_bank(int *section)
 {
     if (insert_open() != HS_DISTRESSOR_ID) return nullptr;
+    if (__atomic_load_n(&dist_bank, __ATOMIC_RELAXED) >= dist_count) { *section = -1; return "PRESETS"; }
     const auto &page = dist_banks[__atomic_load_n(&dist_bank, __ATOMIC_RELAXED)];
     *section = page.module;
     return page.title;
@@ -233,6 +239,7 @@ extern "C" const char *hs_distressor_bank(int *section)
 extern "C" const char *hs_tube_strip_bank(int *section)
 {
     if (insert_open() != HS_TUBE_STRIP_ID) return nullptr;
+    if (__atomic_load_n(&tube_bank, __ATOMIC_RELAXED) >= tube_count) { *section = -1; return "PRESETS"; }
     const auto &page = tube_banks[__atomic_load_n(&tube_bank, __ATOMIC_RELAXED)];
     *section = page.module;
     return page.title;
@@ -241,6 +248,7 @@ extern "C" const char *hs_tube_strip_bank(int *section)
 extern "C" const char *hs_heat_bank(int *section)
 {
     if (insert_open() != HS_HEAT_ID) return nullptr;
+    if (__atomic_load_n(&heat_bank, __ATOMIC_RELAXED) >= heat_count) { *section = -1; return "PRESETS"; }
     const auto &page = heat_banks[__atomic_load_n(&heat_bank, __ATOMIC_RELAXED)];
     *section = page.module;
     return page.title;
@@ -259,6 +267,7 @@ static bool flavor_open() { return insert_open() == flavor_uid; }
 extern "C" const char *hs_channel_bank(int *module)
 {
     if (insert_open() != HS_CHANNEL_ID) return nullptr;
+    if (__atomic_load_n(&channel_bank, __ATOMIC_RELAXED) >= channel_count) { *module = -1; return "PRESETS"; }
     const auto &page = channel_banks[__atomic_load_n(&channel_bank, __ATOMIC_RELAXED)];
     *module = page.module;
     return page.title;
@@ -324,7 +333,8 @@ extern "C" int hs_bank_position(int *count)
     if (!selection) return -1;
     *count = static_cast<int>(uid == flavor_uid ? bank_count : uid == HS_XSAT_ID ? xsat_count : uid == HS_BUS_ID ? bus_count
         : uid == HS_PUMP_ID ? pump_count : uid == HS_DISTRESSOR_ID ? dist_count : uid == HS_TUBE_STRIP_ID ? tube_count : uid == HS_HEAT_ID ? heat_count : channel_count);
-    return static_cast<int>(__atomic_load_n(selection, __ATOMIC_RELAXED));
+    unsigned at = __atomic_load_n(selection, __ATOMIC_RELAXED);
+    return at < static_cast<unsigned>(*count) ? static_cast<int>(at) : -1;
 }
 
 __attribute__((constructor)) static void init_editor()
@@ -343,6 +353,7 @@ __attribute__((constructor)) static void init_editor()
 
 extern "C" int padmix_cc(int cc,int value)
 {
+    if (preset_open() && !question_active() && preset_cc(cc, value)) return 1;
     if (cc==100 && insert_open()==HS_EQ2_ID && !question_active()) {
         int amount=value >= 64 ? value-128 : value;
         if (amount) {
@@ -363,6 +374,7 @@ extern "C" int padmix_cc(int cc,int value)
 extern "C" int padmix_note(int note, int value, int shift)
 {
     unsigned uid = insert_open();
+    if (preset_open() && !question_active() && preset_note(note, value, shift)) return 1;
     if (note == 13 && uid == HS_EQ2_ID && !question_active()) {
         if (value>0) {
             unsigned sel=__atomic_load_n(&eq_selection,__ATOMIC_RELAXED);
@@ -374,16 +386,7 @@ extern "C" int padmix_note(int note, int value, int shift)
         return 1;
     }
     if (note == 13 && (uid == flavor_uid || uid == HS_CHANNEL_ID || uid == HS_XSAT_ID || uid == HS_BUS_ID || uid == HS_PUMP_ID || uid == HS_HEAT_ID || uid == HS_DISTRESSOR_ID || uid == HS_TUBE_STRIP_ID) && !question_active()) {
-        unsigned *selection = uid == flavor_uid ? &bank : uid == HS_XSAT_ID ? &xsat_bank : uid == HS_BUS_ID ? &bus_bank
-            : uid == HS_PUMP_ID ? &pump_bank : uid == HS_DISTRESSOR_ID ? &dist_bank : uid == HS_TUBE_STRIP_ID ? &tube_bank : uid == HS_HEAT_ID ? &heat_bank : &channel_bank;
-        unsigned count = uid == flavor_uid ? bank_count : uid == HS_XSAT_ID ? xsat_count : uid == HS_BUS_ID ? bus_count
-            : uid == HS_PUMP_ID ? pump_count : uid == HS_DISTRESSOR_ID ? dist_count : uid == HS_TUBE_STRIP_ID ? tube_count : uid == HS_HEAT_ID ? heat_count : channel_count;
-        if (value > 0) {
-            unsigned previous = __atomic_load_n(selection, __ATOMIC_RELAXED);
-            unsigned page = (previous + (shift ? count - 1 : 1)) % count;
-            __atomic_store_n(selection, page, __ATOMIC_RELAXED);
-            refresh();
-        }
+        b2_paged(uid, value, shift);
         return 1;
     }
     return next_note ? next_note(note, value, shift) : 0;
@@ -415,15 +418,6 @@ extern "C" int fxmap_get_row(void *context, int id, void *output)
                 ? EQ_FIRST+(band-1)*EB_COUNT+page.parameters[i] : page.parameters[i];
         return 1;
     }
-    const auto &page = uid == flavor_uid
-        ? banks[__atomic_load_n(&bank, __ATOMIC_RELAXED)]
-        : uid == HS_XSAT_ID ? xsat_banks[__atomic_load_n(&xsat_bank, __ATOMIC_RELAXED)]
-        : uid == HS_BUS_ID ? bus_banks[__atomic_load_n(&bus_bank, __ATOMIC_RELAXED)]
-        : uid == HS_PUMP_ID ? pump_banks[__atomic_load_n(&pump_bank, __ATOMIC_RELAXED)]
-        : uid == HS_DISTRESSOR_ID ? dist_banks[__atomic_load_n(&dist_bank, __ATOMIC_RELAXED)]
-        : uid == HS_TUBE_STRIP_ID ? tube_banks[__atomic_load_n(&tube_bank, __ATOMIC_RELAXED)]
-        : uid == HS_HEAT_ID ? heat_banks[__atomic_load_n(&heat_bank, __ATOMIC_RELAXED)]
-        : channel_banks[__atomic_load_n(&channel_bank, __ATOMIC_RELAXED)];
     memset(row, 0, sizeof *row);
     if (uid == flavor_uid) memcpy(row->name, flavor_name, sizeof flavor_name);
     else if (uid == HS_XSAT_ID) memcpy(row->name, "HS Drive Sat", sizeof "HS Drive Sat");
@@ -433,6 +427,21 @@ extern "C" int fxmap_get_row(void *context, int id, void *output)
     else if (uid == HS_TUBE_STRIP_ID) memcpy(row->name, "HS Tube Strip", sizeof "HS Tube Strip");
     else if (uid == HS_HEAT_ID) memcpy(row->name, "HS Heat", sizeof "HS Heat");
     else memcpy(row->name, "HS Channel Strip", sizeof "HS Channel Strip");
+    if (preset_open()) {
+        for (int &parameter : row->parameters) parameter = -1;
+        snprintf(row->labels[0], sizeof row->labels[0], "Slot %u", __atomic_load_n(&preset_slot, __ATOMIC_RELAXED) + 1);
+        snprintf(row->labels[1], sizeof row->labels[1], "#%u", __atomic_load_n(&preset_gen, __ATOMIC_RELAXED));
+        return 1;
+    }
+    const auto &page = uid == flavor_uid
+        ? banks[__atomic_load_n(&bank, __ATOMIC_RELAXED)]
+        : uid == HS_XSAT_ID ? xsat_banks[__atomic_load_n(&xsat_bank, __ATOMIC_RELAXED)]
+        : uid == HS_BUS_ID ? bus_banks[__atomic_load_n(&bus_bank, __ATOMIC_RELAXED)]
+        : uid == HS_PUMP_ID ? pump_banks[__atomic_load_n(&pump_bank, __ATOMIC_RELAXED)]
+        : uid == HS_DISTRESSOR_ID ? dist_banks[__atomic_load_n(&dist_bank, __ATOMIC_RELAXED)]
+        : uid == HS_TUBE_STRIP_ID ? tube_banks[__atomic_load_n(&tube_bank, __ATOMIC_RELAXED)]
+        : uid == HS_HEAT_ID ? heat_banks[__atomic_load_n(&heat_bank, __ATOMIC_RELAXED)]
+        : channel_banks[__atomic_load_n(&channel_bank, __ATOMIC_RELAXED)];
     memcpy(row->parameters, page.parameters, sizeof row->parameters);
     memcpy(row->labels, page.labels, sizeof row->labels);
     return 1;

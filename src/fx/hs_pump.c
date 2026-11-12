@@ -239,7 +239,7 @@ static const char *const names[] = {
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == PU_COUNT, "Pump port count");
 
-const LADSPA_Descriptor hs_pump_descriptor = {
+LADSPA_Descriptor hs_pump_descriptor = {
     .UniqueID = HS_PUMP_ID, .Label = "hs_pump", .Name = "HS Pump",
     .Maker = "SampQOL Lab", .Copyright = "Prototype",
     .Properties = LADSPA_PROPERTY_HARD_RT_CAPABLE,

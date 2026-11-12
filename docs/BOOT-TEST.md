@@ -38,6 +38,9 @@ Open the insert effects list and test each effect with audio playing. Load one e
 - [ ] **HS Tube Strip** loads and passes audio near the same level (compressor idle at load). On the OPTO COMP page, turning **K1** (Threshold) down compresses and the amber OPTO GR DB lamps move with the music (note it if they show NO METER). The middle screen button moves through 7 pages; EQ First redraws the signal path as EQ > COMP.
 - [ ] **HS Bass Focus** loads and passes audio at the same level with Bass at 0 dB. Turning **K2** down moves the curve below the crossover marker; **K3** switches the lamp between MONO and STEREO.
 - [ ] On HS Pump, HS Heat and HS Crush, the **middle screen button** moves through their pages (6 on Pump: COMP, TIME, COLOUR, KEY, MOD, MOD TIME; 8 on Heat; 6 on Crush), and the tab row lights the page you're on.
+- [ ] On Channel Strip, Drive Sat, Bus Compressor, Pump, Heat, Crush or Tube Strip, hold **B2** for half a second: PRESETS opens. A quick B2 still changes the normal page.
+- [ ] In PRESETS, **K1** and **DATA** select all eight slots. Hold **B3** to save a slot, change two controls, then press **SHIFT+B3**: both saved values return. Power-cycle and confirm the slot is still present.
+- [ ] Briefly remove or rename `MPC-Sample/Presets` on the card, then save a preset: the folder is recreated and the completed slot file appears without a leftover `.new` file.
 - [ ] HS Channel Strip has a **DESS** tab: with Range up, a bright vocal loses its "s" sounds; Mode **LISTEN** plays only what is being removed; Range 0 changes nothing.
 - [ ] **MOD:** on HS Pump's KEY page, set Send to **A**. On a second track's HS Crush MOD page, set Source **A**, a Target and some Depth: that knob now moves with the first track's level.
 - [ ] HS Drive Sat, HS Bus Compressor and HS Para EQ have no Bypass knob on their pages; the Bypass button above the screen still bypasses them.

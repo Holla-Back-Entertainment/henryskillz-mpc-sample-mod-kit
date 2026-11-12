@@ -14,6 +14,7 @@ if cp "$HS/hs-flavor.so" /tmp/hs-flavor.so &&
    cp "$HS/hs-pro-fx-ladspa.so" /tmp/hs-ladspa-test/; then
     chmod 644 /tmp/hs-flavor.so /tmp/hs-browser.so /tmp/hs-eq.so /tmp/hs-fx.so /tmp/hs-seq.so /tmp/hs-ladspa-test/hs-pro-fx-ladspa.so
     HS_PRELOAD="/tmp/hs-flavor.so:/tmp/hs-browser.so:/tmp/hs-eq.so:/tmp/hs-fx.so:/tmp/hs-seq.so:"
+    export HS_PRESETS_DIR="${DIR%/*}/MPC-Sample/Presets"
 fi 2>/dev/null
 # SampQOL screen styling and the graphic channel mixer (SampQOL 0.2.0 only; each checks that itself and
 # steps aside on any other build). Optional, each on its own: they go after hs-fx and before hs-seq.

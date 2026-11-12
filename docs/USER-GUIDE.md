@@ -10,6 +10,7 @@ You don't need to know anything about modding. If you can load a sample and play
 - [The buttons this guide talks about](#the-buttons-this-guide-talks-about)
 - [Open an HS effect](#open-an-hs-effect)
 - [Move between pages](#move-between-pages)
+- [Save and load effect presets](#save-and-load-effect-presets)
 - [One Bypass](#one-bypass)
 - [HS Saturator](#hs-saturator)
 - [HS Channel Strip (with the DESS de-esser)](#hs-channel-strip)
@@ -87,6 +88,24 @@ If it doesn't work: make sure the effect page itself is open (you pressed **B3**
 
 ---
 
+## Save and load effect presets
+
+Channel Strip, Drive Sat, Bus Compressor, Pump, Heat, Crush and Tube Strip each have eight preset slots. They store the complete effect, including its MOD and key-bus controls, on the SD card. Saturator, Para EQ and Bass Focus do not have this preset page.
+
+1. Open the effect, then hold **B2** for half a second. A quick B2 press still changes page.
+2. Turn **K1** or **DATA** to choose slot 1 to 8.
+3. Hold **B3** for about one second to save the current controls. A quick B3 press does not overwrite anything.
+4. Hold **SHIFT** and press **B3** to load the selected slot.
+5. Tap or hold **B2** to leave PRESETS and return to the page you came from.
+
+![Eight effect preset slots, with slot 5 selected and the load and save controls shown](../assets/screens/hs-presets.png)
+
+Slots are shared between projects and stay under `MPC-Sample/Presets` on the card. **EMPTY** means that slot has not been saved for this effect. A saved slot says **SAVED**; preset files can optionally put a short name in parentheses on their first line.
+
+If it doesn't work: make sure the effect editor itself is open and hold B2, rather than tapping it. Loading an empty slot only reports that it is empty; it does not change the effect.
+
+---
+
 ## One Bypass
 
 Every HS effect uses the **Bypass** button above the screen: **B3**, labelled **Bypass** on the effect page. Press it to switch the effect off and on, the same as any stock effect.
@@ -115,7 +134,7 @@ Soft saturation for drums and bass. It adds harmonics, then filters them, so you
 
 **Bypass:** **B3**.
 
-If it doesn't work: Drive starts at 0 dB, which is silent by design. Turn **K1** up.
+If it doesn't work: Drive starts at 0 dB, which makes no audible change by design. Turn **K1** up.
 
 ---
 
@@ -125,7 +144,7 @@ If it doesn't work: Drive starts at 0 dB, which is silent by design. Turn **K1**
 
 A console-style channel. The signal goes: input and drive, filters, EQ, compressor and gate, de-esser, output. One switch puts the EQ after the compressor instead.
 
-![HS Channel Strip on its I/O page with Input, Drive and Output knobs. Emulator capture from an earlier build: the DESS tab is not in this picture](../assets/screens/hs-channel-strip.png)
+![HS Channel Strip DESS page showing Frequency, Threshold and Range, followed by its shifted Mode row](../assets/screens/hs-channel-deesser.png)
 
 **I/O**
 | Knob | Control | Range | What it does |
@@ -597,7 +616,7 @@ The shipped chains:
 
 Case doesn't matter. The name has to start with the whole word: "Bass 2", "Bass-1" and "Bass2" match BASS, "Bassline 2" matches BASSLINE, "Kickdrum" matches nothing. The VOX, DRUMS and BASS effects load at their starting settings, so dial them in to taste.
 
-KICK and BASSLINE are presets: the strip opens already set. The slot shows its short name, hs_tube_strip.
+KICK and BASSLINE open the strip already set up, no preset slot needed. The slot shows its short name, hs_tube_strip.
 
 - **KICK:** Drive 3.5, High-Pass OFF, Threshold -8 dB, Ratio 4:1, Attack 15 ms so the click gets through, Release 110 ms. Bass +2 dB at 60 Hz, Low Mid -3 dB at 350 Hz to take out the cardboard, High Mid +2 dB at 4 kHz for the beater. Output +1.5 dB.
 - **BASSLINE:** Drive 3, High-Pass 30 Hz, Threshold -10 dB, Ratio 3:1, Attack 30 ms, Release 300 ms. Bass +3 dB at 60 Hz, Low Mid -2 dB at 250 Hz, High Mid +2 dB at 900 Hz so it reads on small speakers, Treble -2 dB. Output +1 dB.

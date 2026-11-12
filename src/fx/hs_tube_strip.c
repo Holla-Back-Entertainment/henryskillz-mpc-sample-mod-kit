@@ -232,7 +232,7 @@ static const char *const names[] = {
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS,
                "Tube Strip port count");
 
-const LADSPA_Descriptor hs_tube_strip_descriptor = {
+LADSPA_Descriptor hs_tube_strip_descriptor = {
     .UniqueID = HS_TUBE_STRIP_ID, .Label = "hs_tube_strip", .Name = "HS Tube Strip",
     .Maker = "Henry Skillz", .Copyright = "Prototype",
     .Properties = LADSPA_PROPERTY_HARD_RT_CAPABLE,
