@@ -25,9 +25,7 @@ static float fresh(const LADSPA_Descriptor *d, unsigned long p)
     else if (LADSPA_IS_HINT_DEFAULT_440(h)) v = 440;
     /* ponytail: the host turns DEFAULT_1 on a stepped control into its maximum (seen on Heat and Bus
        Compressor, 12 Nov 2026); no effect with presets uses that combination any more, so it is not modelled. */
-    if (LADSPA_IS_HINT_INTEGER(h) || LADSPA_IS_HINT_TOGGLED(h)) v = floor(v + .5);
-    if (!strcmp(d->Label, "hs_heat") && !strcmp(d->PortNames[p], "Circuit")) v = 1;   /* its 1.75 reads as Saturation */
-    return (float)v;
+    return hs_snap_default(d, p, (float)v);
 }
 
 int main(void)

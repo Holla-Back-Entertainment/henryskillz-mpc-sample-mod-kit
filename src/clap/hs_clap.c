@@ -74,7 +74,7 @@ static bool p_info(const clap_plugin_t *p, uint32_t i, clap_param_info_t *info) 
                   (LADSPA_IS_HINT_INTEGER(r->HintDescriptor) || LADSPA_IS_HINT_TOGGLED(r->HintDescriptor) ? CLAP_PARAM_IS_STEPPED : 0);
     snprintf(info->name, sizeof info->name, "%s", s->d->PortNames[port]);
     range(r, &info->min_value, &info->max_value);
-    info->default_value = ladspa_default(r, 48000);
+    info->default_value = hs_snap_default(s->d, port, ladspa_default(r, 48000));
     return true;
 }
 static bool p_value(const clap_plugin_t *p, clap_id id, double *v) {
@@ -169,7 +169,7 @@ static bool pl_from_location(const clap_plugin_t *p, uint32_t kind, const char *
         float *v = malloc(s->d->PortCount * sizeof *v); char err[200];
         if (!v) return false;
         for (unsigned long q = 0; q < s->d->PortCount; ++q)
-            v[q] = hs_is_ctl_in(s->d, q) ? ladspa_default(&s->d->PortRangeHints[q], 48000) : 0;
+            v[q] = hs_is_ctl_in(s->d, q) ? hs_snap_default(s->d, q, ladspa_default(&s->d->PortRangeHints[q], 48000)) : 0;
         bool ok = !hs_preset_apply(s->d, fp->args, v, err, sizeof err);
         if (ok) for (unsigned long q = 0; q < s->d->PortCount; ++q) if (hs_is_ctl_in(s->d, q)) s->ctl[q] = v[q];
         free(v);
@@ -196,7 +196,7 @@ static bool fx_init(const clap_plugin_t *p) {
             if (LADSPA_IS_PORT_INPUT(t) && ai < 2) s->in[ai++] = (int)i;
             else if (LADSPA_IS_PORT_OUTPUT(t) && ao < 2) s->out[ao++] = (int)i;
         } else if (LADSPA_IS_PORT_INPUT(t)) {
-            s->ctl[i] = ladspa_default(&s->d->PortRangeHints[i], 48000);
+            s->ctl[i] = hs_snap_default(s->d, i, ladspa_default(&s->d->PortRangeHints[i], 48000));
             s->param_port[s->nparams++] = (uint32_t)i;
         }
     }

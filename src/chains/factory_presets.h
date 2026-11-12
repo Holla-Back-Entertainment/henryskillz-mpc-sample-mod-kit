@@ -91,6 +91,16 @@ static inline int hs_is_ctl_in(const LADSPA_Descriptor *d, unsigned long p) {
     return LADSPA_IS_PORT_CONTROL(d->PortDescriptors[p]) && LADSPA_IS_PORT_INPUT(d->PortDescriptors[p]);
 }
 
+/* A stepped control's default as the effect reads it: the LADSPA hint can land between steps (Heat's
+ * Circuit is 1.75 on 0..7, Pump's Attack 3.5), so hosts and presets get the whole step instead.
+ * Heat reads its 1.75 as Saturation (1), see hs_heat.c; every other effect rounds. */
+static inline float hs_snap_default(const LADSPA_Descriptor *d, unsigned long p, float v) {
+    LADSPA_PortRangeHintDescriptor h = d->PortRangeHints[p].HintDescriptor;
+    if (!LADSPA_IS_HINT_INTEGER(h) && !LADSPA_IS_HINT_TOGGLED(h)) return v;
+    if (!strcmp(d->Label, "hs_heat") && !strcmp(d->PortNames[p], "Circuit")) return 1;
+    return (float)(long)(v + (v < 0 ? -.5f : .5f));
+}
+
 /* Write each argument's value into vals[port]. Returns 0, or -1 with the reason in err. */
 static inline int hs_preset_apply(const LADSPA_Descriptor *d, const char *const *args, float *vals,
                                   char *err, size_t errlen) {
