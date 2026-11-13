@@ -13,6 +13,9 @@
 #include <clap/clap.h>
 #include "../fx/ladspa.h"
 #include "../chains/factory_presets.h"
+#ifdef HS_CLAP_GUI
+#include "hs_clap_gui.h"
+#endif
 
 const LADSPA_Descriptor *ladspa_descriptor(unsigned long index);
 
@@ -31,6 +34,12 @@ typedef struct {
     int in[2], out[2];                /* audio port indices */
     uint32_t nparams;
     uint32_t *param_port;             /* CLAP param index -> LADSPA port index */
+#ifdef HS_CLAP_GUI
+    void *gui;                        /* the editor (hs_clap_gui_mac.m) */
+    struct { uint16_t what; uint32_t port; float value; } edits[256];   /* editor -> host, one writer one reader */
+    uint32_t edit_head, edit_tail;
+    int begin_dropped, value_dropped;  /* editor thread only */
+#endif
 } fx_t;
 
 /* The LADSPA default rules (ladspa.h, LADSPA_HINT_DEFAULT_*). */
@@ -99,8 +108,34 @@ static void apply_events(fx_t *s, const clap_input_events_t *in) {
             s->ctl[pv->param_id] = (float)pv->value;
     }
 }
+#ifdef HS_CLAP_GUI
+/* Knob moves from the editor go out to the host as gesture and value events at the next flush or
+ * process call (never both at once, per the CLAP threading rules). */
+static void send_edits(fx_t *s, const clap_output_events_t *out) {
+    static const uint16_t types[] = {CLAP_EVENT_PARAM_GESTURE_BEGIN, CLAP_EVENT_PARAM_VALUE, CLAP_EVENT_PARAM_GESTURE_END};
+    uint32_t head = __atomic_load_n(&s->edit_head, __ATOMIC_ACQUIRE);
+    for (uint32_t t = s->edit_tail; t != head; ++t) {
+        const __typeof__(s->edits[0]) *e = &s->edits[t % 256];
+        if (!out) continue;
+        if (e->what == HS_EDIT_VALUE) {
+            clap_event_param_value_t ev = {{sizeof ev, 0, CLAP_CORE_EVENT_SPACE_ID, CLAP_EVENT_PARAM_VALUE, 0},
+                                           e->port, NULL, -1, -1, -1, -1, e->value};
+            out->try_push(out, &ev.header);
+        } else {
+            clap_event_param_gesture_t ev = {{sizeof ev, 0, CLAP_CORE_EVENT_SPACE_ID, types[e->what], 0}, e->port};
+            out->try_push(out, &ev.header);
+        }
+    }
+    __atomic_store_n(&s->edit_tail, head, __ATOMIC_RELEASE);
+}
+#endif
 static void p_flush(const clap_plugin_t *p, const clap_input_events_t *in, const clap_output_events_t *out) {
-    (void)out; apply_events(p->plugin_data, in);
+    apply_events(p->plugin_data, in);
+#ifdef HS_CLAP_GUI
+    send_edits(p->plugin_data, out);
+#else
+    (void)out;
+#endif
 }
 static const clap_plugin_params_t params_ext = {p_count, p_info, p_value, p_to_text, p_from_text, p_flush};
 
@@ -204,6 +239,9 @@ static bool fx_init(const clap_plugin_t *p) {
 }
 static void fx_destroy(const clap_plugin_t *p) {
     fx_t *s = p->plugin_data;
+#ifdef HS_CLAP_GUI
+    if (s->gui) hs_clap_gui.destroy(p);   /* hosts should have closed it; don't leak a live view */
+#endif
     if (s->h) s->d->cleanup(s->h);
     free(s->ctl); free(s->param_port); free(s); free((void *)p);
 }
@@ -230,6 +268,9 @@ static void fx_reset(const clap_plugin_t *p) {
 static clap_process_status fx_process(const clap_plugin_t *p, const clap_process_t *pr) {
     fx_t *s = p->plugin_data;
     apply_events(s, pr->in_events);
+#ifdef HS_CLAP_GUI
+    send_edits(s, pr->out_events);
+#endif
     if (!pr->audio_inputs_count || !pr->audio_outputs_count) return CLAP_PROCESS_ERROR;
     float **in = pr->audio_inputs[0].data32, **out = pr->audio_outputs[0].data32;
     if (!in || !out) return CLAP_PROCESS_ERROR;
@@ -246,9 +287,46 @@ static const void *fx_ext(const clap_plugin_t *p, const char *id) {
     if (!strcmp(id, CLAP_EXT_AUDIO_PORTS)) return &ports_ext;
     if (!strcmp(id, CLAP_EXT_STATE)) return &state_ext;
     if (!strcmp(id, CLAP_EXT_PRESET_LOAD) || !strcmp(id, CLAP_EXT_PRESET_LOAD_COMPAT)) return &preset_load_ext;
+#ifdef HS_CLAP_GUI
+    if (!strcmp(id, CLAP_EXT_GUI)) return &hs_clap_gui;
+#endif
     return NULL;
 }
 static void fx_main_thread(const clap_plugin_t *p) { (void)p; }
+
+#ifdef HS_CLAP_GUI
+static const void *gui_handle(void *ctx) { return ((fx_t *)ctx)->h; }
+static void gui_edit(void *ctx, int what, uint32_t port, float value) {
+    fx_t *s = ctx;
+    if (port >= s->d->PortCount || !hs_is_ctl_in(s->d, port)) return;
+    if (what == HS_EDIT_VALUE) s->ctl[port] = value;   /* the DSP reads it next block, as a state load does */
+    /* Host not flushing and the queue full: drop values, but keep every gesture closed. Begin and value
+       leave room for a final value + end; an end whose begin was dropped is dropped too. */
+    uint32_t head = s->edit_head, free_slots = 256 - (head - __atomic_load_n(&s->edit_tail, __ATOMIC_ACQUIRE));
+    if (what == HS_EDIT_END && s->begin_dropped) { s->begin_dropped = 0; s->value_dropped = 0; return; }
+    if (what != HS_EDIT_END && free_slots < 3) {
+        if (what == HS_EDIT_BEGIN) s->begin_dropped = 1; else s->value_dropped = 1;
+        return;
+    }
+    if (what == HS_EDIT_END && s->value_dropped) {     /* the host gets the knob's final value */
+        s->value_dropped = 0;
+        s->edits[head % 256].what = HS_EDIT_VALUE;
+        s->edits[head % 256].port = port;
+        s->edits[head % 256].value = s->ctl[port];
+        ++head;
+    }
+    s->edits[head % 256].what = (uint16_t)what;
+    s->edits[head % 256].port = port;
+    s->edits[head % 256].value = value;
+    __atomic_store_n(&s->edit_head, head + 1, __ATOMIC_RELEASE);
+    const clap_host_params_t *hp = host_ext(s, CLAP_EXT_PARAMS);
+    if (hp) hp->request_flush(s->host);
+}
+hs_gui_target hs_clap_gui_target(const clap_plugin_t *p) {
+    fx_t *s = p->plugin_data;
+    return (hs_gui_target){s->d, s->ctl, s->param_port, s->nparams, s, &s->gui, gui_handle, gui_edit};
+}
+#endif
 
 /* factory */
 static uint32_t f_count(const clap_plugin_factory_t *f) { (void)f; return fx_count; }

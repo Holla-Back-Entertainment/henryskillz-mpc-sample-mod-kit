@@ -220,6 +220,7 @@ static double complex band_h(const struct band *b,double complex z1)
 /* Magnitude in dB at `points` log-spaced frequencies from 20 Hz to 20 kHz, computed from the
  * same biquads the audio runs. which: 0 = left/mid total, 1 = right/side total,
  * 2+i = band i on its own. Returns 0 when nothing has been published yet. */
+int hs_eq2_response_of(const float *v,unsigned long rate,int which,int points,float *db);
 int hs_eq2_response(int which,int points,float *db)
 {
     if (points<2 || which<0 || which>=2+EQ_BANDS) return 0;
@@ -234,6 +235,14 @@ int hs_eq2_response(int which,int points,float *db)
         if (!(a&1) && a==__atomic_load_n(&published_seq,__ATOMIC_RELAXED)) break;
         if (tries>1000) return 0;
     }
+    return hs_eq2_response_of(v,rate,which,points,db);
+}
+
+/* The same curve from given settings (v indexed by EQ_*, as hs_eq2_values) at `rate`: the CLAP
+ * faceplate draws its own instance's settings, not the last instance that ran. */
+int hs_eq2_response_of(const float *v,unsigned long rate,int which,int points,float *db)
+{
+    if (points<2 || which<0 || which>=2+EQ_BANDS || !rate) return 0;
     static struct band bands[EQ_BANDS];  // ponytail: UI thread only
     for (int i=0;i<EQ_BANDS;++i) {
         memset(&bands[i],0,sizeof bands[i]);
