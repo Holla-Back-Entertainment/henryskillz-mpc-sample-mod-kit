@@ -54,9 +54,9 @@ Get it only from that page. It's the author's official download, and the install
 
 ## Step 5. Open the installer
 
-**Easiest:** open the [online installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) in your browser.
+**Easiest:** open the [online installer](https://holla-back-entertainment.github.io/henryskillz-mpc-sample-mod-kit/install/) in your browser.
 
-**Or offline:** download `henryskillz-mpc-sample-installer.html` from [Releases](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/releases/latest) and double-click it.
+**Or offline:** download `henryskillz-mpc-sample-installer.html` from [Releases](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/releases/latest) and double-click it.
 
 Both versions work the same way. Everything happens inside your browser: your files are never uploaded.
 

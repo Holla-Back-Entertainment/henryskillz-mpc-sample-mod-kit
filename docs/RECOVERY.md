@@ -32,7 +32,7 @@ Pick one:
 
 ## Report a problem
 
-[Open an issue](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues) and include:
+[Open an issue](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues) and include:
 - Your MPC firmware version and SampQOL version.
 - What you did and what you saw.
 - If there's a `logs` folder inside `autorun` on the card, attach `events.log` and `last-exit.log`.
