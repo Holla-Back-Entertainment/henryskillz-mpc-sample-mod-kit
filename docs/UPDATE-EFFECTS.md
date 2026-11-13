@@ -11,14 +11,14 @@ Already installed the kit? You only need the new effect files. No SampQOL downlo
 
 1. **Switch the MPC off** normally, take the SD card out and put it in your computer.
 2. **Back up** the `autorun/hs` folder: copy it to your desktop.
-3. Open the [installer page](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) and, under **Already installed? Update just the effects**, click **Download hs-effects-update.zip**.
+3. Open the [installer page](https://holla-back-entertainment.github.io/henryskillz-mpc-sample-mod-kit/install/) and, under **Already installed? Update just the effects**, click **Download hs-effects-update.zip**.
 4. **Unzip** it. You get an `hs` folder: the add-on libraries (`.so`), the three track chains (`VOX.xfx`, `DRUMS.xfx`, `BASS.xfx`) and `hs-addons.sh` (the start-up list that loads them).
 5. **Copy everything in that folder** into `autorun/hs` on the SD card. Say yes to replace. Replace them all together: a mix of old and new files can hide the HS effects list.
 6. **Eject** the card, put it in the MPC, switch on and press **B1**.
 
 The new effects are in the insert effects list with the others. The menu has 40 rows, so HS Air Exciter, HS Drive Sat and the stock Bus Compressor leave the menu to make room for HS Crush, HS Bass Focus and HS Tube Strip. Projects that already use them still open with them.
 
-Stems is not part of this update. To add Stems, run the [installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) again from a fresh SampQOL download with **Add Stems** ticked: Stems needs one more line in SampQOL's start script, and that file is part of the signed check.
+Stems is not part of this update. To add Stems, run the [installer](https://holla-back-entertainment.github.io/henryskillz-mpc-sample-mod-kit/install/) again from a fresh SampQOL download with **Add Stems** ticked: Stems needs one more line in SampQOL's start script, and that file is part of the signed check.
 
 ## Why this is safe to do
 
@@ -26,7 +26,7 @@ The card's start-up check only covers SampQOL's own files and its start script. 
 
 ## If something goes wrong
 
-- **The MPC boots stock** (no HenrySkillz screen), or **restarts twice and then runs stock**: switch off, put your backed-up `hs` folder back in `autorun`, and tell us on the [issues page](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
+- **The MPC boots stock** (no HenrySkillz screen), or **restarts twice and then runs stock**: switch off, put your backed-up `hs` folder back in `autorun`, and tell us on the [issues page](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues).
 - **The HS effects are missing from the list**: you probably replaced only some of the files. Copy them all again.
 - Still stuck? Switch off and take the card out: the MPC is stock again. See [RECOVERY.md](RECOVERY.md).
 

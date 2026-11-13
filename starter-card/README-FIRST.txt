@@ -8,6 +8,6 @@ HENRYSKILLZ MPC SAMPLE STARTER
 If the unit hangs, hold power to switch off, remove the card and boot stock.
 
 Full guide and support:
-https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit
+https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit
 
 Unofficial community software. Not affiliated with Akai Professional or inMusic Brands.

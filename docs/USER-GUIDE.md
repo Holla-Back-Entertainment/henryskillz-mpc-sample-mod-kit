@@ -750,4 +750,4 @@ Automatic project backups are a SampQOL feature, not part of this kit. See [Samp
 
 ---
 
-Something not working as this guide says? [Report it](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues) with your firmware version, what you pressed and what you saw.
+Something not working as this guide says? [Report it](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues) with your firmware version, what you pressed and what you saw.
