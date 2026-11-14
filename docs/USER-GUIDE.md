@@ -464,7 +464,7 @@ If it doesn't work: if GR DB shows **NO METER**, the meter could not be read, bu
 
 Splits the sound at a crossover, makes the lows mono and sets their level. The highs pass untouched. The panel draws the response it applies, with a dotted line at the crossover.
 
-![HS Bass Focus: response curve with the crossover marker at 125 Hz, Crossover, Bass at 0.0 dB and Mono Bass on MONO](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-bass-focus.png)
+![HS Bass Focus: response curve with the crossover marker at 125 Hz, Crossover, Bass at +0.5 dB and Mono Bass on MONO](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-bass-focus.png)
 
 | Knob | Control | Range | What it does |
 |---|---|---|---|
