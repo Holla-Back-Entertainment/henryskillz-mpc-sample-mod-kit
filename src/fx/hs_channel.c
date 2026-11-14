@@ -485,7 +485,7 @@ _Static_assert(sizeof names / sizeof *names == FIRST_CONTROL + CH_COUNT, "parame
 _Static_assert(sizeof descriptors / sizeof *descriptors == FIRST_CONTROL + CH_COUNT, "port descriptors");
 
 LADSPA_Descriptor hs_channel_descriptor = {
-    .UniqueID = HS_CHANNEL_ID, .Label = "hs_channel_strip", .Name = "HS Channel Strip",
+    .UniqueID = HS_CHANNEL_ID, .Label = "HS Channel Strip", .Name = "HS Channel Strip",
     .Maker = "Henry Skillz", .Copyright = "Original DSP",
     .Properties = LADSPA_PROPERTY_HARD_RT_CAPABLE,
     .PortCount = FIRST_CONTROL + CH_COUNT, .PortDescriptors = descriptors,

@@ -147,7 +147,7 @@ _Static_assert(sizeof names / sizeof *names == PORTS &&
                sizeof defaults / sizeof *defaults == XS_COUNT, "Drive Sat port count");
 
 LADSPA_Descriptor hs_xsat_descriptor = {
-    .UniqueID = HS_XSAT_ID, .Label = "hs_drive_sat", .Name = "HS Drive Sat",
+    .UniqueID = HS_XSAT_ID, .Label = "HS Drive Sat", .Name = "HS Drive Sat",
     .Maker = "Henry Skillz", .Copyright = "Prototype",
     .Properties = LADSPA_PROPERTY_HARD_RT_CAPABLE,
     .PortCount = PORTS, .PortDescriptors = types, .PortNames = names, .PortRangeHints = hints,

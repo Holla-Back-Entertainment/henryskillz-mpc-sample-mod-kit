@@ -65,5 +65,6 @@ struct Category {
 #include "hs_distressor.h"
 #include "hs_heat.h"
 #include "hs_tube_strip.h"
+#include "hs_bass_focus.h"
 #include "insert.inc"
 #include "banks.inc"

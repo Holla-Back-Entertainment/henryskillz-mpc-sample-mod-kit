@@ -233,7 +233,7 @@ _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *t
                "Tube Strip port count");
 
 LADSPA_Descriptor hs_tube_strip_descriptor = {
-    .UniqueID = HS_TUBE_STRIP_ID, .Label = "hs_tube_strip", .Name = "HS Tube Strip",
+    .UniqueID = HS_TUBE_STRIP_ID, .Label = "HS Tube Strip", .Name = "HS Tube Strip",
     .Maker = "Henry Skillz", .Copyright = "Prototype",
     .Properties = LADSPA_PROPERTY_HARD_RT_CAPABLE,
     .PortCount = PORTS, .PortDescriptors = types, .PortNames = names, .PortRangeHints = hints,

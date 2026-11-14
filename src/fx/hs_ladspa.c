@@ -126,7 +126,7 @@ static const LADSPA_PortRangeHint exciter_hints[] = {
 
 static LADSPA_Descriptor effects[] = {
     {
-        .UniqueID = SATURATOR_ID, .Label = "hs_saturator", .Name = "HS Saturator",
+        .UniqueID = SATURATOR_ID, .Label = "HS Saturator", .Name = "HS Saturator",
         .Maker = "Henry Skillz", .Copyright = "Prototype",
         .PortCount = PORT_COUNT, .PortDescriptors = ports,
         .PortNames = saturator_names, .PortRangeHints = saturator_hints,
@@ -134,7 +134,7 @@ static LADSPA_Descriptor effects[] = {
         .activate = activate, .run = run, .cleanup = free
     },
     {
-        .UniqueID = EXCITER_ID, .Label = "hs_air_exciter", .Name = "HS Air Exciter",
+        .UniqueID = EXCITER_ID, .Label = "HS Air Exciter", .Name = "HS Air Exciter",
         .Maker = "Henry Skillz", .Copyright = "Prototype",
         .PortCount = PORT_COUNT, .PortDescriptors = ports,
         .PortNames = exciter_names, .PortRangeHints = exciter_hints,

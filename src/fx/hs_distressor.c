@@ -259,7 +259,7 @@ _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *t
                sizeof defaults / sizeof *defaults == DS_COUNT, "Crush port count");
 
 LADSPA_Descriptor hs_distressor_descriptor = {
-    .UniqueID = HS_DISTRESSOR_ID, .Label = "hs_distressor", .Name = "HS Crush",
+    .UniqueID = HS_DISTRESSOR_ID, .Label = "HS Crush", .Name = "HS Crush",
     .Maker = "Henry Skillz", .Copyright = "Prototype",
     .Properties = LADSPA_PROPERTY_HARD_RT_CAPABLE,
     .PortCount = PORTS, .PortDescriptors = types, .PortNames = names, .PortRangeHints = hints,
