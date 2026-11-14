@@ -69,8 +69,8 @@ int main(int argc, char **argv) {
     expect("C# MIN", csmin, 4);
     expect("A# MAJ", bbmaj, 4);
     expect("G MIN", gmin, 4);
-    {   /* a 1.5 s E one-shot reads as its note */
-        long n = SR * 3 / 2; float *y = calloc(n, sizeof *y);
+    for (int k = 0; k < 2; k++) {   /* a 1.5 s and a 0.2 s E one-shot read as their note */
+        long n = k ? SR / 5 : SR * 3 / 2; float *y = calloc(n, sizeof *y);
         for (long i = 0; i < n; i++) for (int h = 1; h <= 3; h++) y[i] += 0.2f / h * sin(2 * M_PI * 164.81 * h * i / SR);
         int root, scale; char got[32];
         assert(!browser_detect_key(y, n, SR, 0, &root, &scale));

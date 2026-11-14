@@ -198,7 +198,7 @@ static Key best_key(const double *w, const double *roots, const double *bn, cons
 }
 
 int browser_detect_key(const float *y, long n, int sr, float bpm, int *root, int *scale) {
-    if (!y || n < sr / 2 || sr < 8000) return -1;
+    if (!y || n < sr / 8 || sr < 8000) return -1;   /* 125 ms: short one-shots still read their note */
     if (!(bpm >= 40 && bpm <= 300)) bpm = 120;   /* one-shot / no clear beat: the key still reads */
     Spec sp = {0};
     int dsr; long dn;
