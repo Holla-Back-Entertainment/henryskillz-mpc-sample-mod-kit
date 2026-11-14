@@ -23,6 +23,7 @@ static unsigned b3_token, b3_gen;
 
 #include "factory.inc"
 #include "hs_fx_key.h"
+#include "hs_preset_migrate.h"
 
 /* The starter preset built in for this effect's slot (0-7), or null. A saved file always wins. */
 static const Factory *factory_find(const char *label, unsigned slot)
@@ -137,7 +138,13 @@ static bool preset_open()
 static void preset_dir(char *out, size_t size, const char *label)
 {
     const char *root = getenv("HS_PRESETS_DIR");
-    snprintf(out, size, "%s/%s", root && *root ? root : "/tmp/hs-presets", hs_fx_key(label));
+    if (!root || !*root) root = "/tmp/hs-presets";
+    const char *key = hs_fx_key(label);
+    static int crush_migrated;               /* set once a pass leaves nothing behind; otherwise tried again */
+    if (!strcmp(key, HS_CRUSH_DIR) && !__atomic_load_n(&crush_migrated, __ATOMIC_ACQUIRE) &&
+        hs_preset_migrate_crush(root) == 0)
+        __atomic_store_n(&crush_migrated, 1, __ATOMIC_RELEASE);
+    snprintf(out, size, "%s/%s", root, key);
 }
 
 static void say(const char *fmt, unsigned n)
