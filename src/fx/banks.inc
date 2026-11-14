@@ -185,11 +185,10 @@ extern "C" int hs_flavor_subpage(int *count)
     return static_cast<int>(at - first);
 }
 
-/* Unit hs-fx draws after knob (0-5) of the open HS page's value, or nullptr. */
-extern "C" const char *hs_knob_unit(int knob)
+/* The open HS page (not the flavor's), or nullptr. */
+static const FlavorBank *open_page()
 {
     unsigned uid = insert_open(), count;
-    if (knob < 0 || knob > 5) return nullptr;
     const FlavorBank *page = nullptr;
     if (uid == HS_EQ2_ID) {
         unsigned sel = __atomic_load_n(&eq_selection, __ATOMIC_RELAXED);
@@ -201,7 +200,22 @@ extern "C" const char *hs_knob_unit(int knob)
             : uid == HS_TUBE_STRIP_ID ? tube_banks : uid == HS_HEAT_ID ? heat_banks : channel_banks;
         if (at < count) page = &table[at];
     }
+    return page;
+}
+
+/* Unit hs-fx draws after knob (0-5) of the open HS page's value, or nullptr. */
+extern "C" const char *hs_knob_unit(int knob)
+{
+    const FlavorBank *page = knob >= 0 && knob <= 5 ? open_page() : nullptr;
     return page && page->units[knob][0] ? page->units[knob] : nullptr;
+}
+
+/* Parameter under knob (0-5) of the open HS page, numbered as a MOD Target is, or -1. hs-fx turns
+   that knob when the effect's MOD is moving the parameter. EQ bands are not offset: no MOD there. */
+extern "C" int hs_knob_param(int knob)
+{
+    const FlavorBank *page = knob >= 0 && knob <= 5 ? open_page() : nullptr;
+    return page ? page->parameters[knob] : -1;
 }
 
 /* Header label over B2: page index and count of the open HS editor, or -1 when none is open. */

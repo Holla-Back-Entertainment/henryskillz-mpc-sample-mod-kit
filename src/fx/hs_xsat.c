@@ -146,6 +146,9 @@ _Static_assert(sizeof names / sizeof *names == PORTS &&
                sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == XS_COUNT, "Drive Sat port count");
 
+/* The open editor turns this effect's MOD target knob to the heard value (hs_mod.h). */
+HS_MOD_KNOB_EXPORT(hs_xsat_mod_knob, struct xsat, hints + FIRST)
+
 LADSPA_Descriptor hs_xsat_descriptor = {
     .UniqueID = HS_XSAT_ID, .Label = "HS Drive Sat", .Name = "HS Drive Sat",
     .Maker = "Henry Skillz", .Copyright = "Prototype",

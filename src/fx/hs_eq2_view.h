@@ -16,6 +16,14 @@ static float (*dist_gr)(const void *);
 static const void *tube_descriptor;
 static float (*tube_gr)(const void *);
 static unsigned (*eq2_tap)(const void *, float *, unsigned, unsigned long *);
+typedef int (*mod_knob_fn)(const void *, int *);
+/* MOD effects: descriptor and hs_<name>_mod_knob (hs_mod.h), by enum effect; NULL for the rest. */
+static const char *const mod_names[HS_TUBE_STRIP + 1] = {
+    [HS_CHANNEL] = "hs_channel", [HS_XSAT] = "hs_xsat", [HS_BUS] = "hs_bus", [HS_PUMP] = "hs_pump",
+    [HS_HEAT] = "hs_heat", [HS_DISTRESSOR] = "hs_distressor", [HS_TUBE_STRIP] = "hs_tube_strip"
+};
+static const void *mod_descriptor[HS_TUBE_STRIP + 1];
+static mod_knob_fn mod_knob[HS_TUBE_STRIP + 1];
 static int (*live_lock)(const void *);      /* hs_registry.c: holds a live instance while it is read */
 static void (*live_unlock)(void);
 
@@ -46,6 +54,14 @@ static int eq2_link(void)
     dist_gr = (float (*)(const void *))dlsym(lib, "hs_distressor_gr");
     tube_descriptor = dlsym(lib, "hs_tube_strip_descriptor");
     tube_gr = (float (*)(const void *))dlsym(lib, "hs_tube_strip_gr");
+    for (int k = 0; k <= HS_TUBE_STRIP; ++k) {
+        if (!mod_names[k]) continue;
+        char name[48];
+        snprintf(name, sizeof name, "%s_descriptor", mod_names[k]);
+        mod_descriptor[k] = dlsym(lib, name);
+        snprintf(name, sizeof name, "%s_mod_knob", mod_names[k]);
+        mod_knob[k] = (mod_knob_fn)dlsym(lib, name);
+    }
     return eq2_response && eq2_values;
 }
 
@@ -81,6 +97,19 @@ static float dist_open_gr(void)
 static float tube_open_gr(void)
 {
     return live_gr(tube_gr, tube_descriptor);
+}
+
+/* The open MOD effect's live target (-1: none, or it cannot be read) and *delta, the knob steps
+   from its set value to the value the audio hears. Held in the registry while read, as live_gr. */
+static int mod_open_knob(enum effect kind, int *delta)
+{
+    *delta = 0;
+    if (kind > HS_TUBE_STRIP || !mod_names[kind]) return -1;
+    void *h = eq2_link() && mod_knob[kind] && live_lock && live_unlock ? open_handle(mod_descriptor[kind]) : NULL;
+    if (!h || !live_lock(h)) return -1;
+    int target = mod_knob[kind](h, delta);
+    live_unlock();
+    return target;
 }
 
 static unsigned eq2_seq(void)

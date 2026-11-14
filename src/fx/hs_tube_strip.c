@@ -232,6 +232,9 @@ static const char *const names[] = {
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS,
                "Tube Strip port count");
 
+/* The open editor turns this effect's MOD target knob to the heard value (hs_mod.h). */
+HS_MOD_KNOB_EXPORT(hs_tube_strip_mod_knob, struct tube_strip, hints + FIRST)
+
 LADSPA_Descriptor hs_tube_strip_descriptor = {
     .UniqueID = HS_TUBE_STRIP_ID, .Label = "HS Tube Strip", .Name = "HS Tube Strip",
     .Maker = "Henry Skillz", .Copyright = "Prototype",

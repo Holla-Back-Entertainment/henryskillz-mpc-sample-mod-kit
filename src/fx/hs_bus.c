@@ -210,6 +210,9 @@ _Static_assert(sizeof names / sizeof *names == PORTS &&
                sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == BUS_COUNT, "Bus comp port count");
 
+/* The open editor turns this effect's MOD target knob to the heard value (hs_mod.h). */
+HS_MOD_KNOB_EXPORT(hs_bus_mod_knob, struct bus, hints + FIRST)
+
 LADSPA_Descriptor hs_bus_descriptor = {
     .UniqueID = HS_BUS_ID, .Label = "HS Bus Compressor", .Name = "HS Bus Compressor",
     .Maker = "Henry Skillz", .Copyright = "Prototype",

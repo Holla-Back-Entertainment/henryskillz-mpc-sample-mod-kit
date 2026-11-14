@@ -258,6 +258,9 @@ static const char *const names[] = {
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == DS_COUNT, "Crush port count");
 
+/* The open editor turns this effect's MOD target knob to the heard value (hs_mod.h). */
+HS_MOD_KNOB_EXPORT(hs_distressor_mod_knob, struct distressor, hints + FIRST)
+
 LADSPA_Descriptor hs_distressor_descriptor = {
     .UniqueID = HS_DISTRESSOR_ID, .Label = "HS Crush", .Name = "HS Crush",
     .Maker = "Henry Skillz", .Copyright = "Prototype",

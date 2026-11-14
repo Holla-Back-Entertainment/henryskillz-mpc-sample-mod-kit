@@ -313,6 +313,9 @@ static const char *const names[] = {
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == HE_COUNT, "Heat port count");
 
+/* The open editor turns this effect's MOD target knob to the heard value (hs_mod.h). */
+HS_MOD_KNOB_EXPORT(hs_heat_mod_knob, struct heat, hints + FIRST)
+
 LADSPA_Descriptor hs_heat_descriptor = {
     .UniqueID = HS_HEAT_ID, .Label = "HS Heat", .Name = "HS Heat",
     .Maker = "SampQOL Lab", .Copyright = "Prototype",
