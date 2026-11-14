@@ -454,11 +454,15 @@ static int heat_section(const char **name)
     return section >= 0 && section < 6 ? section : 0;
 }
 
+/* Circuit from the knob bar (0..73 px): same rule as configure() in hs_heat.c, floor(v + .2) on 0..7,
+   so the host's 1.75 default (18 px) reads Saturation and every whole step reads itself. */
+static int heat_circuit_of(int value) { return (35*value + 73)/365; }
+
 static void heat_note(int knob, int value)
 {
     if (value < 0) return;
     int section = heat_section(NULL);
-    if (section == 0 && knob == 0) heat_circuit = (value*7+36)/73;
+    if (section == 0 && knob == 0) heat_circuit = heat_circuit_of(value);
     if (section == 1 && knob == 0) heat_filter = (value*7+36)/73;
 }
 
@@ -471,7 +475,7 @@ static const char *heat_marking(int knob, int value)
     static const char *const wave[] = {"TRI","SINE","SQR","SAW","EXP","RAMP","RND"};
     if (value < 0) return NULL;
     int section = heat_section(NULL);
-    if (section == 0 && knob == 0) return circuit[(value*7+36)/73];
+    if (section == 0 && knob == 0) return circuit[heat_circuit_of(value)];
     if (section == 1 && knob == 0) return filter[(value*7+36)/73];
     if (section == 4 && knob == 2) return wave[(value*6+36)/73];
     return NULL;

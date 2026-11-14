@@ -33,6 +33,19 @@ static float thd(float hz)
     double f = 2*(re*re + im*im)/((double)n*n), t = all/n;
     return 100*sqrt(fmax(0, t - f)/f);
 }
+/* what SampQOL loads on a fresh insert: the hint default, raw (no rounding, so Circuit is 1.75) */
+static float hint_default(int i)
+{
+    const LADSPA_PortRangeHint *r = &d->PortRangeHints[4+i];
+    int k = r->HintDescriptor & LADSPA_HINT_DEFAULT_MASK, lg = LADSPA_IS_HINT_LOGARITHMIC(r->HintDescriptor) && r->LowerBound > 0;
+    float lo = r->LowerBound, hi = r->UpperBound;
+    if (k == LADSPA_HINT_DEFAULT_MINIMUM) return lo;
+    if (k == LADSPA_HINT_DEFAULT_MAXIMUM) return hi;
+    if (k == LADSPA_HINT_DEFAULT_0) return 0;
+    assert(k == LADSPA_HINT_DEFAULT_LOW || k == LADSPA_HINT_DEFAULT_MIDDLE || k == LADSPA_HINT_DEFAULT_HIGH);  /* DEFAULT_1 reads as the max on the MPC */
+    float t = k == LADSPA_HINT_DEFAULT_LOW ? .25f : k == LADSPA_HINT_DEFAULT_HIGH ? .75f : .5f;
+    return lg ? expf(logf(lo)*(1-t) + logf(hi)*t) : lo*(1-t) + hi*t;
+}
 static float peak(void) { float p = 0; for (int i = 0; i < N; ++i) { assert(isfinite(out[0][i])); p = fmaxf(p, fabsf(out[0][i])); } return p; }
 
 int main(void)
@@ -87,6 +100,27 @@ int main(void)
     reset(); ctl[HE_CIRCUIT] = 7; ctl[HE_FTYPE] = 1; ctl[HE_ENV_DEPTH] = 100; ctl[HE_LFO_DEPTH] = 100; tone(.5f, 100);
     clock_t t0 = clock(); for (int k = 0; k < 20; ++k) go();
     printf("speed: %.0fx realtime (Mac)\n", 20.0/((double)(clock()-t0)/CLOCKS_PER_SEC));
+    /* host default on a fresh insert is 1.75 (DEFAULT_LOW on 0..7): it must sound as Saturation (1),
+       not Enhancement (2), and every whole step must still be itself */
+    static float ref[3][N];
+    const float circ[3] = {1, 1.75f, 2};
+    for (int k = 0; k < 3; ++k) { reset(); ctl[HE_CIRCUIT] = circ[k]; ctl[HE_DRIVE] = 90; tone(.5f, 220); go(); memcpy(ref[k], out[0], sizeof ref[k]); }
+    assert(!memcmp(ref[0], ref[1], sizeof ref[0]) && memcmp(ref[1], ref[2], sizeof ref[1]));
+    for (int i = 0; i <= 73; ++i) { int c = (35*i + 73)/365; assert(c >= 0 && c <= 7); }
+    for (int c = 0; c <= 7; ++c) assert((35*(int)lroundf(c*73/7.0f) + 73)/365 == c);   /* faceplate rule, whole steps */
+    assert((35*18 + 73)/365 == 1);                                                     /* 1.75 -> 18 px -> Saturation */
+
+    /* a fresh insert, at the values SampQOL loads from the hints, stays within 1 dB of the dry level on
+       a -12 dBFS signal (it came in about +6 dB hot before Volume loaded at -6 dB) */
+    float load[2]; const float lhz[2] = {1000, 100};
+    for (int k = 0; k < 2; ++k) {
+        for (int i = 0; i < HE_COUNT; ++i) ctl[i] = hint_default(i);
+        d->activate(h); tone(.25f, lhz[k]); go(); load[k] = level_db(N/2);
+    }
+    printf("load defaults, -12 dBFS: 1 kHz %+.2f dB, 100 Hz %+.2f dB (circuit %.2f, drive %.2f, volume %.1f)\n",
+           load[0], load[1], hint_default(HE_CIRCUIT), hint_default(HE_DRIVE), hint_default(HE_VOLUME));
+    assert(fabsf(load[0]) <= 1 && fabsf(load[1]) <= 1);
+    assert((int)floorf(hint_default(HE_CIRCUIT) + .2f) == 1);   /* still loads on Saturation */
     puts("check-heat: OK");
     return 0;
 }

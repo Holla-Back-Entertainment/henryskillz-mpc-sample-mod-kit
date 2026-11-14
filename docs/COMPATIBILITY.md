@@ -4,7 +4,7 @@ This page separates what has been tested from what might work. “Tested” mean
 
 | Environment | Status | What works | Evidence / limit |
 |---|---|---|---|
-| MPC Sample firmware 1.3.0.12 + SampQOL 0.2.0 | **Emulator tested** | Full installer, effects, displays, presets, chains, browser tags, mixer and optional stems | The public installer is tested against the pristine SampQOL 0.2.0 package and booted in the virtual MPC. The last recorded physical-device pass was v0.5; run the [v0.6+ hardware checklist](BOOT-TEST.md) before calling the current build hardware tested. |
+| MPC Sample firmware 1.3.0.12 + SampQOL 0.2.0 | **Hardware tested (v0.7.0)** | Full installer, effects, displays, presets, chains, browser tags, mixer and optional stems | v0.7.0 passed on a real MPC Sample on 15 Nov 2026: effect editors and mixer during playback, chains, browser tags, Stems, M/S, a project with the stock Bus Compressor, and a power-off cold boot. The installer is also tested against the pristine SampQOL 0.2.0 package and booted in the virtual MPC. |
 | MPC Sample firmware 1.3.0.12, stock app | **Emulator tested: HS Tools only** | SEQ desk/meters, browser key/BPM and optional stems | Use the separate HS Tools release. The LADSPA effects and track chains require SampQOL. |
 | MPC Boot Thingy | **Not packaged or tested yet** | Choose-at-boot may be possible | Do not describe this kit as listed or compatible until its package has been accepted and boot-tested. |
 | Gridzilla | **Not tested** | Unknown | Do not claim co-loading. A launcher integration needs its developer's agreement and a real boot test. |

@@ -21,6 +21,19 @@ static void go(void) { for (int i = 0; i < N; i += 256) {
     d->run(h, 256); } }
 static float out_db(int from, int to) { double a = 0; for (int i = from; i < to; ++i) { assert(isfinite(out[0][i])); a += out[0][i]*out[0][i]; } return 10*log10(a/(to-from)); }
 static float gain_db(int from, int to) { double b = 0; for (int i = from; i < to; ++i) b += in[0][i]*in[0][i]; return out_db(from, to) - 10*log10(b/(to-from)); }
+/* what SampQOL loads on a fresh insert: the hint default, raw (Ratio arrives as 3.5) */
+static float hint_default(int i)
+{
+    const LADSPA_PortRangeHint *r = &d->PortRangeHints[4+i];
+    int k = r->HintDescriptor & LADSPA_HINT_DEFAULT_MASK, lg = LADSPA_IS_HINT_LOGARITHMIC(r->HintDescriptor) && r->LowerBound > 0;
+    float lo = r->LowerBound, hi = r->UpperBound;
+    if (k == LADSPA_HINT_DEFAULT_MINIMUM) return lo;
+    if (k == LADSPA_HINT_DEFAULT_MAXIMUM) return hi;
+    if (k == LADSPA_HINT_DEFAULT_0) return 0;
+    assert(k == LADSPA_HINT_DEFAULT_LOW || k == LADSPA_HINT_DEFAULT_MIDDLE || k == LADSPA_HINT_DEFAULT_HIGH);  /* DEFAULT_1 reads as the max on the MPC */
+    float t = k == LADSPA_HINT_DEFAULT_LOW ? .25f : k == LADSPA_HINT_DEFAULT_HIGH ? .75f : .5f;
+    return lg ? expf(logf(lo)*(1-t) + logf(hi)*t) : lo*(1-t) + hi*t;
+}
 static float thd(float hz)
 {
     double re = 0, im = 0, all = 0; int n = N/2;
@@ -46,9 +59,14 @@ int main(void)
         if (r == 0) assert(fabsf(slope - 1) < .1f);
         if (r >= 3 && r != 5) assert(slope > (r >= 6 ? 8 : .6f*(r == 3 ? 4 : 6)));
     }
-    /* load defaults (output 7.5, as SampQOL loads it): a -12 dBFS signal stays near unity */
-    reset(); ctl[DS_OUTPUT] = 7.5f; tone(.25f, 1000, 0, N); go(); printf("defaults, -12 dBFS: %+.2f dB\n", gain_db(N/2, N));
-    assert(fabsf(gain_db(N/2, N)) < 1.5f);
+    /* load defaults, at the values SampQOL loads from the hints (Output 7.5, Ratio 3.5): a -12 dBFS
+       signal stays within 1 dB of the dry level */
+    for (int i = 0; i < DS_COUNT; ++i) ctl[i] = hint_default(i);
+    assert(ctl[DS_OUTPUT] == 7.5f);
+    d->activate(h); tone(.25f, 1000, 0, N); go();
+    float load = gain_db(N/2, N);
+    printf("load defaults, -12 dBFS: %+.2f dB\n", load);
+    assert(fabsf(load) <= 1);
 
     /* British mode: louder input comes out quieter once well past threshold */
     float b[2];

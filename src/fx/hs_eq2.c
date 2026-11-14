@@ -7,7 +7,7 @@
 #include "hs_eq2.h"
 #include "hs_eq2_curves.h"
 
-enum { IL, IR, OL, OR, FIRST, PORTS = FIRST+EQ_COUNT, MAX_SECTIONS = 4 };
+enum { IL, IR, OL, OR, FIRST, PORTS = FIRST+EQ_COUNT, MAX_SECTIONS = 4, TAP = 2048 };
 struct section {
     double b0,b1,b2,a1,a2, z1[2],z2[2];
 };
@@ -23,6 +23,8 @@ struct eq {
     unsigned long rate;
     double in_gain, out_gain;
     int active_count, mid_side, parallel, ready;
+    float tap[TAP];                 /* last TAP output samples, (L+R)/2, for the editor's spectrum */
+    unsigned tap_w;
 };
 
 #define BAND_LIST(X) X(1) X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12)                      X(13) X(14) X(15) X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24)
@@ -218,6 +220,7 @@ static double complex band_h(const struct band *b,double complex z1)
 /* Magnitude in dB at `points` log-spaced frequencies from 20 Hz to 20 kHz, computed from the
  * same biquads the audio runs. which: 0 = left/mid total, 1 = right/side total,
  * 2+i = band i on its own. Returns 0 when nothing has been published yet. */
+int hs_eq2_response_of(const float *v,unsigned long rate,int which,int points,float *db);
 int hs_eq2_response(int which,int points,float *db)
 {
     if (points<2 || which<0 || which>=2+EQ_BANDS) return 0;
@@ -232,6 +235,14 @@ int hs_eq2_response(int which,int points,float *db)
         if (!(a&1) && a==__atomic_load_n(&published_seq,__ATOMIC_RELAXED)) break;
         if (tries>1000) return 0;
     }
+    return hs_eq2_response_of(v,rate,which,points,db);
+}
+
+/* The same curve from given settings (v indexed by EQ_*, as hs_eq2_values) at `rate`: the CLAP
+ * faceplate draws its own instance's settings, not the last instance that ran. */
+int hs_eq2_response_of(const float *v,unsigned long rate,int which,int points,float *db)
+{
+    if (points<2 || which<0 || which>=2+EQ_BANDS || !rate) return 0;
     static struct band bands[EQ_BANDS];  // ponytail: UI thread only
     for (int i=0;i<EQ_BANDS;++i) {
         memset(&bands[i],0,sizeof bands[i]);
@@ -316,6 +327,7 @@ static void run(LADSPA_Handle handle,unsigned long frames)
     if (!s->active_count && s->in_gain*s->out_gain==1) {
         for (unsigned long i=0;i<frames;++i) {
             float l=il[i],r=ir[i]; ol[i]=l; orr[i]=r;
+            s->tap[s->tap_w++&(TAP-1)]=.5f*(l+r);
         }
         return;
     }
@@ -351,6 +363,7 @@ static void run(LADSPA_Handle handle,unsigned long frames)
             double a=l; l=a+r; r=a-r;
         }
         ol[i]=(float)(s->out_gain*l); orr[i]=(float)(s->out_gain*r);
+        s->tap[s->tap_w++&(TAP-1)]=.5f*(ol[i]+orr[i]);
     }
     for (int j=0;j<s->active_count;++j) {
         struct band *b=s->active[j];
@@ -361,6 +374,26 @@ static void run(LADSPA_Handle handle,unsigned long frames)
             }
     }
 }
+
+#ifdef HS_MPC_LADSPA_RECALL   /* the MPC build only: it carries hs_registry.c; the CLAP build and the tools do not */
+/* Editor spectrum: copies the newest n (<= TAP) output samples of an instance, oldest first, and
+   returns how many samples it has written so far. Read from the UI thread while audio writes; a torn
+   sample or two only shows as a flicker. */
+int hs_ladspa_lock_live(const void *h);   /* hs_registry.c */
+void hs_ladspa_unlock(void);
+unsigned hs_eq2_tap(const void *handle,float *dst,unsigned n,unsigned long *rate)
+{
+    const struct eq *s=handle;
+    if (rate) *rate=0;
+    if (!hs_ladspa_lock_live(s)) return 0;   /* closed or freed: no fresh frame */
+    if (n>TAP) n=TAP;
+    unsigned w=__atomic_load_n(&s->tap_w,__ATOMIC_RELAXED);
+    for (unsigned i=0;i<n;++i) dst[i]=s->tap[(w-n+i)&(TAP-1)];
+    if (rate) *rate=s->rate;
+    hs_ladspa_unlock();
+    return w;
+}
+#endif
 
 #define AI (LADSPA_PORT_INPUT|LADSPA_PORT_AUDIO)
 #define AO (LADSPA_PORT_OUTPUT|LADSPA_PORT_AUDIO)

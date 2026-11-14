@@ -12,7 +12,7 @@
 #include <sys/stat.h>
 #include <time.h>
 
-enum { PRESET_SLOTS = 8, PRESET_MAX = 96 };
+enum { PRESET_SLOTS = 8, PRESET_MAX = 256 };   /* Para EQ has 245 controls */
 static unsigned preset_slot;                 /* 0..7 */
 static char preset_msg[24];
 static time_t preset_msg_at;
@@ -20,6 +20,18 @@ static int preset_busy;
 static unsigned preset_gen;                  /* bumps on every message: changes the knob row so SampQOL repaints */
 static char preset_names[8][15];            /* 14 chars fit a slot box */
 static unsigned b3_token, b3_gen;
+
+#include "factory.inc"
+#include "hs_fx_key.h"
+#include "hs_preset_migrate.h"
+
+/* The starter preset built in for this effect's slot (0-7), or null. A saved file always wins. */
+static const Factory *factory_find(const char *label, unsigned slot)
+{
+    for (const Factory &f : factory)
+        if (f.slot == static_cast<int>(slot) && !strcmp(f.label, hs_fx_key(label))) return &f;
+    return nullptr;
+}
 
 using controls_fn = int (*)(const void *, const char **, float *, float *, float *, unsigned char *, int);
 using set_fn = void (*)(int, int, int);
@@ -54,6 +66,7 @@ static const void *open_handle()
 }
 
 static bool has_presets(unsigned uid) { return uid != flavor_uid; }
+static unsigned eq_preset;                   /* Para EQ has no page word: 1 while its PRESETS page is up */
 
 /* B2: a tap steps the effect's own pages (SHIFT steps back); holding it B2_HOLD_US opens PRESETS.
    On PRESETS a tap or a hold returns to the page it came from. PRESETS is "selection == count". */
@@ -62,6 +75,11 @@ static unsigned b2_token, b2_gen, preset_return;
 
 static void preset_toggle(unsigned uid)
 {
+    if (uid == HS_EQ2_ID) {
+        __atomic_xor_fetch(&eq_preset, 1u, __ATOMIC_RELAXED);
+        if (refresh) refresh();
+        return;
+    }
     unsigned count, *s = paged(uid, &count);
     if (!s || !has_presets(uid)) return;
     unsigned at = __atomic_load_n(s, __ATOMIC_RELAXED);
@@ -80,11 +98,14 @@ static void *b2_hold(void *arg)
     return nullptr;
 }
 
-/* B2 for a paged HS editor. value > 0 = press, 0 = release. */
+/* B2 for a paged HS editor. value > 0 = press, 0 = release. The Para EQ pages inside eq_selection
+   (band * 4 + page: 2 pages on GLOBAL, 4 on a band) and steps on release like the rest, so a hold can
+   open PRESETS without also turning the page. */
 static void b2_paged(unsigned uid, int value, int shift)
 {
     unsigned count, *s = paged(uid, &count);
-    if (!s) return;
+    bool eq = uid == HS_EQ2_ID;
+    if (!s && !eq) return;
     if (value > 0) {
         unsigned token = (++b2_gen << 1) | 1;
         __atomic_store_n(&b2_token, token, __ATOMIC_RELEASE);
@@ -93,6 +114,13 @@ static void b2_paged(unsigned uid, int value, int shift)
         return;
     }
     if (!(__atomic_exchange_n(&b2_token, 0u, __ATOMIC_ACQ_REL) & 1)) return;   /* a hold already acted */
+    if (eq) {
+        if (__atomic_load_n(&eq_preset, __ATOMIC_RELAXED)) { preset_toggle(uid); return; }
+        unsigned sel = __atomic_load_n(&eq_selection, __ATOMIC_RELAXED), pages = sel/4 ? 4 : 2;
+        __atomic_store_n(&eq_selection, sel/4*4 + (sel%4 + (shift ? pages - 1 : 1))%pages, __ATOMIC_RELAXED);
+        if (refresh) refresh();
+        return;
+    }
     unsigned at = __atomic_load_n(s, __ATOMIC_RELAXED);
     if (at >= count) { preset_toggle(uid); return; }
     __atomic_store_n(s, (at + (shift ? count - 1 : 1)) % count, __ATOMIC_RELAXED);
@@ -102,6 +130,7 @@ static void b2_paged(unsigned uid, int value, int shift)
 static bool preset_open()
 {
     unsigned uid = insert_open(), count;
+    if (uid == HS_EQ2_ID) return __atomic_load_n(&eq_preset, __ATOMIC_RELAXED) != 0;
     unsigned *s = paged(uid, &count);
     return s && has_presets(uid) && __atomic_load_n(s, __ATOMIC_RELAXED) >= count;
 }
@@ -109,7 +138,15 @@ static bool preset_open()
 static void preset_dir(char *out, size_t size, const char *label)
 {
     const char *root = getenv("HS_PRESETS_DIR");
-    snprintf(out, size, "%s/%s", root && *root ? root : "/tmp/hs-presets", label);
+    if (!root || !*root) root = "/tmp/hs-presets";
+    const char *key = hs_fx_key(label);
+    /* Once per run, whatever the result: this sits on draw paths (8 calls per PRESETS draw), and a slot
+       that exists in both folders would otherwise rescan the card on every frame. A file left behind
+       stays in the old folder and moves on a later boot once its slot is free. */
+    static int crush_tried;
+    if (!strcmp(key, HS_CRUSH_DIR) && !__atomic_exchange_n(&crush_tried, 1, __ATOMIC_ACQ_REL))
+        (void)hs_preset_migrate_crush(root);
+    snprintf(out, size, "%s/%s", root, key);
 }
 
 static void say(const char *fmt, unsigned n)
@@ -174,6 +211,9 @@ static void preset_load(unsigned slot)
     preset_dir(dir, sizeof dir, label);
     snprintf(path, sizeof path, "%s/%u.txt", dir, slot + 1);
     FILE *f = fopen(path, "r");
+    if (!f)
+        if (const Factory *starter = factory_find(label, slot))
+            f = fmemopen(const_cast<char *>(starter->text), strlen(starter->text), "r");
     if (!f) { say("SLOT %u EMPTY", slot + 1); return; }
     auto job = std::make_unique<load_job>();
     job->slot = state(0x1632908) + 1;                         /* SampQOL's selected insert row = the open slot */
@@ -183,12 +223,15 @@ static void preset_load(unsigned slot)
             bool lg = (integer[i] & 2) && v > 0;                /* log ports: the host's knob is log(v/lo)/log(hi/lo) */
             float t = hi[i] <= lo[i] ? 0 : lg ? std::log(v / lo[i]) / std::log(hi[i] / lo[i]) : (v - lo[i]) / (hi[i] - lo[i]);
             t = t < 0 ? 0 : t > 1 ? 1 : t;
+            /* Already there: skip it. The Para EQ has 245 controls and a preset moves a handful. */
+            if (std::fabs(v - val[i]) <= 1e-4f * (hi[i] - lo[i])) continue;
             /* integer ports: round up so the host's truncation lands on the saved step */
             job->index[job->n] = i;
             job->value[job->n++] = (integer[i] & 1) ? static_cast<int>(std::ceil(t * 1000 - 1e-3f)) : static_cast<int>(std::lround(t * 1000));
         }
     fclose(f);
-    if (job->slot < 1 || job->slot > 4 || !job->n) { say("LOAD FAILED", 0); return; }
+    if (job->slot < 1 || job->slot > 4) { say("LOAD FAILED", 0); return; }
+    if (!job->n) { say("LOADED %u", slot + 1); return; }      /* every control already matches */
     if (__atomic_exchange_n(&preset_busy, 1, __ATOMIC_ACQ_REL)) return;
     pthread_t t;
     load_job *raw = job.release();
@@ -219,9 +262,12 @@ extern "C" int hs_preset_view(int *slot, unsigned char used[PRESET_SLOTS], const
         if (n <= 0 || !label) continue;
         preset_dir(dir, sizeof dir, label);
         snprintf(path, sizeof path, "%s/%d.txt", dir, i + 1);
-        used[i] = stat(path, &st) == 0;
+        bool file = stat(path, &st) == 0;
+        const Factory *starter = file ? nullptr : factory_find(label, static_cast<unsigned>(i));
+        used[i] = file || starter;
         preset_names[i][0] = 0;
-        FILE *f = used[i] ? fopen(path, "r") : nullptr;     /* ponytail: re-read per draw; 8 tiny files, draws are rare */
+        if (starter) snprintf(preset_names[i], sizeof preset_names[i], "%s", starter->name);
+        FILE *f = file ? fopen(path, "r") : nullptr;        /* ponytail: re-read per draw; 8 tiny files, draws are rare */
         char line[96];
         if (f && fgets(line, sizeof line, f)) {
             const char *a = strchr(line, '('), *b = a ? strchr(a, ')') : nullptr;

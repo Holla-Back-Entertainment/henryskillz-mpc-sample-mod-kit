@@ -29,3 +29,10 @@ jobs:
             hs_channel.c hs_saturator.c hs_air_exciter.c hs_env.c \
             -o /tmp/check-registry -lm -pthread
           /tmp/check-registry
+      - name: Every factory preset names real controls, inside their ranges
+        working-directory: src/fx
+        run: |
+          gcc -O2 -I. -DHS_MPC_LADSPA_RECALL gen-factory.c hs_ladspa.c hs_registry.c hs_eq2.c hs_pump.c hs_heat.c \
+            hs_distressor.c hs_bass_focus.c hs_tube_strip.c hs_bus.c hs_xsat.c hs_channel.c hs_saturator.c \
+            hs_air_exciter.c hs_env.c -o /tmp/gen-factory -lm -pthread
+          /tmp/gen-factory > /dev/null

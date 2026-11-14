@@ -106,6 +106,8 @@ static int same_as_old(const LADSPA_Descriptor *od, const LADSPA_Descriptor *nd,
             if (!strncmp(od->PortNames[i], "Key", 3)) v = 0;   /* key bus off: the two builds have separate buses */
             a.ctl[i] = b.ctl[i] = v;
         }
+    else                                   /* the old build's load values: a hint default may have moved since */
+        for (unsigned long i = 4; i < od->PortCount; ++i) b.ctl[i] = a.ctl[i];
     for (int k = 0; k < 5; ++k) b.ctl[4 + mod + k] = mods[k];
     unsigned seed = rng;
     const struct plug *ps[2] = {&a, &b};

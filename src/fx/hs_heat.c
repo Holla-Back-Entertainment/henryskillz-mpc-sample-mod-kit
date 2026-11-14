@@ -52,11 +52,11 @@ struct heat {
     struct hs_mod mod;
 };
 
-static const float defaults[] = {1, 40, 0, 0, 100, 0, 0, 0, 0, 0, 20, 60, 0, 64, 0, 0, 100, 0, HS_MOD_DEFAULTS};
+static const float defaults[] = {1, 40, 0, 0, 100, 0, 0, 0, 0, 0, 20, 60, 0, 64, 0, 0, 100, -6, HS_MOD_DEFAULTS};
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
 #define INT (B | LADSPA_HINT_INTEGER)
 static const LADSPA_PortRangeHint hints[PORTS] = {
-    [FIRST+HE_CIRCUIT] = {INT|LADSPA_HINT_DEFAULT_1,0,7},
+    [FIRST+HE_CIRCUIT] = {INT|LADSPA_HINT_DEFAULT_LOW,0,7},
     [FIRST+HE_DRIVE] = {B|LADSPA_HINT_DEFAULT_LOW,0,127},
     [FIRST+HE_WET] = {B|LADSPA_HINT_DEFAULT_0,-24,6},
     [FIRST+HE_FTYPE] = {INT|LADSPA_HINT_DEFAULT_0,0,7},
@@ -73,7 +73,9 @@ static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+HE_LFO_WAVE] = {INT|LADSPA_HINT_DEFAULT_0,0,6},
     [FIRST+HE_FREQ_PAN] = {B|LADSPA_HINT_DEFAULT_0,-64,63},
     [FIRST+HE_MIX] = {B|LADSPA_HINT_DEFAULT_MAXIMUM,0,100},
-    [FIRST+HE_VOLUME] = {B|LADSPA_HINT_DEFAULT_0,-24,12},
+    /* A fresh insert loads Saturation at Drive 31.75 (DEFAULT_LOW), about +6 dB into the clipper with
+       no make-up, so Volume loads at -6 dB (DEFAULT_MIDDLE on -24..12) to keep it near unity. */
+    [FIRST+HE_VOLUME] = {B|LADSPA_HINT_DEFAULT_MIDDLE,-24,12},
     HS_MOD_HINTS(FIRST+HE_MOD, HE_MOD)
 };
 #undef B
@@ -151,7 +153,10 @@ static void connect(LADSPA_Handle h, unsigned long port, LADSPA_Data *p)
 static void configure(struct heat *s, const float *v)
 {
     float rate = s->rate;
-    int c = (int)lroundf(v[HE_CIRCUIT]);
+    /* The knob only ever sends whole numbers. The one fraction is the host's default on a fresh insert
+       (DEFAULT_LOW = 1.75 on 0..7; it has no hint that lands on 1), and that must be Saturation, so
+       fractions below .8 go down. hs_fx_faceplate.h heat_circuit_of() mirrors this for the lamps. */
+    int c = (int)floorf(v[HE_CIRCUIT] + .2f);
     const struct circuit *cc = &circuits[c];
     if (c != s->circuit || !s->ready) {
         design(&s->pre[0], 0, 150, cc->lo_db, .707f, rate);
@@ -262,6 +267,11 @@ static void run(LADSPA_Handle h, unsigned long frames)
         v[i] = p && isfinite(*p) ? fminf(r->UpperBound, fmaxf(r->LowerBound, *p)) : defaults[i];
     }
     hs_mod_apply(&s->mod, v, HE_MOD, hints + FIRST, frames, s->rate);
+    if (__atomic_load_n(&s->mod.shown, __ATOMIC_RELAXED) == HE_CIRCUIT + 1) {   /* the knob shows the circuit */
+        float set;                                    /* that plays: configure() picks it with floor(v + .2) */
+        __atomic_load(&s->mod.set, &set, __ATOMIC_RELAXED);
+        hs_mod_publish(&s->mod, HE_CIRCUIT, floorf(set + .2f), floorf(v[HE_CIRCUIT] + .2f));
+    }
     if (!s->ready || memcmp(v, s->values, sizeof v)) { configure(s, v); s->countdown = 0; }
 
     for (unsigned long i = 0; i < frames; ++i) {
@@ -309,6 +319,9 @@ static const char *const names[] = {
 };
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == HE_COUNT, "Heat port count");
+
+/* The open editor turns this effect's MOD target knob to the heard value (hs_mod.h). */
+HS_MOD_KNOB_EXPORT(hs_heat_mod_knob, struct heat, hints + FIRST)
 
 LADSPA_Descriptor hs_heat_descriptor = {
     .UniqueID = HS_HEAT_ID, .Label = "HS Heat", .Name = "HS Heat",

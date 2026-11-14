@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <string.h>
 
-enum { MAX_DESC = 16, MAX_INST = 256, MAX_PORT = 96 };   /* ponytail: fixed tables; past 256 live instances presets just can't read the extra ones */
+enum { MAX_DESC = 16, MAX_INST = 256, MAX_PORT = 256 };  /* Para EQ: 4 audio + 245 controls */   /* ponytail: fixed tables; past 256 live instances presets just can't read the extra ones */
 
 struct orig { LADSPA_Handle (*inst)(const LADSPA_Descriptor *, unsigned long);
               void (*conn)(LADSPA_Handle, unsigned long, LADSPA_Data *);
@@ -71,6 +71,18 @@ __attribute__((constructor)) static void hs_registry_init(void)
         d->instantiate = wrappers[i].inst; d->connect_port = wrappers[i].conn; d->cleanup = wrappers[i].clean;
     }
 }
+
+/* For the editor's live readouts (gain reduction, spectrum tap), which run on their own thread: returns 1
+ * with the registry locked when h is a live instance, so its cleanup cannot free it until
+ * hs_ladspa_unlock(). Never called from audio. */
+int hs_ladspa_lock_live(const void *h)
+{
+    pthread_mutex_lock(&lock);
+    if (h && find((LADSPA_Handle)h)) return 1;
+    pthread_mutex_unlock(&lock);
+    return 0;
+}
+void hs_ladspa_unlock(void) { pthread_mutex_unlock(&lock); }
 
 /* Current values of the instance's control inputs, in the host's parameter order (control input
  * ports in port order). lo/hi are the LADSPA bounds (0..1 when unbounded). integer[] is flags:

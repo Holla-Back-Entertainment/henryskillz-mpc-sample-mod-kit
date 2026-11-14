@@ -90,7 +90,9 @@ If it doesn't work: make sure the effect page itself is open (you pressed **B3**
 
 ## Save and load effect presets
 
-Channel Strip, Drive Sat, Bus Compressor, Pump, Heat, Crush and Tube Strip each have eight preset slots. They store the complete effect, including its MOD and key-bus controls, on the SD card. Saturator, Para EQ and Bass Focus do not have this preset page.
+Channel Strip, Drive Sat, Bus Compressor, Pump, Heat, Crush, Tube Strip and Para EQ each have eight preset slots. They store the complete effect, including its MOD and key-bus controls, on the SD card. Saturator and Bass Focus have three knobs and no preset page.
+
+The first few slots of each effect hold named **starter presets** (for example VOCAL, DRUM BUS and BASS on Channel Strip; VOCAL CLEAN, KICK, BASS TIGHT, AIR MASTER and PHONE on Para EQ). They are built in, so they are there on a new card. Tube Strip's first two, KICK and BASSLINE, are the same settings as the KICK and BASSLINE track chains, and the CLAP build of the effects lists all of them in the host's preset browser. Saving into a starter slot replaces it with your own settings for that card; the other slots start EMPTY.
 
 1. Open the effect, then hold **B2** for half a second. A quick B2 press still changes page.
 2. Turn **K1** or **DATA** to choose slot 1 to 8.
@@ -366,7 +368,7 @@ Eight drive circuits into a multimode filter, with dirt, a 2-band EQ, an envelop
 |---|---|---|---|
 | K1 | Freq Pan | -64 to +63 | Moves the left and right filter frequencies apart, for width. |
 | K2 | Mix | 0 to 100 % | Blend of the effect and the dry sound. |
-| K3 | Volume | -24 to +12 dB | Final level. |
+| K3 | Volume | -24 to +12 dB | Final level. A fresh insert loads at -6 dB, which matches the dry level at the starting Drive. |
 
 **MOD** and **MOD TIME**: see [MOD and the key bus](#mod-and-the-key-bus).
 
@@ -612,8 +614,19 @@ The shipped chains:
 | VOX, VOCAL or VOCALS | HS Channel Strip, HS Bus Compressor, HS Air Exciter |
 | DRUMS, DRUM or DRM | HS Saturator, HS Bus Compressor |
 | BASS | HS Drive Sat, HS Para EQ |
+| KICK | HS Tube Strip, set for a kick |
+| BASSLINE | HS Tube Strip, set for a bassline |
 
-Case doesn't matter. The name has to start with the whole word: "Bass 2", "Bass-1" and "Bass2" match BASS, "Bassline" doesn't. Each effect loads at its starting settings, so dial them in to taste.
+Case doesn't matter. The name has to start with the whole word: "Bass 2", "Bass-1" and "Bass2" match BASS, "Bassline 2" matches BASSLINE, "Kickdrum" matches nothing. The VOX, DRUMS and BASS effects load at their starting settings, so dial them in to taste.
+
+KICK and BASSLINE open the strip already set up, no preset slot needed. The insert list shows it as HS Tube Strip.
+
+- **KICK:** Drive 3.5, High-Pass OFF, Threshold -8 dB, Ratio 4:1, Attack 15 ms so the click gets through, Release 110 ms. Bass +2 dB at 60 Hz, Low Mid -3 dB at 350 Hz to take out the cardboard, High Mid +2 dB at 4 kHz for the beater. Output +1.5 dB.
+- **BASSLINE:** Drive 3, High-Pass 30 Hz, Threshold -10 dB, Ratio 3:1, Attack 30 ms, Release 300 ms. Bass +3 dB at 60 Hz, Low Mid -2 dB at 250 Hz, High Mid +2 dB at 900 Hz so it reads on small speakers, Treble -2 dB. Output +1 dB.
+
+Values can show a hair off (110 ms as 111 ms): the MPC stores each knob to about 1 %.
+
+The name presets in the rename list work too: **Bass**, **Drums** and **Vocal** load their chains.
 
 **One UNDO** (**SHIFT** + **MINUS**) takes back the rename and the chain together.
 
@@ -645,7 +658,7 @@ If it doesn't work: chains only load on a track with no inserts, and the name mu
 
 When you preview a sample in the browser, its row shows the key and tempo at the right end, like **C# MIN 75 BPM**. The key is white, the tempo grey. Works with WAV and MP3.
 
-- The tempo is the one the preview plays at.
+- The tempo is the one the preview plays at. It is for the preview only: loading the sample does not pass it on, so a file with no tempo of its own loads the way it does on a stock MPC.
 - The key takes a moment to appear while the MPC works it out.
 - Besides MAJ and MIN, you may see modes such as DORIAN or MIXO. A one-shot shows a single note, like **NOTE E**.
 - Scroll away and the tag hides. Come back to the row and it shows again.

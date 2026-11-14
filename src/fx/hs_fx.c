@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,6 +88,7 @@ struct effect_page {
     int values[KNOBS];
     int main_values[KNOBS];
     int bypassed[KNOBS];
+    int mod_steps[KNOBS];       /* MOD moving a knob's parameter: steps from values[] to what the audio hears */
 };
 
 #include "hs_fx_faceplate.h"
@@ -341,6 +343,15 @@ static int is_graph_editor(enum effect kind)
 
 #include "hs_eq2_view.h"
 
+/* The value knob i draws: SampQOL's bar, turned by the steps a running MOD adds (mod_tick). */
+static int shown_value(const struct effect_page *page, int i)
+{
+    int v = page->values[i];
+    if (v < 0 || !page->mod_steps[i]) return v;
+    v += page->mod_steps[i];
+    return v < 0 ? 0 : v > HS_MOD_KNOB ? HS_MOD_KNOB : v;
+}
+
 static const uint32_t *draw_stock_rack(struct effect_page *page)
 {
     if (page->kind == HS_EQ2) return draw_eq2(page);
@@ -392,43 +403,44 @@ static const uint32_t *draw_stock_rack(struct effect_page *page)
         }
         rect(p, x+1, 82, 96, 1, face->accent);
         fastener(p, x+4, 86);
+        int value = shown_value(page, i);
         center_ink(p, src, 50, 165, rows[bank+i], cx, 84);
         if (flavor) {
             static int (*power_module)(void);
             if (!power_module) power_module = (int (*)(void))dlsym(RTLD_DEFAULT, "hs_flavor_power_module");
             int module = i == 0 && !page->shifted && power_module ? power_module() : -1;
-            flavor_control(p, cx, page->values[i], module, page->bypassed[i]);
+            flavor_control(p, cx, value, module, page->bypassed[i]);
         } else if (page->kind == HS_EQ2) {
-            rack_knob(p,cx,116,page->values[i],page->bypassed[i],eq2_color());
+            rack_knob(p,cx,116,value,page->bypassed[i],eq2_color());
         } else if (page->kind == HS_BUS) {
             static const uint32_t accents[] = {0xb5bcc2,0x7ba5c1,0xa6bf9e};
-            rack_knob(p, cx, 116, page->values[i], page->bypassed[i], accents[bus_section(NULL)]);
+            rack_knob(p, cx, 116, value, page->bypassed[i], accents[bus_section(NULL)]);
         } else if (page->kind == HS_PUMP || page->kind == HS_DISTRESSOR) {
-            pump_knob(p, cx, 116, page->values[i], page->bypassed[i]);
+            pump_knob(p, cx, 116, value, page->bypassed[i]);
         } else if (page->kind == HS_HEAT) {
-            heat_knob(p, cx, 116, page->values[i], page->bypassed[i]);
+            heat_knob(p, cx, 116, value, page->bypassed[i]);
         } else if (page->kind == HS_BASS_FOCUS) {
-            rack_knob(p, cx, 116, page->values[i], page->bypassed[i], bf_green);
+            rack_knob(p, cx, 116, value, page->bypassed[i], bf_green);
         } else if (page->kind == HS_TUBE_STRIP) {
-            rack_knob(p, cx, 116, page->values[i], page->bypassed[i], tube_amber);
+            rack_knob(p, cx, 116, value, page->bypassed[i], tube_amber);
         } else if (page->kind == HS_XSAT) {
-            rack_knob(p, cx, 116, page->values[i], page->bypassed[i], 0xd3a164);
+            rack_knob(p, cx, 116, value, page->bypassed[i], 0xd3a164);
         } else if (page->kind == HS_CHANNEL) {
-            channel_knob(p, cx, 116, page->values[i], page->bypassed[i]);
+            channel_knob(p, cx, 116, value, page->bypassed[i]);
         } else {
-            large_knob(p, cx, 115, page->values[i], page->bypassed[i]);
+            large_knob(p, cx, 115, value, page->bypassed[i]);
         }
         rect(p, x+5, 137, 88, 14, 0x0a0f12);
         frame(p, x+5, 137, 88, 14, 0x323d43);
         const char *marked = mod_page(page->kind) ? mod_marking(i)
-            : page->kind == HS_BUS ? bus_marking(i, page->values[i])
-            : page->kind == HS_PUMP ? pump_marking(i, page->values[i])
-            : page->kind == HS_HEAT ? heat_marking(i, page->values[i])
-            : page->kind == HS_DISTRESSOR ? dist_marking(i, page->values[i])
-            : page->kind == HS_BASS_FOCUS ? bf_marking(i, page->values[i])
-            : page->kind == HS_TUBE_STRIP ? tube_marking(i, page->values[i])
-            : page->kind == HS_EQ2 ? eq2_marking(i,page->values[i])
-            : page->kind == HS_CHANNEL ? channel_marking(i, page->shifted, page->values[i]) : NULL;
+            : page->kind == HS_BUS ? bus_marking(i, value)
+            : page->kind == HS_PUMP ? pump_marking(i, value)
+            : page->kind == HS_HEAT ? heat_marking(i, value)
+            : page->kind == HS_DISTRESSOR ? dist_marking(i, value)
+            : page->kind == HS_BASS_FOCUS ? bf_marking(i, value)
+            : page->kind == HS_TUBE_STRIP ? tube_marking(i, value)
+            : page->kind == HS_EQ2 ? eq2_marking(i,value)
+            : page->kind == HS_CHANNEL ? channel_marking(i, page->shifted, value) : NULL;
         if (marked)
             text(p, cx - 2*(int)strlen(marked), 142, marked, 22,
                  page->kind == HS_PUMP || page->kind == HS_DISTRESSOR ? 0xf0f0ec : page->kind == HS_HEAT ? 0xd8f040
@@ -575,7 +587,7 @@ static const void *effect_overlay(const uint32_t *p)
     if (page->kind != kind)
         for (int i = 0; i < KNOBS; ++i) page->main_values[i] = -1;
     if (page->kind != kind || page->shifted != shifted)
-        for (int i = 0; i < KNOBS; ++i) page->values[i] = -1;
+        for (int i = 0; i < KNOBS; ++i) page->values[i] = -1, page->mod_steps[i] = 0;
     page->kind = kind;
     page->shifted = shifted;
     memcpy(page->stock, p, sizeof page->stock);
@@ -616,6 +628,94 @@ static void header(uint32_t *p)
     rect(p, 0, 30, W, 1, rail);
 }
 
+/* Live readouts (Para EQ spectrum, Crush and Tube Strip gain-reduction lamps, and the knob a running
+   MOD is moving on any HS effect). The host only calls our hooks when a knob moves, so nothing animated on its own. SampQOL's own EQ screen runs a detached
+   thread that sleeps, checks its screen is up and pushes a frame; this does the same with our
+   faceplates: every 40 ms, while padmix is open on one of these three editors (the last full layer-27
+   draw was an effect page), tick the readout and repaint only when it moved. The UI thread hands over
+   its page (pages are per thread); page_draw keeps the two threads from rendering it at once.
+   Never repaint from inside an overlay hook instead: that froze the device (card, 12 Nov 2026). */
+static pthread_mutex_t page_draw = PTHREAD_MUTEX_INITIALIZER;
+static pthread_once_t fx_ui_once = PTHREAD_ONCE_INIT;
+static struct effect_page *fx_ui_page;
+static int fx_on_screen;
+static int hs_editor;              /* the last effect body drawn was one of our faceplates */
+
+/* hs_fx_flip.c holds the glass still while this is true: padmix is open on an HS editor. */
+int hs_fx_editor_up(void)
+{
+    static int (*padmix_open)(void);
+    if (!padmix_open) padmix_open = (int (*)(void))dlsym(RTLD_DEFAULT, "padmix_open");
+    return padmix_open && padmix_open() && __atomic_load_n(&fx_on_screen, __ATOMIC_RELAXED) &&
+           __atomic_load_n(&hs_editor, __ATOMIC_RELAXED);
+}
+
+static int has_mod(enum effect kind) { return kind <= HS_TUBE_STRIP && mod_names[kind]; }
+
+/* MOD: the audio moves its target every block, but the host only redraws when a knob is turned, so
+   the target's knob stood still. Steps each knob of the open page is turned by; 1 when they changed,
+   i.e. the drawn knob moved (at most a repaint per 40 ms tick). Call with page_draw held. */
+static int mod_tick(struct effect_page *page)
+{
+    if (!has_mod(page->kind)) return 0;
+    static int (*param_of)(int);
+    if (!param_of) param_of = (int (*)(int))dlsym(RTLD_DEFAULT, "hs_knob_param");
+    int steps[KNOBS] = {0}, delta, target = mod_open_knob(page->kind, &delta);
+    for (int i = 0; i < KNOBS && target >= 0 && delta && param_of; ++i)
+        if (param_of((page->shifted ? 3 : 0) + i) == target) steps[i] = delta;
+    if (!memcmp(steps, page->mod_steps, sizeof steps)) return 0;
+    memcpy(page->mod_steps, steps, sizeof steps);
+    return 1;
+}
+
+/* 1 when the open editor's readout changed enough to redraw. Call with page_draw held. */
+static int live_tick(struct effect_page *page)
+{
+    enum effect kind = page->kind;
+    int moved = mod_tick(page);
+    if (kind == HS_EQ2) return eq2_spectrum_tick() | moved;
+    if (kind != HS_DISTRESSOR && kind != HS_TUBE_STRIP) return moved;
+    static const int steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
+    static int drawn[2] = {-2, -2};
+    int tube = kind == HS_TUBE_STRIP;
+    float db = tube ? tube_open_gr() : dist_open_gr();
+    if (tube) tube_gr_db = db; else dist_gr_db = db;
+    int lit = db < 0 ? -1 : 0;                     /* redraw only when the lit LED count changes */
+    for (int k = 0; k < 10 && lit >= 0; ++k) lit += db >= steps[k];
+    if (lit == drawn[tube]) return moved;
+    drawn[tube] = lit;
+    return 1;
+}
+
+static void *fx_ui_loop(void *arg)
+{
+    (void)arg;
+    int (*padmix_open)(void) = (int (*)(void))dlsym(RTLD_DEFAULT, "padmix_open");
+    for (;;) {
+        usleep(40000);
+        struct effect_page *page = __atomic_load_n(&fx_ui_page, __ATOMIC_ACQUIRE);
+        if (!padmix_open || !padmix_open() || !__atomic_load_n(&fx_on_screen, __ATOMIC_RELAXED) || !page)
+            continue;
+        /* Render under page_draw into our own frame, then push with the lock released: the UI thread
+           may already hold the overlay's lock when it takes page_draw, so never wait on both here. */
+        static uint32_t live_frame[W * H];
+        pthread_mutex_lock(&page_draw);
+        int moved = live_tick(page);
+        if (moved) memcpy(live_frame, draw_gear(page), sizeof live_frame);
+        pthread_mutex_unlock(&page_draw);
+        if (!moved) continue;
+        if (!next_rect) next_rect = (overlay_rect_fn)dlsym(RTLD_NEXT, "overlay_update_rect");
+        if (next_rect) next_rect(27, live_frame, 0, 40, W, H);
+    }
+    return NULL;
+}
+
+static void fx_ui_start(void)
+{
+    pthread_t t;
+    if (pthread_create(&t, NULL, fx_ui_loop, NULL) == 0) pthread_detach(t);
+}
+
 static void effect_knobs(uint32_t *p)
 {
     struct effect_page *page = get_effect_page(0);
@@ -650,27 +750,19 @@ static void effect_knobs(uint32_t *p)
         unsigned seq = eq2_seq();
         if (seq != drawn) { drawn = seq; changed = 1; }
     }
-    if (page->kind == HS_DISTRESSOR) {
-        /* GR row: redraw only when the lit LED count changes, not every frame */
-        static int drawn = -2;
-        dist_gr_db = dist_open_gr();
-        static const int steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
-        int lit = dist_gr_db < 0 ? -1 : 0;
-        for (int k = 0; k < 10 && lit >= 0; ++k) lit += dist_gr_db >= steps[k];
-        if (lit != drawn) { drawn = lit; changed = 1; }
-    }
-    if (page->kind == HS_TUBE_STRIP) {
-        static int drawn = -2;
-        tube_gr_db = tube_open_gr();
-        static const int steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
-        int lit = tube_gr_db < 0 ? -1 : 0;
-        for (int k = 0; k < 10 && lit >= 0; ++k) lit += tube_gr_db >= steps[k];
-        if (lit != drawn) { drawn = lit; changed = 1; }
+    if (page->kind == HS_EQ2 || has_mod(page->kind)) {    /* live readouts or a MOD knob: animate */
+        __atomic_store_n(&fx_ui_page, page, __ATOMIC_RELEASE);
+        pthread_once(&fx_ui_once, fx_ui_start);
+        pthread_mutex_lock(&page_draw);
+        if (live_tick(page)) changed = 1;
+        pthread_mutex_unlock(&page_draw);
     }
     if (changed) {
         if (!next_rect)
             next_rect = (overlay_rect_fn)dlsym(RTLD_NEXT, "overlay_update_rect");
+        pthread_mutex_lock(&page_draw);
         if (next_rect) next_rect(27, draw_gear(page), 0, 40, W, H);
+        pthread_mutex_unlock(&page_draw);
     }
 }
 
@@ -680,6 +772,7 @@ void overlay_update(int mode, const void *buf, int flag)
     if (!next) next = (overlay_fn)dlsym(RTLD_NEXT, "overlay_update");
     if (buf && flag && (mode >= 26 && mode <= 28)) {
         uintptr_t site = return_site(__builtin_return_address(0));
+        if (mode == 27) __atomic_store_n(&fx_on_screen, site == 0xada58, __ATOMIC_RELAXED);
         if (mode == 27 && (site == 0xac2f0 || site == 0xad460)) {
             struct effect_page *page = get_effect_page(0);
             if (page) page->kind = OTHER;
@@ -714,9 +807,11 @@ void overlay_update(int mode, const void *buf, int flag)
             }
         } else if (mode == 27 && site == 0xac2f0)
             insert_body((uint32_t *)buf);
-        else if (mode == 27 && site == 0xada58)
+        else if (mode == 27 && site == 0xada58) {
+            const void *stock = buf;
             buf = effect_overlay(buf);
-        else if (mode == 27 && site == 0xad460)
+            __atomic_store_n(&hs_editor, buf != stock, __ATOMIC_RELAXED);
+        } else if (mode == 27 && site == 0xad460)
             selector_rows((uint32_t *)buf, 0, H);
         else if (mode == 28 && site == 0xad4ac)
             selector_rows((uint32_t *)buf, H, 40);
@@ -731,9 +826,12 @@ void overlay_update_rect(int mode, const void *buf, int x, int y, int w, int h)
     if (!next_rect) next_rect = (overlay_rect_fn)dlsym(RTLD_NEXT, "overlay_update_rect");
     if (buf && mode == 27 && x == 0 && y == 40 && w == W && h == H) {
         uintptr_t site = return_site(__builtin_return_address(0));
-        if (site == 0xaca6c)
+        __atomic_store_n(&fx_on_screen, site == 0xaca6c, __ATOMIC_RELAXED);
+        if (site == 0xaca6c) {
+            const void *stock = buf;
             buf = effect_overlay(buf);
-        else if (site == 0xabb98)
+            __atomic_store_n(&hs_editor, buf != stock, __ATOMIC_RELAXED);
+        } else if (site == 0xabb98)
             stock_name_display((uint32_t *)buf, buf);
     }
     if (buf && mode == 28 && x == 0 && y == 200 && w == W && h == 40 &&

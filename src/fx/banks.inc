@@ -1,119 +1,4 @@
-struct FlavorBank {
-    const char *title;
-    int module;
-    int parameters[6];
-    char labels[6][16];
-    char units[6][4];
-};
-
-static constexpr FlavorBank banks[] = {
-    {"GLOBAL", -1, {6, 10, 7, 8, 9, -1}, {"Intensity", "Width", "Gain", "High-Pass", "Low-Pass", ""}, {}},
-    {"PITCH", 0, {0, 11, 12, 13, 16, 14}, {"Power", "Depth", "Vary", "Fast Rate", "Slow Rate", "Drift"}, {}},
-    {"PITCH X-MOD", 0, {17, 18, 19, 15, 20, -1}, {"X-Mod", "Type", "Mix", "Stereo", "Fast/Slow", ""}, {}},
-    {"DISTORTION", 1, {1, 21, 23, 22, 24, 27}, {"Power", "Depth", "Model", "Vary", "Mix", "Smooth"}, {}},
-    {"DIST INPUT", 1, {25, 26, -1, -1, -1, -1}, {"Input HP", "Input LP", "", "", "", ""}, {}},
-    {"DIGITAL", 2, {2, 30, 31, 28, 29, 36}, {"Power", "Bits", "Rate", "Depth", "Vary", "Smooth"}, {}},
-    {"DIGITAL SHAPE", 2, {32, 33, 37, 34, 35, 38}, {"Glitch", "Length", "Envelope", "Input HP", "Input LP", "Stereo"}, {}},
-    {"VINYL", 3, {3, 39, 41, 40, 42, 44}, {"Power", "Depth", "Crackle", "Vary", "Clicks", "Pops"}, {}},
-    {"VINYL NOISE", 3, {43, 45, 46, 47, 48, 49}, {"Rate", "Rumble", "Noise", "Tone", "Stereo", "Hum"}, {}},
-    {"VINYL ENVELOPE", 3, {50, 51, -1, -1, -1, -1}, {"Envelope", "Release", "", "", "", ""}, {}},
-    {"VOLUME", 4, {4, 52, 60, 53, 54, 55}, {"Power", "Depth", "Dropouts", "Vary", "Fast Rate", "Slow Rate"}, {}},
-    {"VOLUME SHAPE", 4, {57, 58, 59, 56, -1, -1}, {"Fast Drift", "Slow Drift", "Stereo", "Fast/Slow", "", ""}, {}},
-    {"TIMBRE", 5, {5, 61, 63, 62, -1, -1}, {"Power", "Depth", "Profile", "Vary", "", ""}, {}}
-};
-/* Labels use stock wording: plain words, no units. The unit (last field) is drawn after the value
-   by hs-fx (hs_knob_unit), as stock shows "-6.0 dB" under "Threshold". Knobs whose value hs-fx
-   draws itself (ratios, switches, times with units) have no unit here. */
-static constexpr FlavorBank channel_banks[] = {
-    {"INPUT / OUTPUT", 0, {CH_INPUT, CH_DRIVE, CH_OUTPUT, -1, -1, -1},
-        {"Input", "Drive", "Output", "", "", ""}, {"DB", "%", "DB"}},
-    {"242 BLACK FILTERS", 1, {CH_HP, CH_LP, CH_EQ_FIRST, -1, -1, -1},
-        {"High-Pass", "Low-Pass", "EQ First", "", "", ""}, {"HZ", "HZ"}},
-    {"LOW EQ", 2, {CH_LF_DB, CH_LF_HZ, CH_LF_BELL, -1, -1, -1},
-        {"Gain", "Frequency", "Bell", "", "", ""}, {"DB", "HZ"}},
-    {"LOW MID EQ", 3, {CH_LM_DB, CH_LM_HZ, CH_LM_Q, -1, -1, -1},
-        {"Gain", "Frequency", "Q", "", "", ""}, {"DB", "HZ"}},
-    {"HIGH MID EQ", 4, {CH_HM_DB, CH_HM_HZ, CH_HM_Q, -1, -1, -1},
-        {"Gain", "Frequency", "Q", "", "", ""}, {"DB", "HZ"}},
-    {"HIGH EQ", 5, {CH_HF_DB, CH_HF_HZ, CH_HF_BELL, -1, -1, -1},
-        {"Gain", "Frequency", "Bell", "", "", ""}, {"DB", "HZ"}},
-    {"COMPRESSOR", 6, {CH_COMP_THRESHOLD, CH_COMP_RATIO, CH_MAKEUP,
-                        CH_COMP_FAST, CH_COMP_RELEASE, CH_COMP_HARD},
-        {"Threshold", "Ratio", "Make-Up", "Fast Attack", "Release", "Hard Knee"}, {"DB", "", "DB", "", "MS"}},
-    {"GATE / EXPAND", 7, {CH_GATE_THRESHOLD, CH_GATE_RANGE, CH_GATE_RELEASE,
-                         CH_GATE_FAST, CH_GATE_EXPAND, -1},
-        {"Threshold", "Range", "Release", "Fast Attack", "Expand", ""}, {"DB", "DB", "MS"}},
-    {"DE-ESSER", 8, {CH_DS_FREQ, CH_DS_THRESHOLD, CH_DS_RANGE,
-                     CH_DS_MODE, -1, -1},
-        {"Frequency", "Threshold", "Range", "Mode", "", ""}, {"HZ", "DB", "DB"}},
-    HS_MOD_BANKS(CH_MOD, 0)
-};
-/* No Bypass knob on any HS page: SampQOL's B3 is the one Bypass (the old ports are ignored). */
-static constexpr FlavorBank xsat_banks[] = {
-    {"DRIVE", 0, {XS_DRIVE, XS_SHAPE, XS_DEPTH, -1, -1, -1},
-        {"Drive", "Shape", "Depth", "", "", ""}, {"DB", "", "%"}},
-    {"HARMONICS", 1, {XS_HARMONICS, XS_MIX, XS_HEADROOM, -1, -1, -1},
-        {"Harmonics", "Mix", "Headroom +6", "", "", ""}, {"%", "%"}},
-    {"INPUT / OUTPUT", 2, {XS_INPUT, XS_OUTPUT, -1, -1, -1, -1},
-        {"Input", "Output", "", "", "", ""}, {"DB", "DB"}},
-    HS_MOD_BANKS(XS_MOD, 0)
-};
-static constexpr FlavorBank bus_banks[] = {
-    {"COMPRESSION", 0, {BUS_THRESHOLD, BUS_RATIO, BUS_MAKEUP, -1, -1, -1},
-        {"Threshold", "Ratio", "Make-Up", "", "", ""}, {"DB", "", "DB"}},
-    {"TIMING", 1, {BUS_ATTACK, BUS_RELEASE, BUS_HPF, -1, -1, -1},
-        {"Attack", "Release", "Sidechain HP", "", "", ""}, {"", "", "HZ"}},
-    {"PARALLEL", 2, {BUS_MIX, -1, -1, -1, -1, -1},
-        {"Mix", "", "", "", "", ""}, {"%"}},
-    HS_MOD_BANKS(BUS_MOD, 0)
-};
-static constexpr FlavorBank pump_banks[] = {
-    {"COMPRESS", 0, {PU_INPUT, PU_RATIO, PU_OUTPUT, -1, -1, -1},
-        {"Input", "Ratio", "Output", "", "", ""}, {"DB", "", "DB"}},
-    {"TIMING", 1, {PU_ATTACK, PU_RELEASE, PU_ATMOD, -1, -1, -1},
-        {"Attack", "Release", "Attack Mod", "", "", ""}, {}},
-    {"COLOUR", 2, {PU_SAT, PU_DET_HP, PU_MIX, -1, -1, -1},
-        {"Saturation", "Detector HP", "Mix", "", "", ""}, {"", "", "%"}},
-    {"KEY", 3, {PU_KEY, PU_SEND, -1, -1, -1, -1},
-        {"Key In", "Send", "", "", "", ""}, {}},
-    HS_MOD_BANKS(PU_MOD, 0)
-};
-static constexpr FlavorBank dist_banks[] = {
-    {"COMPRESS", 0, {DS_INPUT, DS_RATIO, DS_OUTPUT, -1, -1, -1}, {"Input", "Ratio", "Output", "", "", ""}, {}},
-    {"TIMING", 1, {DS_ATTACK, DS_RELEASE, DS_DETECTOR, -1, -1, -1}, {"Attack", "Release", "Detector", "", "", ""}, {}},
-    {"AUDIO", 2, {DS_AUDIO, DS_BRIT, DS_MIX, -1, -1, -1}, {"Audio", "British", "Mix", "", "", ""}, {"", "", "%"}},
-    {"KEY", 3, {DS_KEY, DS_SEND, -1, -1, -1, -1}, {"Key In", "Send", "", "", "", ""}, {}},
-    HS_MOD_BANKS(DS_MOD, 0)
-};
-static constexpr FlavorBank tube_banks[] = {
-    {"TUBE", 0, {TS_DRIVE, TS_HPF, TS_OUTPUT, -1, -1, -1}, {"Drive", "High-Pass", "Output", "", "", ""}, {}},
-    {"OPTO COMP", 1, {TS_THRESHOLD, TS_RATIO, TS_ATTACK, -1, -1, -1}, {"Threshold", "Ratio", "Attack", "", "", ""}, {}},
-    {"COMP TIME", 2, {TS_RELEASE, TS_ORDER, TS_SC, -1, -1, -1}, {"Release", "EQ First", "Sidechain EQ", "", "", ""}, {}},
-    {"BASS", 3, {TS_BASS_HZ, TS_BASS_DB, -1, -1, -1, -1}, {"Frequency", "Gain", "", "", "", ""}, {}},
-    {"LOW MID", 4, {TS_LMID_HZ, TS_LMID_DB, TS_Q, -1, -1, -1}, {"Frequency", "Gain", "High Q", "", "", ""}, {}},
-    {"HIGH MID", 5, {TS_HMID_HZ, TS_HMID_DB, TS_Q, -1, -1, -1}, {"Frequency", "Gain", "High Q", "", "", ""}, {}},
-    {"TREBLE", 6, {TS_TREBLE_HZ, TS_TREBLE_DB, -1, -1, -1, -1}, {"Frequency", "Gain", "", "", "", ""}, {}},
-    HS_MOD_BANKS(TS_MOD, 0)
-};
-static constexpr FlavorBank heat_banks[] = {
-    {"CHARACTER", 0, {HE_CIRCUIT, HE_DRIVE, HE_WET, -1, -1, -1}, {"Circuit", "Drive", "Wet", "", "", ""}, {"", "", "DB"}},
-    {"FILTER", 1, {HE_FTYPE, HE_FREQ, HE_RESO, -1, -1, -1}, {"Filter Type", "Frequency", "Resonance", "", "", ""}, {}},
-    {"DIRT + EQ", 2, {HE_DIRT, HE_EQ_LO, HE_EQ_HI, -1, -1, -1}, {"Dirt", "EQ Low", "EQ High", "", "", ""}, {}},
-    {"ENVELOPE", 3, {HE_ENV_DEPTH, HE_ENV_ATK, HE_ENV_REL, -1, -1, -1}, {"Env Depth", "Attack", "Release", "", "", ""}, {}},
-    {"LFO", 4, {HE_LFO_DEPTH, HE_LFO_SPEED, HE_LFO_WAVE, -1, -1, -1}, {"LFO Depth", "Speed", "Wave", "", "", ""}, {}},
-    {"OUTPUT", 5, {HE_FREQ_PAN, HE_MIX, HE_VOLUME, -1, -1, -1}, {"Freq Pan", "Mix", "Volume", "", "", ""}, {"", "%", "DB"}},
-    HS_MOD_BANKS(HE_MOD, 0)
-};
-static constexpr FlavorBank eq_global[] = {
-    {"GLOBAL",0,{EQ_INPUT,EQ_OUTPUT,EQ_MIDSIDE,-1,-1,-1},{"Input","Output","Mid/Side","","",""},{"DB","DB"}},
-    {"ROUTING",1,{EQ_PARALLEL,-1,-1,-1,-1,-1},{"Parallel","","","","",""}, {}}
-};
-static constexpr FlavorBank eq_band[] = {
-    {"SHAPE",0,{EB_FREQ,EB_GAIN,EB_Q,-1,-1,-1},{"Frequency","Gain","Q","","",""},{"HZ","DB"}},
-    {"MODE",1,{EB_TYPE,EB_ON,EB_BYPASS,-1,-1,-1},{"Type","Band On","Band Bypass","","",""}, {}},
-    {"FILTER",2,{EB_FAMILY,EB_SLOPE,EB_BELL,-1,-1,-1},{"Filter Family","Slope","Bell Shape","","",""}, {}},
-    {"STEREO",3,{EB_STEREO,-1,-1,-1,-1,-1},{"Position","","","","",""}, {}}
-};
+#include "bank_tables.inc"   /* the page tables, shared with the CLAP faceplate (src/clap/hs_clap_panel.c) */
 /* One atomic word keeps band and page coherent through the overlay callbacks. */
 static unsigned eq_selection = 4; // band 1, page 0
 static int (*next_cc)(int,int);
@@ -197,6 +82,7 @@ static void follow_instance()
     unsigned *pages[] = {&xsat_bank, &bus_bank, &pump_bank, &dist_bank, &tube_bank, &heat_bank, &channel_bank, &bank};
     for (unsigned *s : pages) __atomic_store_n(s, 0u, __ATOMIC_RELAXED);
     __atomic_store_n(&eq_selection, 4u, __ATOMIC_RELAXED);
+    __atomic_store_n(&eq_preset, 0u, __ATOMIC_RELAXED);
     mod_seen_source = mod_seen_target = -1;     /* hs_mod_view: MOD knobs not seen on this insert */
 }
 
@@ -299,11 +185,10 @@ extern "C" int hs_flavor_subpage(int *count)
     return static_cast<int>(at - first);
 }
 
-/* Unit hs-fx draws after knob (0-5) of the open HS page's value, or nullptr. */
-extern "C" const char *hs_knob_unit(int knob)
+/* The open HS page (not the flavor's), or nullptr. */
+static const FlavorBank *open_page()
 {
     unsigned uid = insert_open(), count;
-    if (knob < 0 || knob > 5) return nullptr;
     const FlavorBank *page = nullptr;
     if (uid == HS_EQ2_ID) {
         unsigned sel = __atomic_load_n(&eq_selection, __ATOMIC_RELAXED);
@@ -315,7 +200,22 @@ extern "C" const char *hs_knob_unit(int knob)
             : uid == HS_TUBE_STRIP_ID ? tube_banks : uid == HS_HEAT_ID ? heat_banks : channel_banks;
         if (at < count) page = &table[at];
     }
+    return page;
+}
+
+/* Unit hs-fx draws after knob (0-5) of the open HS page's value, or nullptr. */
+extern "C" const char *hs_knob_unit(int knob)
+{
+    const FlavorBank *page = knob >= 0 && knob <= 5 ? open_page() : nullptr;
     return page && page->units[knob][0] ? page->units[knob] : nullptr;
+}
+
+/* Parameter under knob (0-5) of the open HS page, numbered as a MOD Target is, or -1. hs-fx turns
+   that knob when the effect's MOD is moving the parameter. EQ bands are not offset: no MOD there. */
+extern "C" int hs_knob_param(int knob)
+{
+    const FlavorBank *page = knob >= 0 && knob <= 5 ? open_page() : nullptr;
+    return page ? page->parameters[knob] : -1;
 }
 
 /* Header label over B2: page index and count of the open HS editor, or -1 when none is open. */
@@ -325,7 +225,7 @@ extern "C" int hs_bank_position(int *count)
     if (uid == HS_EQ2_ID) {
         unsigned sel = __atomic_load_n(&eq_selection, __ATOMIC_RELAXED);
         *count = sel/4 ? 4 : 2;
-        return static_cast<int>(sel%4);
+        return preset_open() ? -1 : static_cast<int>(sel%4);
     }
     const unsigned *selection = uid == flavor_uid ? &bank : uid == HS_XSAT_ID ? &xsat_bank : uid == HS_BUS_ID ? &bus_bank
         : uid == HS_PUMP_ID ? &pump_bank : uid == HS_DISTRESSOR_ID ? &dist_bank : uid == HS_TUBE_STRIP_ID ? &tube_bank : uid == HS_HEAT_ID ? &heat_bank
@@ -376,13 +276,7 @@ extern "C" int padmix_note(int note, int value, int shift)
     unsigned uid = insert_open();
     if (preset_open() && !question_active() && preset_note(note, value, shift)) return 1;
     if (note == 13 && uid == HS_EQ2_ID && !question_active()) {
-        if (value>0) {
-            unsigned sel=__atomic_load_n(&eq_selection,__ATOMIC_RELAXED);
-            unsigned count=sel/4 ? 4 : 2;
-            unsigned page=(sel%4+(shift ? count-1 : 1))%count;
-            __atomic_store_n(&eq_selection,sel/4*4+page,__ATOMIC_RELAXED);
-            refresh();
-        }
+        b2_paged(uid, value, shift);
         return 1;
     }
     if (note == 13 && (uid == flavor_uid || uid == HS_CHANNEL_ID || uid == HS_XSAT_ID || uid == HS_BUS_ID || uid == HS_PUMP_ID || uid == HS_HEAT_ID || uid == HS_DISTRESSOR_ID || uid == HS_TUBE_STRIP_ID) && !question_active()) {
@@ -409,6 +303,13 @@ extern "C" int fxmap_get_row(void *context, int id, void *output)
         unsigned band=sel/4;
         const auto &page=band ? eq_band[sel%4] : eq_global[sel%4];
         memset(row,0,sizeof *row);
+        if (preset_open()) {
+            snprintf(row->name, sizeof row->name, "HS Para EQ PRESETS");
+            for (int &parameter : row->parameters) parameter = -1;
+            snprintf(row->labels[0], sizeof row->labels[0], "Slot %u", __atomic_load_n(&preset_slot, __ATOMIC_RELAXED) + 1);
+            snprintf(row->labels[1], sizeof row->labels[1], "#%u", __atomic_load_n(&preset_gen, __ATOMIC_RELAXED));
+            return 1;
+        }
         /* Band in the title: bands 5-24 share default settings, so without it their frames are
            pixel-identical and SampQOL's duplicate skip never redraws the band change. */
         snprintf(row->name,sizeof row->name,band ? "HS Para EQ BAND %02u" : "HS Para EQ GLOBAL",band);

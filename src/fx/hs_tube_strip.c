@@ -47,13 +47,13 @@ static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+TS_RELEASE] = {LOG|LADSPA_HINT_DEFAULT_MIDDLE, 100, 5000},
     [FIRST+TS_ORDER] = {TOG, 0, 1},
     [FIRST+TS_SC] = {TOG, 0, 1},
-    [FIRST+TS_BASS_HZ] = {STEP|LADSPA_HINT_DEFAULT_1, 0, 3},
+    [FIRST+TS_BASS_HZ] = {STEP|LADSPA_HINT_DEFAULT_LOW, 0, 3},
     [FIRST+TS_BASS_DB] = {B|LADSPA_HINT_DEFAULT_MIDDLE, -24, 24},
     [FIRST+TS_LMID_DB] = {B|LADSPA_HINT_DEFAULT_MIDDLE, -16, 16},
     [FIRST+TS_LMID_HZ] = {LOG|LADSPA_HINT_DEFAULT_MIDDLE, 30, 4500},
     [FIRST+TS_HMID_HZ] = {LOG|LADSPA_HINT_DEFAULT_MIDDLE, 200, 20000},
     [FIRST+TS_HMID_DB] = {B|LADSPA_HINT_DEFAULT_MIDDLE, -16, 16},
-    [FIRST+TS_TREBLE_HZ] = {STEP|LADSPA_HINT_DEFAULT_1, 0, 3},
+    [FIRST+TS_TREBLE_HZ] = {STEP|LADSPA_HINT_DEFAULT_LOW, 0, 3},
     [FIRST+TS_TREBLE_DB] = {B|LADSPA_HINT_DEFAULT_MIDDLE, -20, 20},
     [FIRST+TS_Q] = {TOG, 0, 1},
     [FIRST+TS_BYPASS] = {TOG, 0, 1},
@@ -231,6 +231,9 @@ static const char *const names[] = {
 };
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS,
                "Tube Strip port count");
+
+/* The open editor turns this effect's MOD target knob to the heard value (hs_mod.h). */
+HS_MOD_KNOB_EXPORT(hs_tube_strip_mod_knob, struct tube_strip, hints + FIRST)
 
 LADSPA_Descriptor hs_tube_strip_descriptor = {
     .UniqueID = HS_TUBE_STRIP_ID, .Label = "HS Tube Strip", .Name = "HS Tube Strip",
