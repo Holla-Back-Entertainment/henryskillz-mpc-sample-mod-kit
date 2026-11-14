@@ -72,7 +72,7 @@ Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid 
 
 | Preset slots | Channel Strip de-esser |
 |---|---|
-| ![Eight per-effect preset slots with slot 5 selected and the load and save controls shown](assets/screens/hs-presets.png) | ![HS Channel Strip DESS page showing Frequency, Threshold and Range, plus the shifted Mode row](assets/screens/hs-channel-deesser.png) |
+| ![Eight per-effect preset slots with slot 5 selected and the load and save controls shown](assets/screens/hs-presets.png) | ![HS Channel Strip DESS page showing Frequency, Threshold and Range, with SHIFT for the Mode row](assets/screens/hs-channel-deesser.png) |
 
 These are real 320×240 captures from the MPC Sample emulator running the public installer output:
 
@@ -94,7 +94,7 @@ These are real 320×240 captures from the MPC Sample emulator running the public
 |---|---|---|
 | ![HS Crush compress page: gain-reduction LEDs, ratio lamps, input, ratio and output knobs](assets/screens/hs-crush.png) | ![HS Bass Focus: live response curve with the crossover marker, crossover, bass and mono knobs](assets/screens/hs-bass-focus.png) | ![HS Tube Strip tube page: gain-reduction LEDs, signal path, drive, HPF and output knobs](assets/screens/hs-tube-strip.png) |
 
-The HS Pump, HS Heat, HS Crush, HS Bass Focus, HS Tube Strip, presets and de-esser panels above are rendered from the same panel drawing code in `src/fx/`, not captured from the emulator yet. All other pictures in this section are emulator captures.
+Every picture in this section is an emulator capture.
 
 ![MPC EQ page with the dB and frequency grid](assets/screens/eq-page-grid.png)
 

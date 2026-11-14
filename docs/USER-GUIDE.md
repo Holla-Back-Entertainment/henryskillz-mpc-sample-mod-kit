@@ -146,7 +146,7 @@ If it doesn't work: Drive starts at 0 dB, which makes no audible change by desig
 
 A console-style channel. The signal goes: input and drive, filters, EQ, compressor and gate, de-esser, output. One switch puts the EQ after the compressor instead.
 
-![HS Channel Strip DESS page showing Frequency, Threshold and Range, followed by its shifted Mode row](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-channel-deesser.png)
+![HS Channel Strip DESS page showing Frequency, Threshold and Range, with SHIFT for the Mode row](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-channel-deesser.png)
 
 **I/O**
 | Knob | Control | Range | What it does |
@@ -274,7 +274,7 @@ If it doesn't work: Threshold starts at the top of its range, where it does very
 
 A stepped feedback compressor that can squash hard. It also keys from another track, for ducking.
 
-![HS Pump COMPRESS page: ratio lamps from 1 to 20, Input, Ratio and Output knobs. Rendered at 3x from the panel drawing code, not an emulator capture](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-pump.png)
+![HS Pump COMPRESS page: ratio lamps from 1 to 20, Input, Ratio and Output knobs](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-pump.png)
 
 **COMPRESS**
 | Knob | Control | Range | What it does |
@@ -323,9 +323,8 @@ Eight drive circuits into a multimode filter, with dirt, a 2-band EQ, an envelop
 
 | CHARACTER page | FILTER page |
 |---|---|
-| ![HS Heat CHARACTER page: eight circuit lamps with ROUGH CRUNCH lit, Circuit, Drive and Wet knobs](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-heat.png) | ![HS Heat FILTER page: filter type lamps, Filter Type on LP2 12 DB, Frequency and Resonance knobs](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-heat-filter.png) |
+| ![HS Heat CHARACTER page: eight circuit lamps with HIGH GAIN lit, Circuit, Drive and Wet knobs](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-heat.png) | ![HS Heat FILTER page: filter type lamps, Filter Type on OFF, Frequency and Resonance knobs](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-heat-filter.png) |
 
-Both pictures are rendered at 3x from the panel drawing code, not emulator captures.
 
 **CHARACTER**
 | Knob | Control | Range | What it does |
@@ -424,7 +423,7 @@ If it doesn't work: every band starts with Band On set to OFF. Turn it on. A HIG
 
 A character compressor with eight curves, an Opto mode, detector filters, two distortion modes, a British-style mode and a gain-reduction meter (**GR DB**) on the panel. Input, Output, Attack and Release use a 0 to 10 scale.
 
-![HS Crush COMPRESS page: gain-reduction LEDs, ratio lamps with 4 lit, Input 5.1, Ratio 4:1, Output 6.2. Rendered at 3x from the panel drawing code, not an emulator capture](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-crush.png)
+![HS Crush COMPRESS page: gain-reduction LEDs, ratio lamps with 6 lit, Input 5.1, Ratio 6:1, Output 7.5](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-crush.png)
 
 **COMPRESS**
 | Knob | Control | Range | What it does |
@@ -465,7 +464,7 @@ If it doesn't work: if GR DB shows **NO METER**, the meter could not be read, bu
 
 Splits the sound at a crossover, makes the lows mono and sets their level. The highs pass untouched. The panel draws the response it applies, with a dotted line at the crossover.
 
-![HS Bass Focus: response curve with the crossover marker at 125 Hz, Crossover, Bass at -6.0 dB and Mono Bass on MONO. Rendered at 3x from the panel drawing code, not an emulator capture](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-bass-focus.png)
+![HS Bass Focus: response curve with the crossover marker at 125 Hz, Crossover, Bass at 0.0 dB and Mono Bass on MONO](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-bass-focus.png)
 
 | Knob | Control | Range | What it does |
 |---|---|---|---|
@@ -489,7 +488,7 @@ If it doesn't work: with Bass at 0 dB on a sound with no stereo lows, you will h
 
 A tube channel strip: tube drive, a 6 dB/oct high-pass, an opto compressor and a 4-band EQ. The panel shows the gain reduction (**OPTO GR DB**) and the signal path in order. The EQ can go before or after the compressor, and a side-chain EQ turns it into a de-esser.
 
-![HS Tube Strip TUBE page: gain-reduction LEDs, the TUBE, HPF, COMP, EQ signal path, Drive, HPF and Output knobs. Rendered at 3x from the panel drawing code, not an emulator capture](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-tube-strip.png)
+![HS Tube Strip TUBE page: gain-reduction LEDs, the TUBE, HPF, COMP, EQ signal path, Drive, HPF and Output knobs](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-tube-strip.png)
 
 **TUBE**
 | Knob | Control | Range | What it does |
