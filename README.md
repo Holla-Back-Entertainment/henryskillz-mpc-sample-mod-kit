@@ -127,6 +127,7 @@ Switch off and take the SD card out. That's it. More options in [RECOVERY.md](do
 ## Help
 
 - **[FAQ](docs/FAQ.md)**: errors, versions, warranty, "it booted stock".
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)**: what to check when something does not work.
 - **[Report a problem](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues)**: include your firmware version, what you did and what you saw.
 - Questions about the **HS effects or this installer go here**, not to the SampQOL author or Akai.
 
