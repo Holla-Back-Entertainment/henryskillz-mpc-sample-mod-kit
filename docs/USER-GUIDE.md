@@ -368,7 +368,7 @@ Eight drive circuits into a multimode filter, with dirt, a 2-band EQ, an envelop
 |---|---|---|---|
 | K1 | Freq Pan | -64 to +63 | Moves the left and right filter frequencies apart, for width. |
 | K2 | Mix | 0 to 100 % | Blend of the effect and the dry sound. |
-| K3 | Volume | -24 to +12 dB | Final level. |
+| K3 | Volume | -24 to +12 dB | Final level. A fresh insert loads at -6 dB, which matches the dry level at the starting Drive. |
 
 **MOD** and **MOD TIME**: see [MOD and the key bus](#mod-and-the-key-bus).
 
