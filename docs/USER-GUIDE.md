@@ -669,6 +669,17 @@ There is nothing to press. It is just there while you browse.
 
 If it doesn't work: the tag only shows for a sample that is previewing. Check Preview is on in the browser.
 
+### Warp on import
+
+Load a loop onto a pad and its warp is already on, so it plays at the project tempo straight away. On a stock MPC you have to turn Warp on yourself on the Tune page.
+
+- Only loops get it: the sample must run at least a bar at its tempo and end on a beat. Kicks, 808s, hits and other one-shots load the way they do on a stock MPC.
+- A sample whose tempo the MPC read wrong usually doesn't end on a beat, so it isn't warped either. If a loop loads unwarped, set its tempo and turn Warp on, on the Tune page.
+- To switch it off, turn off **Audio Tracks Auto Warp** in the MPC's Preferences (Audio Warp and BPM Detect). That switch then covers both audio tracks and pads.
+- Turn Warp off on the Tune page for any pad you want to play at its own speed.
+
+If it doesn't work: it only acts on samples loaded from the browser onto a pad.
+
 ---
 
 ## SEQ desk and the METERS page

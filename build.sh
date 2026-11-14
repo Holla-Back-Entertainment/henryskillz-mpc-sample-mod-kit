@@ -21,6 +21,6 @@ docker run --rm -v "$PWD:/w" -w /w/src "${IMAGE:-gcc:12}" sh -ec '
   cd ../mixer
   gcc -O2 -fPIC -shared graphic_mixer.c -o /w/addon/hs/hs-mixer.so -lm -ldl
   cd ../warp
-  gcc -O3 -Wall -Wextra -fPIC -shared browser_warp.c preview_tempo.c key_detect.c browser_tag.c -o /w/addon/hs/hs-browser.so -ldl -lm -lpthread
+  gcc -O3 -Wall -Wextra -fPIC -shared browser_warp.c preview_tempo.c key_detect.c browser_tag.c import_warp.c -o /w/addon/hs/hs-browser.so -ldl -lm -lpthread
 '
 python3 installer/make_installer.py
