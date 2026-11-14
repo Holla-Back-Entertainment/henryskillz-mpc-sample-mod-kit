@@ -15,13 +15,14 @@ static const char *match(const char *name)
 int main(void)
 {
     mkdir(CHAIN_DIR, 0755);
-    const char *files[] = {"VOX.xfx", "VOXBG.xfx", "DRUMS.xfx", "BASS.xfx"};
-    for (int i = 0; i < 4; ++i) { char p[64]; snprintf(p, sizeof p, CHAIN_DIR "/%s", files[i]); fclose(fopen(p, "w")); }
+    const char *files[] = {"VOX.xfx", "VOXBG.xfx", "DRUMS.xfx", "BASS.xfx", "KICK.xfx", "BASSLINE.xfx"};
+    for (int i = 0; i < 6; ++i) { char p[64]; snprintf(p, sizeof p, CHAIN_DIR "/%s", files[i]); fclose(fopen(p, "w")); }
     assert(!strcmp(match("Vox Lead"), "VOX.xfx"));
     assert(!strcmp(match("Vox Chop"), "VOX.xfx"));
     assert(!strcmp(match("VoxBG 2"), "VOXBG.xfx"));
     assert(!strcmp(match("Bass"), "BASS.xfx") && !strcmp(match("bass2"), "BASS.xfx") && !strcmp(match("Bass-1"), "BASS.xfx"));
-    assert(!*match("Bassline") && !*match("Voxel") && !*match("Drumstick"));
+    assert(!strcmp(match("Bassline 2"), "BASSLINE.xfx") && !strcmp(match("Kick"), "KICK.xfx"));
+    assert(!*match("Kickdrum") && !*match("Voxel") && !*match("Drumstick"));
     assert(!strcmp(match("Vocals"), "VOX.xfx") && !strcmp(match("Vocal 2"), "VOX.xfx"));
     assert(!strcmp(match("Drm"), "DRUMS.xfx") && !strcmp(match("Drums"), "DRUMS.xfx") && !strcmp(match("Drum 1"), "DRUMS.xfx"));
     assert(!*match("Keys"));

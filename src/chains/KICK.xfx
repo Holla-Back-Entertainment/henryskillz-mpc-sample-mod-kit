@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<MPCVObject>
+  <Version>
+    <File_Version>2.1</File_Version>
+    <Application>MPC-V</Application>
+    <Application_Version>0.0.0.495</Application_Version>
+    <Platform>Linux</Platform>
+  </Version>
+  <InsertEffectStrip>
+    <Insert1>
+      <Is64Bits>1</Is64Bits>
+      <Name>hs_tube_strip</Name>
+      <DescriptiveName>HS Tube Strip</DescriptiveName>
+      <FormatName>LADSPA</FormatName>
+      <Category>Effect</Category>
+      <ManufacturerName>Henry Skillz</ManufacturerName>
+      <FileOrID>/tmp/hs-ladspa-test/hs-pro-fx-ladspa.so</FileOrID>
+      <UID>4739853</UID>
+      <IsInstrument>0</IsInstrument>
+      <NumInput>2</NumInput>
+      <NumOutput>2</NumOutput>
+      <ProgramNumber>0</ProgramNumber>
+      <Data>96.yLyr9.....flYlvOtdT39fxqg3CAD.tODW4w7...........qppJ+rppJ7C...sOojv99bBhl7C...wOqppp9....7C.........................+....5C...vO</Data>
+    </Insert1>
+    <InsertEnable1>True</InsertEnable1>
+  </InsertEffectStrip>
+</MPCVObject>

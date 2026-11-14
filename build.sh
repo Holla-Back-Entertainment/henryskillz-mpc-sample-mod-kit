@@ -15,7 +15,7 @@ docker run --rm -v "$PWD:/w" -w /w/src "${IMAGE:-gcc:12}" sh -ec '
   gcc -O2 -Wall -Wextra -Werror -shared -fPIC hs_seq.c -o /w/addon/hs/hs-seq.so -ldl -lm -pthread
   cd ../chains
   gcc -O2 -Wall -Wextra -Werror -fPIC -shared hs_chains.c chains_toast.c -o /w/addon/hs/hs-chains.so -ldl -lpthread
-  cp VOX.xfx DRUMS.xfx BASS.xfx /w/addon/hs/
+  cp VOX.xfx DRUMS.xfx BASS.xfx KICK.xfx BASSLINE.xfx /w/addon/hs/
   cd ../chrome
   gcc -O2 -Wall -Wextra -Werror -shared -fPIC hs_chrome.c -o /w/addon/hs/hs-chrome.so -ldl
   cd ../mixer

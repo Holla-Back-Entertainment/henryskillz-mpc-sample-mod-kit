@@ -7,7 +7,9 @@ SAMPQOL = {"fc9285ac4a3145e04c1b162e3f5058a9c447a9752fec1e06510156ff20575dbd": "
 
 PAYLOAD = (
     "BASS.xfx",
+    "BASSLINE.xfx",
     "DRUMS.xfx",
+    "KICK.xfx",
     "VOX.xfx",
     "hs-addons.sh",
     "hs-browser.so",
