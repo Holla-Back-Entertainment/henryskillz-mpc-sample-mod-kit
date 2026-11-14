@@ -621,7 +621,7 @@ static void eq2_panel(uint32_t *p)
    and lamps for the Detector, Audio and British buttons. The GR
    row reads the open instance (dist_gr_db, set in effect_knobs); -1 means it could not be read. */
 static float dist_gr_db = -1;
-static int dist_ratio = 4, dist_det, dist_audio, dist_brit, dist_key, dist_send;
+static int dist_ratio = 4, dist_det, dist_audio, dist_brit, dist_key, dist_send, dist_auto;
 
 static int dist_section(const char **name)
 {
@@ -644,6 +644,7 @@ static void dist_note(int knob, int value)
     if (section == 2 && knob == 1) dist_brit = value >= 37;
     if (section == 3 && knob == 0) dist_key = key_step(value);
     if (section == 3 && knob == 1) dist_send = key_step(value);
+    if (section == 3 && knob == 2) dist_auto = value >= 37;
 }
 
 static const char *dist_marking(int knob, int value)
@@ -660,6 +661,7 @@ static const char *dist_marking(int knob, int value)
     if (section == 2 && knob == 0) return audio[(value*5+36)/73];
     if (section == 2 && knob == 1) return value >= 37 ? "ON" : "OFF";
     if (section == 2) return NULL;
+    if (section == 3 && knob == 2) return value >= 37 ? "ON" : "OFF";
     if (section == 3) return key_marking(knob, value);
     if (section == 1 && knob == 0) {
         float ms = .05f*powf(600, k*.1f);
@@ -713,6 +715,7 @@ static void dist_panel(uint32_t *p, const int *values)
     pump_led(p, 34, 72, 0x46c84a, dist_det & 1);   text(p, 39, 70, "HP", 2, ink);
     pump_led(p, 54, 72, 0xe2d23a, dist_det & 2);   text(p, 59, 70, "BAND", 4, ink);
     key_lamps(p, 182, 38, dist_key, dist_send, ink, 0x4a4a4c);
+    text(p, 240, 38, "AUTO", 4, dist_auto ? 0x46c84a : 0x4a4a4c);
     int a = dist_audio;
     text(p, 262, 50, "AUDIO", 5, dim);
     pump_led(p, 266, 59, 0x46c84a, a == 1 || a >= 4); text(p, 271, 57, "HP", 2, ink);

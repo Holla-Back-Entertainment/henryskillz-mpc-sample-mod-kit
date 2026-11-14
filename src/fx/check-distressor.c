@@ -1,4 +1,4 @@
-/* HS Crush behaviour check: curves, timing, audio HP, distortion, mix/bypass, meter.
+/* HS Crush behaviour check: curves, timing, audio HP, distortion, mix/bypass, meter, Auto Gain.
  * cc -O2 -I. check-distressor.c hs_distressor.c hs_env.c -lm -o /tmp/check-distressor && /tmp/check-distressor */
 #include <assert.h>
 #include <math.h>
@@ -131,6 +131,40 @@ int main(void)
     float own = gain_db(N/2, N);
     printf("keyed from D: %.2f dB vs own key %.2f dB\n", keyed, own);
     assert(keyed < own - 8);
+    /* Auto Gain: drum-like hits (decaying noise, 4 a second) come out at the input's level, whatever the
+       Input, Ratio and Audio settings; Output then trims around that; silence between hits holds the match. */
+    {
+        struct { float input, ratio, audio, output, want; } set[] = {
+            {5, 4, 0, 7.5f, 0}, {10, 7, 3, 7.5f, 0}, {0, 0, 0, 7.5f, 0}, {8, 5, 2, 7.5f, 0}, {5, 4, 0, 10, 10}};
+        unsigned rnd = 1;
+        for (int i = 0; i < N; ++i) {
+            rnd = rnd*1664525u + 1013904223u;
+            float n = ((rnd >> 8)*(1.f/8388608) - 1)*.5f*expf(-(i % (RATE/4))*(30.f/RATE));
+            in[0][i] = in[1][i] = n;
+        }
+        for (unsigned k = 0; k < sizeof set/sizeof *set; ++k) {
+            reset(); ctl[DS_AUTO] = 1; ctl[DS_INPUT] = set[k].input; ctl[DS_RATIO] = set[k].ratio;
+            ctl[DS_AUDIO] = set[k].audio; ctl[DS_OUTPUT] = set[k].output; go();
+            float g = gain_db(N/2, N);
+            reset(); ctl[DS_INPUT] = set[k].input; ctl[DS_RATIO] = set[k].ratio; ctl[DS_AUDIO] = set[k].audio;
+            ctl[DS_OUTPUT] = set[k].output; go();
+            printf("auto gain, input %g ratio %g audio %g output %g: %+.2f dB (fixed make-up %+.2f dB)\n",
+                   set[k].input, set[k].ratio, set[k].audio, set[k].output, g, gain_db(N/2, N));
+            assert(fabsf(g - set[k].want) < .5f);
+        }
+        /* a gap of silence, then the hits again: the match holds. The compressor's own recovery makes the
+           first hit back louder either way, so it's compared with Auto Gain off on the same hit. */
+        for (int i = 2*RATE; i < 4*RATE; ++i) in[0][i] = in[1][i] = 0;
+        float on[2], off[2];
+        for (int a = 1; a >= 0; --a) {
+            reset(); ctl[DS_AUTO] = a; ctl[DS_INPUT] = 10; ctl[DS_RATIO] = 7; go();
+            float *r = a ? on : off;
+            r[0] = gain_db(4*RATE, 4*RATE + RATE/4); r[1] = gain_db(5*RATE, N);
+        }
+        printf("auto gain after 2 s of silence: first hit %+.2f dB vs off, settled %+.2f dB vs off\n",
+               on[0] - off[0], on[1] - off[1]);
+        assert(fabsf((on[0] - off[0]) - (on[1] - off[1])) < .5f);
+    }
     puts("check-distressor: OK");
     return 0;
 }

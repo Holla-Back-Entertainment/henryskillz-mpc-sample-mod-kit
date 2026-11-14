@@ -25,6 +25,11 @@ jobs:
         run: |
           gcc -O2 -Wall -Wextra -Werror check_import.c import_warp.c -o /tmp/check-import -lm -pthread
           /tmp/check-import
+      - name: HS Crush curves, timing and Auto Gain
+        working-directory: src/fx
+        run: |
+          gcc -O2 -Wall -Wextra -Werror -I. check-distressor.c hs_distressor.c hs_env.c -lm -o /tmp/check-crush
+          /tmp/check-crush
       - name: Build and check LADSPA registry
         working-directory: src/fx
         run: |
