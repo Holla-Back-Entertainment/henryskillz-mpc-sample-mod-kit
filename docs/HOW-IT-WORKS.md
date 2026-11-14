@@ -9,7 +9,7 @@
 3. **`qol-run.sh`** restarts the MPC app with `LD_PRELOAD=mpcqol.so`. It falls back to stock after two quick crashes.
 4. **These add-ons** are more `LD_PRELOAD` libraries. Most go ahead of `mpcqol.so` (`HS_PRELOAD`). Two go after it (`HS_POSTLOAD`): `hs-chains.so`, so its "Chain loaded" box draws on top of SampQOL's screens, then `hs-stems-ui.so`, so its screen copy sees every other drawing.
    `hs-fx.so` also hooks the page-flip ioctl, below every `drmModePageFlip` hook. While an HS effect editor is open, it keeps the editor on the screen while the app redraws underneath. It flips a copy of what is already showing, held in two buffers of its own, and copies SampQOL's later paints across. Without this, the stock waveform flickered through during playback (`src/fx/hs_fx_flip.c`).
-   Most of them hook symbols that SampQOL exports (`overlay_update`, `mixview_frame`, `fxmap_get_row`, `eq_spectrum_draw`), which is why they're tied to one SampQOL version. The effect picker, `hs-chrome.so` and `hs-mixer.so` check the symbol's offset in `mpcqol.so` and step aside on any other build.
+   Most of them hook symbols that SampQOL exports (`overlay_update`, `mixview_frame`, `fxmap_get_row`, `eq_spectrum_draw`, `eq_draw`), which is why they're tied to one SampQOL version. The effect picker, `hs-chrome.so`, `hs-mixer.so` and the `eq_draw` grid in `hs-eq.so` check the symbol's offset in `mpcqol.so` and step aside on any other build.
 
 ## What the installer changes
 
