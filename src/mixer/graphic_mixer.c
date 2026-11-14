@@ -8,6 +8,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 
 #define QOL_MIXVIEW_FRAME 0xdf230u   /* mixview_frame in mpcqol.so of SampQOL 0.2.0 */
 enum { W = 320, H = 256, STRIP_BYTES = 116 };
@@ -110,11 +111,21 @@ static void draw_console(uintptr_t base,int view)
     if(!overlay_update_fn)overlay_update_fn=(overlay_fn)dlsym(RTLD_NEXT,"overlay_update");if(overlay_update_fn)overlay_update_fn(33,p,1);
 }
 
+static long mixer_drawn_ms;   /* atomic: when the console last drew */
+static long now_ms(void) { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return t.tv_sec * 1000L + t.tv_nsec / 1000000; }
+
+/* hs-fx.so (hs_fx_flip.c) holds the glass still while this is true, so playback redraws of the stock
+   page underneath never flash through the console (3 of 25 grabs, 14 Nov 2026). The console redraws
+   on every mixer refresh, so a quiet 150 ms means the page is gone.
+   ponytail: recency, not a page id; leaving the mixer can hold the old frame up to 150 ms. */
+__attribute__((visibility("default")))
+int hs_mixer_up(void) { return now_ms() - __atomic_load_n(&mixer_drawn_ms, __ATOMIC_RELAXED) < 150; }
+
 __attribute__((visibility("default")))
 void mixview_frame(int view,int mode,const char *label,int arg3,int arg4,void *arg5,void *arg6,void *arg7)
 {
     static int matched = -1;    /* -1 not checked yet, 0 other build, 1 SampQOL 0.2.0 */
     if(!original_frame)original_frame=(frame_fn)dlsym(RTLD_NEXT,"mixview_frame");if(!original_frame)return;
     if(matched<0){Dl_info info;matched=dladdr((void *)original_frame,&info)&&(uintptr_t)original_frame-(uintptr_t)info.dli_fbase==QOL_MIXVIEW_FRAME;}
-    original_frame(view,mode,label,arg3,arg4,arg5,arg6,arg7);if(matched)draw_console((uintptr_t)original_frame-QOL_MIXVIEW_FRAME,view);
+    original_frame(view,mode,label,arg3,arg4,arg5,arg6,arg7);if(matched){draw_console((uintptr_t)original_frame-QOL_MIXVIEW_FRAME,view);__atomic_store_n(&mixer_drawn_ms,now_ms(),__ATOMIC_RELAXED);}
 }

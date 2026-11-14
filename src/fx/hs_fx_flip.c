@@ -1,4 +1,5 @@
-// hs_fx_flip.c: keeps an HS effect editor on the glass while the app redraws underneath it.
+// hs_fx_flip.c: keeps an HS effect editor (and the HS mixer console) on the glass while the app
+// redraws underneath it.
 //
 // Every pixel of an HS editor is SampQOL overlay (header 26, body 27, knobs 28), and SampQOL paints
 // those only onto the app buffer already on the glass, after the fact. So during playback each new
@@ -113,7 +114,9 @@ static int page_flip(int fd, struct flipcmd *f)
 {
     uint32_t app = f->fb_id;
     struct map *o = NULL, *before = NULL;
-    int up = hs_fx_editor_up();         /* calls into SampQOL: never under our lock */
+    static int (*mixer_up)(void);       /* hs-mixer.so's graphic console, if loaded */
+    if (!mixer_up) mixer_up = (int (*)(void))dlsym(RTLD_DEFAULT, "hs_mixer_up");
+    int up = hs_fx_editor_up() || (mixer_up && mixer_up());   /* calls into SampQOL: never under our lock */
     pthread_mutex_lock(&lock);
     before = shown;
     uint32_t was = glass_id;
