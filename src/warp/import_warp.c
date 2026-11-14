@@ -37,11 +37,6 @@
 #define PAD_WARP 0xb0
 #define SETTINGS "/data/Settings/Akai/MPC Sample/MPC Sample.settings"
 
-static const unsigned char build_id[] = {
-    0x1d, 0xac, 0x7f, 0x48, 0x1a, 0x0f, 0xe8, 0xd1, 0x28, 0xe4,
-    0x35, 0xac, 0xe8, 0x8d, 0x7e, 0x6a, 0xec, 0xe0, 0xc9, 0xc9
-};
-
 static uintptr_t base;
 static float (*sample_tempo)(const void *);
 
@@ -155,6 +150,11 @@ __asm__(".text\n.type import_warp_hook,%function\nimport_warp_hook:\n"
         "str x0, [sp, #24]\nldr x0, [sp, #16]\nbl import_warp_after_load\nldr x0, [sp, #24]\n"
         "ldp x29, x30, [sp], #32\nret\n");
 void import_warp_hook(void);
+
+static const unsigned char build_id[] = {
+    0x1d, 0xac, 0x7f, 0x48, 0x1a, 0x0f, 0xe8, 0xd1, 0x28, 0xe4,
+    0x35, 0xac, 0xe8, 0x8d, 0x7e, 0x6a, 0xec, 0xe0, 0xc9, 0xc9
+};
 
 static int find_base(struct dl_phdr_info *i, size_t s, void *d)
 {
