@@ -150,7 +150,8 @@ static void response_band(struct band *b,const float *v,unsigned long rate)
             coefficients(&b->s[0],1+a*A+w2,2*(w2-1),1-a*A+w2,
                          1+a/A+w2,2*(w2-1),1-a/A+w2);
         } else {
-            double a=sqrt(A)*w/q;
+            /* Shelf Q above ~1 is a resonant bump (+15.9 dB extra at Q 8.3); cap it. */
+            double a=sqrt(A)*w/fmin(q,1.0);
             if (type==EQ_LOW_SHELF) {
                 double g=A*w2, d=A+w2;
                 coefficients(&b->s[0],A*(1+a+g),2*A*(g-1),A*(1-a+g),
@@ -350,7 +351,8 @@ static void run(LADSPA_Handle handle,unsigned long frames)
         if (s->mid_side) {
             double a=l; l=a+r; r=a-r;
         }
-        ol[i]=(float)(s->out_gain*l); orr[i]=(float)(s->out_gain*r);
+        l*=s->out_gain; r*=s->out_gain;  /* safety: never emit more than +24 dBFS */
+        ol[i]=(float)fmax(-16.0,fmin(16.0,l)); orr[i]=(float)fmax(-16.0,fmin(16.0,r));
     }
     for (int j=0;j<s->active_count;++j) {
         struct band *b=s->active[j];
