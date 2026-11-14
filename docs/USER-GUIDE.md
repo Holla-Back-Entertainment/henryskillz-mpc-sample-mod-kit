@@ -122,6 +122,8 @@ If it doesn't work: you need to be on the effect's own page, where **B3** reads 
 
 Soft saturation for drums and bass. It adds harmonics, then filters them, so you can choose how bright the added grit is.
 
+![HS Saturator page with Drive, Tone and Mix knobs at their starting values](../assets/screens/hs-saturator.png)
+
 | Knob | Control | Range | What it does |
 |---|---|---|---|
 | K1 | Drive | 0 to 24 dB | How hard the signal hits the saturator. At 0 dB the effect does nothing. |
