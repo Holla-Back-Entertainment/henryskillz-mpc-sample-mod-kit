@@ -96,4 +96,4 @@ Open `check.png` to see exactly what the MPC will show.
 
 ## Share what you build
 
-Open a [discussion or issue](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues) and show it off. Credit whoever's work yours builds on, the way this kit credits SampQOL and orrpunk-art.
+Open a [discussion or issue](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues) and show it off. Credit whoever's work yours builds on, the way this kit credits SampQOL and orrpunk-art.

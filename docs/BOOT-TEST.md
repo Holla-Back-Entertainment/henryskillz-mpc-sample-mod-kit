@@ -8,7 +8,7 @@ Use a **spare exFAT SD card**. Do not use your main card for this first test.
 - [ ] Back up the spare SD card to the computer.
 - [ ] Confirm the MPC Sample is running firmware **1.3.0 / 1.3.0.12**.
 - [ ] Download **SampQOL OS 0.2.0** from [Snare Bes's official release page](https://github.com/snarebes/SampQOL-OS/releases).
-- [ ] Open the [HenrySkillz online installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/), click **Choose zip**, give it the official SampQOL ZIP and download `autorun-hs.zip`. The file chooser is verified in Chrome and Safari; drag-and-drop is not yet certified.
+- [ ] Open the [HenrySkillz online installer](https://holla-back-entertainment.github.io/henryskillz-mpc-sample-mod-kit/install/), click **Choose zip**, give it the official SampQOL ZIP and download `autorun-hs.zip`. The file chooser is verified in Chrome and Safari; drag-and-drop is not yet certified.
 - [ ] Unzip `autorun-hs.zip` and copy its `autorun` folder to the top level of the spare SD card.
 - [ ] Safely eject the SD card from the computer.
 
@@ -42,7 +42,7 @@ Open the insert effects list and test each effect with audio playing. Load one e
 - [ ] The first slots show named starter presets (Heat: WARM TAPE, LOFI FILTER, FUZZ BASS, AUTO WAH). Select one and press **SHIFT+B3**: it says LOADED and the knobs move to it. On Para EQ, loading KICK draws a curve with four bands.
 - [ ] A fresh **HS Heat** loads on **SATURATION**. A fresh **HS Bus Compressor** does not load on ratio X.
 - [ ] With audio playing and no knob touched, the **Para EQ** shows a moving spectrum behind the curve, and the **Crush** and **Tube Strip** GR lamps move.
-- [ ] After choosing HS Crush, the insert slot list reads **hs_crush**. A project saved with Crush by an earlier kit version still opens with it loaded.
+- [ ] After choosing HS Crush, the insert slot list reads **HS Crush**. A project saved with Crush by an earlier kit version still opens with it loaded.
 - [ ] In PRESETS, **K1** and **DATA** select all eight slots. Hold **B3** to save a slot, change two controls, then press **SHIFT+B3**: both saved values return. Power-cycle and confirm the slot is still present.
 - [ ] Briefly remove or rename `MPC-Sample/Presets` on the card, then save a preset: the folder is recreated and the completed slot file appears without a leftover `.new` file.
 - [ ] HS Channel Strip has a **DESS** tab: with Range up, a bright vocal loses its "s" sounds; Mode **LISTEN** plays only what is being removed; Range 0 changes nothing.

@@ -410,7 +410,7 @@ static const char *const names[] = {
 #undef BAND_LIST
 _Static_assert(sizeof names/sizeof *names==PORTS && sizeof types/sizeof *types==PORTS, "EQ2 port count");
 LADSPA_Descriptor hs_eq2_descriptor = {
-    .UniqueID=HS_EQ2_ID,.Label="hs_para_eq",.Name="HS Para EQ",.Maker="Henry Skillz",.Copyright="Prototype",
+    .UniqueID=HS_EQ2_ID,.Label="HS Para EQ",.Name="HS Para EQ",.Maker="Henry Skillz",.Copyright="Prototype",
     .Properties=LADSPA_PROPERTY_HARD_RT_CAPABLE,.PortCount=PORTS,.PortDescriptors=types,
     .PortNames=names,.PortRangeHints=hints,.instantiate=instantiate,.connect_port=connect,
     .activate=activate,.run=run,.cleanup=cleanup

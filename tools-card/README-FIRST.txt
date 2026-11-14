@@ -11,6 +11,6 @@ Running SampQOL OS? Use the main installer instead, it includes all of these.
 If the unit hangs, hold power to switch off, remove the card and boot stock.
 
 How to use each tool:
-https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/blob/main/docs/USER-GUIDE.md
+https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/blob/main/docs/USER-GUIDE.md
 
 Unofficial community software. Not affiliated with Akai Professional or inMusic Brands.

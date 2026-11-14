@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ladspa.h"
+#include "../fx/hs_fx_key.h"
 
 typedef struct { const char *file, *name, *label, *args[32]; } hs_factory_preset;
 
@@ -97,7 +98,7 @@ static inline int hs_is_ctl_in(const LADSPA_Descriptor *d, unsigned long p) {
 static inline float hs_snap_default(const LADSPA_Descriptor *d, unsigned long p, float v) {
     LADSPA_PortRangeHintDescriptor h = d->PortRangeHints[p].HintDescriptor;
     if (!LADSPA_IS_HINT_INTEGER(h) && !LADSPA_IS_HINT_TOGGLED(h)) return v;
-    if (!strcmp(d->Label, "hs_heat") && !strcmp(d->PortNames[p], "Circuit")) return 1;
+    if (!strcmp(hs_fx_key(d->Label), "hs_heat") && !strcmp(d->PortNames[p], "Circuit")) return 1;
     return (float)(long)(v + (v < 0 ? -.5f : .5f));
 }
 

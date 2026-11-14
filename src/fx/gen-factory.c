@@ -36,7 +36,7 @@ int main(void)
     for (int i = 0; i < HS_FACTORY_PRESET_COUNT; ++i) {
         const hs_factory_preset *fp = &hs_factory_presets[i];
         const LADSPA_Descriptor *d = NULL;
-        for (unsigned long k = 0; (d = ladspa_descriptor(k)) && strcmp(d->Label, fp->label); ++k) ;
+        for (unsigned long k = 0; (d = ladspa_descriptor(k)) && strcmp(hs_fx_key(d->Label), fp->label); ++k) ;
         int slot = 0;
         for (int j = 0; j < i; ++j) slot += !strcmp(hs_factory_presets[j].label, fp->label);
         char err[160], name[15];

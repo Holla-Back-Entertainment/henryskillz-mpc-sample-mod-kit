@@ -22,12 +22,13 @@ static char preset_names[8][15];            /* 14 chars fit a slot box */
 static unsigned b3_token, b3_gen;
 
 #include "factory.inc"
+#include "hs_fx_key.h"
 
 /* The starter preset built in for this effect's slot (0-7), or null. A saved file always wins. */
 static const Factory *factory_find(const char *label, unsigned slot)
 {
     for (const Factory &f : factory)
-        if (f.slot == static_cast<int>(slot) && !strcmp(f.label, label)) return &f;
+        if (f.slot == static_cast<int>(slot) && !strcmp(f.label, hs_fx_key(label))) return &f;
     return nullptr;
 }
 
@@ -136,7 +137,7 @@ static bool preset_open()
 static void preset_dir(char *out, size_t size, const char *label)
 {
     const char *root = getenv("HS_PRESETS_DIR");
-    snprintf(out, size, "%s/%s", root && *root ? root : "/tmp/hs-presets", label);
+    snprintf(out, size, "%s/%s", root && *root ? root : "/tmp/hs-presets", hs_fx_key(label));
 }
 
 static void say(const char *fmt, unsigned n)

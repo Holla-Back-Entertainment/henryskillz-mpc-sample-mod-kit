@@ -275,7 +275,7 @@ extern "C" int padmix_note(int note, int value, int shift)
 extern "C" int fxmap_get_row(void *context, int id, void *output)
 {
     unsigned uid = insert_open();
-    if (!output || (uid != flavor_uid && uid != HS_CHANNEL_ID && uid != HS_XSAT_ID && uid != HS_BUS_ID && uid != HS_EQ2_ID && uid != HS_PUMP_ID && uid != HS_HEAT_ID && uid != HS_DISTRESSOR_ID && uid != HS_TUBE_STRIP_ID) || id != -1)
+    if (!output || (uid != flavor_uid && uid != HS_CHANNEL_ID && uid != HS_XSAT_ID && uid != HS_BUS_ID && uid != HS_EQ2_ID && uid != HS_PUMP_ID && uid != HS_HEAT_ID && uid != HS_BASS_FOCUS_ID && uid != HS_DISTRESSOR_ID && uid != HS_TUBE_STRIP_ID) || id != -1)
         return next_map ? next_map(context, id, output) : 0;
     struct MapRow {
         char name[24];
@@ -306,6 +306,13 @@ extern "C" int fxmap_get_row(void *context, int id, void *output)
         return 1;
     }
     memset(row, 0, sizeof *row);
+    if (uid == HS_BASS_FOCUS_ID) {   /* one page, no presets: only here so the title is the name, not the LADSPA label */
+        static constexpr char bass_labels[6][16] = {"Crossover", "Bass", "Mono Bass", "", "", ""};
+        memcpy(row->name, "HS Bass Focus", sizeof "HS Bass Focus");
+        for (int i = 0; i < 6; ++i) row->parameters[i] = i < 3 ? i : -1;
+        memcpy(row->labels, bass_labels, sizeof row->labels);
+        return 1;
+    }
     if (uid == flavor_uid) memcpy(row->name, flavor_name, sizeof flavor_name);
     else if (uid == HS_XSAT_ID) memcpy(row->name, "HS Drive Sat", sizeof "HS Drive Sat");
     else if (uid == HS_BUS_ID) memcpy(row->name, "HS Bus Compressor", sizeof "HS Bus Compressor");

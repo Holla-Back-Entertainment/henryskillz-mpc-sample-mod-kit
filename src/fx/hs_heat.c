@@ -314,7 +314,7 @@ _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *t
                sizeof defaults / sizeof *defaults == HE_COUNT, "Heat port count");
 
 LADSPA_Descriptor hs_heat_descriptor = {
-    .UniqueID = HS_HEAT_ID, .Label = "hs_heat", .Name = "HS Heat",
+    .UniqueID = HS_HEAT_ID, .Label = "HS Heat", .Name = "HS Heat",
     .Maker = "SampQOL Lab", .Copyright = "Prototype",
     .Properties = LADSPA_PROPERTY_HARD_RT_CAPABLE,
     .PortCount = PORTS, .PortDescriptors = types, .PortNames = names, .PortRangeHints = hints,

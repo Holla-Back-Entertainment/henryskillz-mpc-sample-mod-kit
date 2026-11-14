@@ -211,7 +211,7 @@ _Static_assert(sizeof names / sizeof *names == PORTS &&
                sizeof defaults / sizeof *defaults == BUS_COUNT, "Bus comp port count");
 
 LADSPA_Descriptor hs_bus_descriptor = {
-    .UniqueID = HS_BUS_ID, .Label = "hs_bus_comp", .Name = "HS Bus Compressor",
+    .UniqueID = HS_BUS_ID, .Label = "HS Bus Compressor", .Name = "HS Bus Compressor",
     .Maker = "Henry Skillz", .Copyright = "Prototype",
     .Properties = LADSPA_PROPERTY_HARD_RT_CAPABLE,
     .PortCount = PORTS, .PortDescriptors = types, .PortNames = names, .PortRangeHints = hints,

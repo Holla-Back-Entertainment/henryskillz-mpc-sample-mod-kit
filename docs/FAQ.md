@@ -16,7 +16,7 @@ SampQOL OS is Snare Bes's work and his license says it's only shared from his of
 You download it from him, and the installer adds the HenrySkillz files to your copy on your computer.
 
 ### Who do I ask for help?
-**For anything about the HS effects or this installer, ask here:** [open an issue](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
+**For anything about the HS effects or this installer, ask here:** [open an issue](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues).
 Please **don't** take HenrySkillz problems to the SampQOL author or to Akai. To check whether a problem is ours or SampQOL's, try plain SampQOL (from its official zip) without these add-ons.
 
 ### The installer says "This is not SampQOL 0.2.0"
@@ -41,7 +41,7 @@ If it still happens, run the installer again from a fresh SampQOL zip.
 
 ### The screen goes black or the MPC freezes
 Hold the power button until it switches off, take the card out and switch on. It's stock again.
-Then [open an issue](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues) with the details from [RECOVERY.md](RECOVERY.md#report-a-problem).
+Then [open an issue](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues) with the details from [RECOVERY.md](RECOVERY.md#report-a-problem).
 
 ### The app restarted twice and came back as stock
 That's SampQOL's safety net: after two crashes in a row it starts the stock app. Remove the card and report it.

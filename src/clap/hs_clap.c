@@ -200,7 +200,7 @@ static bool pl_from_location(const clap_plugin_t *p, uint32_t kind, const char *
     const clap_host_preset_load_t *hl = host_ext(s, CLAP_EXT_PRESET_LOAD);
     for (int i = 0; kind == CLAP_PRESET_DISCOVERY_LOCATION_PLUGIN && key && i < HS_FACTORY_PRESET_COUNT; ++i) {
         const hs_factory_preset *fp = &hs_factory_presets[i];
-        if (strcmp(fp->name, key) || strcmp(fp->label, s->d->Label)) continue;
+        if (strcmp(fp->name, key) || strcmp(fp->label, hs_fx_key(s->d->Label))) continue;
         float *v = malloc(s->d->PortCount * sizeof *v); char err[200];
         if (!v) return false;
         for (unsigned long q = 0; q < s->d->PortCount; ++q)
@@ -355,7 +355,7 @@ static const clap_plugin_factory_t factory = {f_count, f_desc, f_create};
 static const clap_preset_discovery_provider_descriptor_t prov_desc = {
     CLAP_VERSION_INIT, "com.henryskillz.hs_effects.factory_presets", "HS Effects factory presets", "Henry Skillz"};
 static const char *clap_id_for(const char *label) {
-    for (uint32_t i = 0; i < fx_count; ++i) if (!strcmp(ladspa_descriptor(i)->Label, label)) return ids[i];
+    for (uint32_t i = 0; i < fx_count; ++i) if (!strcmp(hs_fx_key(ladspa_descriptor(i)->Label), label)) return ids[i];
     return NULL;
 }
 static bool pv_init(const clap_preset_discovery_provider_t *pv) {

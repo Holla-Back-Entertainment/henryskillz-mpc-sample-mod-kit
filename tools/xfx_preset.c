@@ -51,7 +51,7 @@ static float from_norm(const LADSPA_PortRangeHint *r, float x) {
 
 static const LADSPA_Descriptor *find(const char *label) {
     const LADSPA_Descriptor *d;
-    for (unsigned long i = 0; (d = ladspa_descriptor(i)); ++i) if (!strcmp(d->Label, label)) return d;
+    for (unsigned long i = 0; (d = ladspa_descriptor(i)); ++i) if (!strcmp(hs_fx_key(d->Label), label)) return d;
     fprintf(stderr, "no effect with label %s\n", label);
     exit(2);
 }
@@ -104,7 +104,7 @@ static int write_xfx(FILE *f, const LADSPA_Descriptor *d, const char *const *arg
            "      <IsInstrument>0</IsInstrument>\n      <NumInput>2</NumInput>\n      <NumOutput>2</NumOutput>\n"
            "      <ProgramNumber>0</ProgramNumber>\n      <Data>%s</Data>\n    </Insert1>\n"
            "    <InsertEnable1>True</InsertEnable1>\n  </InsertEffectStrip>\n</MPCVObject>\n",
-           d->Label, d->Name, d->UniqueID, data);
+           hs_fx_key(d->Label), d->Name, d->UniqueID, data);   /* the id older chains use, not the display Label */
     return 0;
 }
 

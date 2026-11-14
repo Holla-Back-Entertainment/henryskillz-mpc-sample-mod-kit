@@ -5,14 +5,14 @@ No coding, no terminal, no apps to install, no AI tools. Free.
 
 Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top of [SampQOL OS](https://github.com/snarebes/SampQOL-OS) by **Snare Bes**.
 
-### [Open the installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) · [How to use it](docs/USER-GUIDE.md) · [Compatibility](docs/COMPATIBILITY.md) · [Step-by-step guide](docs/INSTALL-GUIDE.md) · [Update just the effects](docs/UPDATE-EFFECTS.md) · [FAQ](docs/FAQ.md) · [Undo it](docs/RECOVERY.md)
+### [Open the installer](https://holla-back-entertainment.github.io/henryskillz-mpc-sample-mod-kit/install/) · [How to use it](docs/USER-GUIDE.md) · [Compatibility](docs/COMPATIBILITY.md) · [Step-by-step guide](docs/INSTALL-GUIDE.md) · [Update just the effects](docs/UPDATE-EFFECTS.md) · [FAQ](docs/FAQ.md) · [Undo it](docs/RECOVERY.md)
 
 <img src="assets/henryskillz-splash-preview.png" width="320" alt="HenrySkillz start screen on the MPC Sample: DRUMS SAMPLE BASS">
 
 > **Unofficial.** Not made, endorsed or supported by Akai Professional, inMusic or the SampQOL author.
 > Everything runs from the SD card. Switch off and take the card out, and the MPC is stock again.
 
-> **Tested:** the installer on a pristine official SampQOL 0.2.0 package (Chrome and Safari), including a virtual-MPC boot of the generated output. The v0.5 build passed a hardware boot test on Henry's own MPC Sample. Changes since then—including Stems onto pads, chain boxes, screen styling, the graphic mixer and effect presets—remain emulator-tested until the current [hardware checklist](docs/BOOT-TEST.md) passes. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues).
+> **Tested:** the installer on a pristine official SampQOL 0.2.0 package (Chrome and Safari), including a virtual-MPC boot of the generated output. The v0.5 build passed a hardware boot test on Henry's own MPC Sample. Changes since then—including Stems onto pads, chain boxes, screen styling, the graphic mixer and effect presets—remain emulator-tested until the current [hardware checklist](docs/BOOT-TEST.md) passes. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues).
 
 ---
 
@@ -72,11 +72,15 @@ Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid 
 
 | Preset slots | Channel Strip de-esser |
 |---|---|
-| ![Eight per-effect preset slots with slot 5 selected and the load and save controls shown](assets/screens/hs-presets.png) | ![HS Channel Strip DESS page showing Frequency, Threshold and Range, plus the shifted Mode row](assets/screens/hs-channel-deesser.png) |
+| ![Eight per-effect preset slots with slot 5 selected and the load and save controls shown](assets/screens/hs-presets.png) | ![HS Channel Strip DESS page showing Frequency, Threshold and Range, with SHIFT for the Mode row](assets/screens/hs-channel-deesser.png) |
 
 These are real 320×240 captures from the MPC Sample emulator running the public installer output:
 
 ![Insert effects list showing the HS effects](assets/screens/hs-effects-list.png)
+
+| HS Saturator |
+|---|
+| ![HS Saturator: Drive, Tone and Mix knobs](assets/screens/hs-saturator.png) |
 
 | HS Channel Strip | HS Para EQ | HS Bus Compressor |
 |---|---|---|
@@ -90,7 +94,7 @@ These are real 320×240 captures from the MPC Sample emulator running the public
 |---|---|---|
 | ![HS Crush compress page: gain-reduction LEDs, ratio lamps, input, ratio and output knobs](assets/screens/hs-crush.png) | ![HS Bass Focus: live response curve with the crossover marker, crossover, bass and mono knobs](assets/screens/hs-bass-focus.png) | ![HS Tube Strip tube page: gain-reduction LEDs, signal path, drive, HPF and output knobs](assets/screens/hs-tube-strip.png) |
 
-The HS Pump, HS Heat, HS Crush, HS Bass Focus, HS Tube Strip, presets and de-esser panels above are rendered from the same panel drawing code in `src/fx/`, not captured from the emulator yet. All other pictures in this section are emulator captures.
+Every picture in this section is an emulator capture.
 
 ![MPC EQ page with the dB and frequency grid](assets/screens/eq-page-grid.png)
 
@@ -101,13 +105,13 @@ The HS Pump, HS Heat, HS Crush, HS Bass Focus, HS Tube Strip, presets and de-ess
 - A **Mac or Windows** computer with a web browser
 - **SampQOL OS 0.2.0**, downloaded free from [Snare Bes's official page](https://github.com/snarebes/SampQOL-OS/releases)
 
-**Not on SampQOL?** HS Tools runs on stock firmware 1.3.0: on-device stems, browser key and BPM tags, and the SEQ desk with LUFS meters. Download `henryskillz-mpc-sample-hs-tools.zip` from the [latest release](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/releases/latest), copy its `autorun` folder to an exFAT SD card and power on. The effects and track chains need SampQOL.
+**Not on SampQOL?** HS Tools runs on stock firmware 1.3.0: on-device stems, browser key and BPM tags, and the SEQ desk with LUFS meters. Download `henryskillz-mpc-sample-hs-tools.zip` from the [latest release](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/releases/latest), copy its `autorun` folder to an exFAT SD card and power on. The effects and track chains need SampQOL.
 
 ## Install in 5 steps
 
 1. **Back up** everything on your SD card to your computer.
 2. **Download** `SampQOL-OS-v0.2.0.zip` from the [official SampQOL page](https://github.com/snarebes/SampQOL-OS/releases).
-3. **Open** the [installer](https://hmukhwana.github.io/henryskillz-mpc-sample-mod-kit/install/) and drop the zip on it. Click **Download autorun-hs.zip**.
+3. **Open** the [installer](https://holla-back-entertainment.github.io/henryskillz-mpc-sample-mod-kit/install/) and drop the zip on it. Click **Download autorun-hs.zip**.
 4. **Unzip** it and copy the `autorun` folder to the top level of your SD card.
 5. **Eject** the card, put it in the MPC, switch on and press **B1** to start.
 
@@ -118,7 +122,7 @@ The HS effects are in the insert effects list.
 <img src="assets/installer-page.png" width="480" alt="The installer page">
 
 The installer runs entirely in your browser. Your files are never uploaded.
-Prefer offline? Download `henryskillz-mpc-sample-installer.html` from [Releases](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/releases/latest) and double-click it.
+Prefer offline? Download `henryskillz-mpc-sample-installer.html` from [Releases](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/releases/latest) and double-click it.
 
 ## Undo it
 
@@ -127,7 +131,8 @@ Switch off and take the SD card out. That's it. More options in [RECOVERY.md](do
 ## Help
 
 - **[FAQ](docs/FAQ.md)**: errors, versions, warranty, "it booted stock".
-- **[Report a problem](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/issues)**: include your firmware version, what you did and what you saw.
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)**: what to check when something does not work.
+- **[Report a problem](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues)**: include your firmware version, what you did and what you saw.
 - Questions about the **HS effects or this installer go here**, not to the SampQOL author or Akai.
 
 ## About SampQOL OS, and why you download it yourself
@@ -147,7 +152,7 @@ If the SampQOL author ever asks for anything here to change or come down, it wil
 Want to write your own add-ons or your own MPC Sample OS? **[BUILD-YOUR-OWN.md](docs/BUILD-YOUR-OWN.md)** explains how it works, how to make your own start screen, and Snare Bes's rules in plain English.
 Technical details: [HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md).
 
-There's also a **starter card** on the [Releases](https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit/releases/latest) page: the smallest possible mod. It shows the HenrySkillz screen, then starts the normal MPC.
+There's also a **starter card** on the [Releases](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/releases/latest) page: the smallest possible mod. It shows the HenrySkillz screen, then starts the normal MPC.
 **It has no effects.** It's a boot test and a template for building your own.
 
 ## Henry Skillz
