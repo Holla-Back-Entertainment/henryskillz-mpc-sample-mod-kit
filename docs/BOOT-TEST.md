@@ -44,16 +44,16 @@ Open the insert effects list and test each effect with audio playing. Load one e
 - [ ] HS Channel Strip has a **DESS** tab: with Range up, a bright vocal loses its "s" sounds; Mode **LISTEN** plays only what is being removed; Range 0 changes nothing.
 - [ ] **MOD:** on HS Pump's KEY page, set Send to **A**. On a second track's HS Crush MOD page, set Source **A**, a Target and some Depth: that knob now moves with the first track's level.
 - [ ] HS Drive Sat, HS Bus Compressor and HS Para EQ have no Bypass knob on their pages; the Bypass button above the screen still bypasses them.
-- [ ] The insert list shows exactly nine HS effects: Saturator, Channel Strip, Heat, Tube Strip (Harmonic); Bus Compressor, Pump, Crush (Dynamics); Para EQ, Bass Focus (EQ/Filter). HS Air Exciter, HS Drive Sat and the stock (non-HS) Bus Compressor are not listed.
+- [ ] The insert list shows exactly nine HS effects: Saturator, Channel Strip, Heat, Tube Strip (Harmonic); Bus Compressor, Pump, Crush (Dynamics); Para EQ, Bass Focus (EQ/Filter). HS HF Exciter, HS Drive Sat and the stock (non-HS) Bus Compressor are not listed.
 - [ ] A project saved with the **stock Bus Compressor** on an insert still opens with it loaded.
-- [ ] A project saved with **HS Drive Sat** or **HS Air Exciter** on an insert (from v0.3.0) still opens with that effect loaded and passing audio.
+- [ ] A project saved with **HS Drive Sat** or **HS HF Exciter** on an insert (from v0.3.0) still opens with that effect loaded and passing audio.
 - [ ] The EQ page shows the dB/Hz grid.
 - [ ] On any HS effect with pages (Pump, Heat, Crush, Channel Strip), the box over the **middle screen button** shows **PAGE 1/N**; pressing it shows PAGE 2/N, and **SHIFT** + it goes back. No "2 PAGE" text inside the panel.
 - [ ] The **SEQ** page shows the desk panel (logo, VU meter, tempo box, output LEDs). Tempo, bars, Rec Quant and swing still change with their knobs, and long values (128 Bars, Q 1/32T) are readable.
 - [ ] With a sequence playing, the **VU needle and output LEDs move with the music** without pressing anything.
 - [ ] Leave the SEQ page playing for **3 minutes**: the MPC does not freeze or restart.
 - [ ] On the SEQ page, **B2** shows the meters page with LUFS M, S and I and PEAK, and they move with the music.
-- [ ] Rename an empty track **VOX**: Channel Strip, Bus Compressor and Air Exciter load on its inserts, and a **Chain loaded / VOX** box shows on top of the track page for about 1.5 s, then clears. One **UNDO** takes back the name and the chain.
+- [ ] Rename an empty track **VOX**: Channel Strip, Bus Compressor and HF Exciter load on its inserts, and a **Chain loaded / VOX** box shows on top of the track page for about 1.5 s, then clears. One **UNDO** takes back the name and the chain.
 - [ ] Rename a track that already has inserts **DRUMS**: its inserts stay as they were, and the box says **Chain not loaded / Track already has effects**.
 - [ ] Rename a dialled-in track **TEST#**: the box says **Chain saved / TEST: N effects**, the track is named **TEST** again (no #), `MPC-Sample/Chains/TEST.xfx` appears on the card, and a new track named TEST loads that chain. One **UNDO** goes back to the old name without a crash.
 - [ ] In the browser, preview a WAV and an MP3: the highlighted row shows a key and BPM tag, and scrolling away hides it.

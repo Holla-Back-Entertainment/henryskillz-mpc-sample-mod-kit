@@ -32,7 +32,7 @@ For how to use every feature, button by button, see the [user guide](docs/USER-G
 | **HS Bass Focus** | EQ / Filter | Splits at a crossover (30 to 500 Hz), makes the lows mono and sets their level. The highs pass untouched |
 | **HS Tube Strip** | Harmonic | Tube channel strip: tube drive, a 6 dB/oct high-pass, an opto compressor with a gain-reduction meter and a 4-band EQ, with the EQ before or after the compressor and a side-chain EQ for de-essing |
 
-**Where did HS Air Exciter, HS Drive Sat and the stock Bus Compressor go?** SampQOL's insert menu has 40 rows. To fit nine HS effects, the stock Bus Compressor leaves the Dynamics list (HS Bus Compressor and HS Crush cover it), and HS Air Exciter and HS Drive Sat leave the menu. All three are still installed: a project that already uses them opens with them, as before.
+**Where did HS HF Exciter, HS Drive Sat and the stock Bus Compressor go?** SampQOL's insert menu has 40 rows. To fit nine HS effects, the stock Bus Compressor leaves the Dynamics list (HS Bus Compressor and HS Crush cover it), and HS HF Exciter and HS Drive Sat leave the menu. All three are still installed: a project that already uses them opens with them, as before.
 
 Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, and the HenrySkillz start screen (after SampQOL's own).
 
@@ -46,7 +46,7 @@ Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid 
 
 **One Bypass.** Every HS effect uses the Bypass button above the screen. The old Bypass knobs on Drive Sat, Bus Compressor and Para EQ are gone (projects that used them still open).
 
-**Track chains.** Rename a track **VOX**, **DRUMS** or **BASS** (or any name that starts with one, like "Vox Lead") and, if the track has no inserts yet, its chain loads: Channel Strip, Bus Compressor and Air Exciter on VOX, Saturator and Bus Compressor on DRUMS, Drive Sat and Para EQ on BASS. One UNDO takes back the rename and the chain together. To save your own, dial in a track's inserts and rename it with a **#** on the end, like **KEYS#**: the chain is saved to `MPC-Sample/Chains/KEYS.xfx` on the card, the track is named KEYS again, and any track you name KEYS gets it. A short box on the screen says what happened: **Chain loaded**, **Chain saved**, or why not (the track already has effects, no effects to save).
+**Track chains.** Rename a track **VOX**, **DRUMS** or **BASS** (or any name that starts with one, like "Vox Lead") and, if the track has no inserts yet, its chain loads: Channel Strip, Bus Compressor and HF Exciter on VOX, Saturator and Bus Compressor on DRUMS, Drive Sat and Para EQ on BASS. One UNDO takes back the rename and the chain together. To save your own, dial in a track's inserts and rename it with a **#** on the end, like **KEYS#**: the chain is saved to `MPC-Sample/Chains/KEYS.xfx` on the card, the track is named KEYS again, and any track you name KEYS gets it. A short box on the screen says what happened: **Chain loaded**, **Chain saved**, or why not (the track already has effects, no effects to save).
 
 **Key and BPM in the browser.** Preview a sample and its row shows the key and the tempo the preview plays at, like **C# MIN 75 BPM**. WAV and MP3.
 
