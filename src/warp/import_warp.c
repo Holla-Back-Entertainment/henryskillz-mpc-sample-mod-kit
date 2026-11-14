@@ -107,10 +107,14 @@ static float load_tempo;   // the loaded sample's tempo, read on the UI thread b
 
 static void *warp_pad(void *arg)
 {
-    uintptr_t sample = (uintptr_t)arg, pad;
+    uintptr_t sample = (uintptr_t)arg, pad = 0;
     int mem = open("/proc/self/mem", O_RDWR | O_CLOEXEC);
     float tempo = load_tempo;
-    if (mem >= 0 && warp_default_on() && (pad = find_pad(mem, sample))) {
+    // The pad is filled in just after the load command returns (a scan run inside the hook didn't find it,
+    // 15 Nov 2026). A scan takes ~90 ms on the unit; a miss is retried, 10 tries, about a second in all.
+    int want = mem >= 0 && warp_default_on();
+    for (int k = 0; want && k < 10 && !(pad = find_pad(mem, sample)); ++k) usleep(20000);
+    if (pad) {
         // Same tempo as the sample: this pad really took the load. Written like stock's Warp control does.
         float now;
         uintptr_t still;
