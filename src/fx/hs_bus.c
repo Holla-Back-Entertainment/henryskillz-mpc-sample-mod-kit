@@ -84,7 +84,9 @@ static void configure(struct bus *s, const float *v)
     static const float fixed_rel[] = {0,.017f,.028f,.04f,.048f,.058f};
     static const float long_att[] = {.08f,.08f,.078f,.073f,.058f,.034f,.013f};
     int attack = (int)lroundf(v[BUS_ATTACK])+4, release = (int)lroundf(v[BUS_RELEASE])+6;
-    int ratio = (int)lroundf(v[BUS_RATIO]);
+    /* The faceplate's own step (bus_marking: a 74-px bar, step = (bar*6+36)/73), so the ratio heard is
+       always the label shown; the 1.5 load default plays 2:1. Plain rounding put 3:1 under a 2:1 label. */
+    int ratio = ((int)lroundf(v[BUS_RATIO] * (73.f / 6)) * 6 + 36) / 73;
     float t = (v[BUS_THRESHOLD]+20)*.2f;
     int row = t >= 8 ? 7 : (int)t;
     for (int i = 0; i < 25; ++i)

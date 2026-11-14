@@ -658,7 +658,7 @@ If it doesn't work: chains only load on a track with no inserts, and the name mu
 
 When you preview a sample in the browser, its row shows the key and tempo at the right end, like **C# MIN 75 BPM**. The key is white, the tempo grey. Works with WAV and MP3.
 
-- The tempo is the one the preview plays at.
+- The tempo is the one the preview plays at. It is for the preview only: loading the sample does not pass it on, so a file with no tempo of its own loads the way it does on a stock MPC.
 - The key takes a moment to appear while the MPC works it out.
 - Besides MAJ and MIN, you may see modes such as DORIAN or MIXO. A one-shot shows a single note, like **NOTE E**.
 - Scroll away and the tag hides. Come back to the row and it shows again.
