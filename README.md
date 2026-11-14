@@ -78,6 +78,10 @@ These are real 320×240 captures from the MPC Sample emulator running the public
 
 ![Insert effects list showing the HS effects](assets/screens/hs-effects-list.png)
 
+| HS Saturator |
+|---|
+| ![HS Saturator: Drive, Tone and Mix knobs](assets/screens/hs-saturator.png) |
+
 | HS Channel Strip | HS Para EQ | HS Bus Compressor |
 |---|---|---|
 | ![HS Channel Strip controls](assets/screens/hs-channel-strip.png) | ![HS Para EQ response display](assets/screens/hs-para-eq.png) | ![HS Bus Compressor controls](assets/screens/hs-bus-compressor.png) |
