@@ -628,6 +628,16 @@ static pthread_mutex_t page_draw = PTHREAD_MUTEX_INITIALIZER;
 static pthread_once_t fx_ui_once = PTHREAD_ONCE_INIT;
 static struct effect_page *fx_ui_page;
 static int fx_on_screen;
+static int hs_editor;              /* the last effect body drawn was one of our faceplates */
+
+/* hs_fx_flip.c holds the glass still while this is true: padmix is open on an HS editor. */
+int hs_fx_editor_up(void)
+{
+    static int (*padmix_open)(void);
+    if (!padmix_open) padmix_open = (int (*)(void))dlsym(RTLD_DEFAULT, "padmix_open");
+    return padmix_open && padmix_open() && __atomic_load_n(&fx_on_screen, __ATOMIC_RELAXED) &&
+           __atomic_load_n(&hs_editor, __ATOMIC_RELAXED);
+}
 
 /* 1 when the open editor's readout changed enough to redraw. Call with page_draw held. */
 static int live_tick(enum effect kind)
@@ -766,9 +776,11 @@ void overlay_update(int mode, const void *buf, int flag)
             }
         } else if (mode == 27 && site == 0xac2f0)
             insert_body((uint32_t *)buf);
-        else if (mode == 27 && site == 0xada58)
+        else if (mode == 27 && site == 0xada58) {
+            const void *stock = buf;
             buf = effect_overlay(buf);
-        else if (mode == 27 && site == 0xad460)
+            __atomic_store_n(&hs_editor, buf != stock, __ATOMIC_RELAXED);
+        } else if (mode == 27 && site == 0xad460)
             selector_rows((uint32_t *)buf, 0, H);
         else if (mode == 28 && site == 0xad4ac)
             selector_rows((uint32_t *)buf, H, 40);
@@ -784,9 +796,11 @@ void overlay_update_rect(int mode, const void *buf, int x, int y, int w, int h)
     if (buf && mode == 27 && x == 0 && y == 40 && w == W && h == H) {
         uintptr_t site = return_site(__builtin_return_address(0));
         __atomic_store_n(&fx_on_screen, site == 0xaca6c, __ATOMIC_RELAXED);
-        if (site == 0xaca6c)
+        if (site == 0xaca6c) {
+            const void *stock = buf;
             buf = effect_overlay(buf);
-        else if (site == 0xabb98)
+            __atomic_store_n(&hs_editor, buf != stock, __ATOMIC_RELAXED);
+        } else if (site == 0xabb98)
             stock_name_display((uint32_t *)buf, buf);
     }
     if (buf && mode == 28 && x == 0 && y == 200 && w == W && h == 40 &&
