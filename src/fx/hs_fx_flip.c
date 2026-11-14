@@ -20,6 +20,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 int hs_fx_editor_up(void);          /* hs_fx.c */
 
@@ -109,14 +110,42 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;   /* guards everything 
 static uint32_t glass_id;           /* last buffer flipped, any owner */
 static struct map *shown;           /* ours, on the glass (or about to be) */
 static int shown_fd;
+static uint32_t swallowed;          /* the app frame our last held flip stood in for */
+
+static int held(void)               /* calls into SampQOL: never under our lock */
+{
+    static int (*mixer_up)(void);   /* hs-mixer.so's graphic console, if loaded */
+    if (!mixer_up) mixer_up = (int (*)(void))dlsym(RTLD_DEFAULT, "hs_mixer_up");
+    return hs_fx_editor_up() || (mixer_up && mixer_up());
+}
+
+/* The mixer hold ends 150 ms after the console's last draw, not on a page change, so the app's frame
+   for the page that replaced it may have been swallowed with nothing flipping after it (transport
+   stopped). Once the hold is off and ours is still up, put that frame into ours and show it. */
+static void *release_watch(void *unused)
+{
+    (void)unused;
+    for (;;) {
+        usleep(50000);
+        if (!__atomic_load_n(&shown, __ATOMIC_RELAXED) || !__atomic_load_n(&swallowed, __ATOMIC_RELAXED) || held())
+            continue;
+        pthread_mutex_lock(&lock);
+        uint32_t mine = 0; int fd = shown_fd;
+        struct map *app = shown && swallowed ? fb_map(fd, swallowed) : NULL;
+        if (app) { copy_rect(shown, app, 0, 0, SW, SH); mine = shown->id; }
+        __atomic_store_n(&swallowed, 0, __ATOMIC_RELAXED);
+        pthread_mutex_unlock(&lock);
+        if (mine) { struct dirtycmd d = { .fb_id = mine }; sys_ioctl(fd, DIRTYFB, &d); }
+    }
+    return NULL;
+}
+static void watch_start(void) { pthread_t t; if (!pthread_create(&t, NULL, release_watch, NULL)) pthread_detach(t); }
 
 static int page_flip(int fd, struct flipcmd *f)
 {
     uint32_t app = f->fb_id;
     struct map *o = NULL, *before = NULL;
-    static int (*mixer_up)(void);       /* hs-mixer.so's graphic console, if loaded */
-    if (!mixer_up) mixer_up = (int (*)(void))dlsym(RTLD_DEFAULT, "hs_mixer_up");
-    int up = hs_fx_editor_up() || (mixer_up && mixer_up());   /* calls into SampQOL: never under our lock */
+    int up = held();
     pthread_mutex_lock(&lock);
     before = shown;
     uint32_t was = glass_id;
@@ -135,7 +164,7 @@ static int page_flip(int fd, struct flipcmd *f)
     f->fb_id = app;
     pthread_mutex_lock(&lock);
     uint32_t redo = 0; int rfd = shown_fd;
-    if (!rc) glass_id = o ? o->id : app;
+    if (!rc) { glass_id = o ? o->id : app; __atomic_store_n(&swallowed, o ? app : 0, __ATOMIC_RELAXED); }
     else if (o) {                       /* failed: the old frame stays up; give it what landed in o */
         glass_id = was;
         if (before) { copy_rect(before, o, 0, 0, SW, SH); redo = before->id; }
@@ -143,6 +172,8 @@ static int page_flip(int fd, struct flipcmd *f)
     __atomic_store_n(&shown, rc ? before : o, __ATOMIC_RELAXED);
     pthread_mutex_unlock(&lock);
     if (redo) { struct dirtycmd d = { .fb_id = redo }; sys_ioctl(rfd, DIRTYFB, &d); }
+    static pthread_once_t once = PTHREAD_ONCE_INIT;
+    if (o) pthread_once(&once, watch_start);
     return rc;
 }
 

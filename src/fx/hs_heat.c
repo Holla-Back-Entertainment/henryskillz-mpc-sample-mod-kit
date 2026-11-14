@@ -267,6 +267,11 @@ static void run(LADSPA_Handle h, unsigned long frames)
         v[i] = p && isfinite(*p) ? fminf(r->UpperBound, fmaxf(r->LowerBound, *p)) : defaults[i];
     }
     hs_mod_apply(&s->mod, v, HE_MOD, hints + FIRST, frames, s->rate);
+    if (__atomic_load_n(&s->mod.shown, __ATOMIC_RELAXED) == HE_CIRCUIT + 1) {   /* the knob shows the circuit */
+        float set;                                    /* that plays: configure() picks it with floor(v + .2) */
+        __atomic_load(&s->mod.set, &set, __ATOMIC_RELAXED);
+        hs_mod_publish(&s->mod, HE_CIRCUIT, floorf(set + .2f), floorf(v[HE_CIRCUIT] + .2f));
+    }
     if (!s->ready || memcmp(v, s->values, sizeof v)) { configure(s, v); s->countdown = 0; }
 
     for (unsigned long i = 0; i < frames; ++i) {

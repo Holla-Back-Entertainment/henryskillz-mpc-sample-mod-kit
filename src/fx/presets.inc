@@ -140,10 +140,12 @@ static void preset_dir(char *out, size_t size, const char *label)
     const char *root = getenv("HS_PRESETS_DIR");
     if (!root || !*root) root = "/tmp/hs-presets";
     const char *key = hs_fx_key(label);
-    static int crush_migrated;               /* set once a pass leaves nothing behind; otherwise tried again */
-    if (!strcmp(key, HS_CRUSH_DIR) && !__atomic_load_n(&crush_migrated, __ATOMIC_ACQUIRE) &&
-        hs_preset_migrate_crush(root) == 0)
-        __atomic_store_n(&crush_migrated, 1, __ATOMIC_RELEASE);
+    /* Once per run, whatever the result: this sits on draw paths (8 calls per PRESETS draw), and a slot
+       that exists in both folders would otherwise rescan the card on every frame. A file left behind
+       stays in the old folder and moves on a later boot once its slot is free. */
+    static int crush_tried;
+    if (!strcmp(key, HS_CRUSH_DIR) && !__atomic_exchange_n(&crush_tried, 1, __ATOMIC_ACQ_REL))
+        (void)hs_preset_migrate_crush(root);
     snprintf(out, size, "%s/%s", root, key);
 }
 
