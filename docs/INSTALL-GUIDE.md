@@ -60,7 +60,7 @@ Get it only from that page. It's the author's official download, and the install
 
 Both versions work the same way. Everything happens inside your browser: your files are never uploaded.
 
-![The installer page](../assets/installer-page.png)
+![The installer page](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/installer-page.png)
 
 ## Step 6. Give it SampQOL
 
@@ -120,7 +120,7 @@ Wait until it says it's safe, then take the card out.
 3. When it asks **Start SampQOL OS?**, press **B1** (Start).
 4. You'll see SampQOL's start screen, then the HenrySkillz screen, then the MPC.
 
-![HenrySkillz start screen captured during an emulator boot](../assets/screens/henryskillz-splash.png)
+![HenrySkillz start screen captured during an emulator boot](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/henryskillz-splash.png)
 
 ## Step 11. Find the effects
 
@@ -132,7 +132,7 @@ Wherever you choose an insert effect (for example a pad's insert slots in the **
 
 HS Air Exciter, HS Drive Sat and the stock Bus Compressor are no longer in the menu (it has 40 rows), but projects that already use them still open with them.
 
-![Insert effects list showing the HS Harmonic effects](../assets/screens/hs-effects-list.png)
+![Insert effects list showing the HS Harmonic effects](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-effects-list.png)
 
 ### Use the FX rack
 
@@ -147,11 +147,11 @@ HS Air Exciter, HS Drive Sat and the stock Bus Compressor are no longer in the m
 
 | HS Channel Strip | HS Para EQ | HS Bus Compressor |
 |---|---|---|
-| ![HS Channel Strip input, drive and output page](../assets/screens/hs-channel-strip.png) | ![HS Para EQ band controls and response curve](../assets/screens/hs-para-eq.png) | ![HS Bus Compressor threshold, ratio and makeup page](../assets/screens/hs-bus-compressor.png) |
+| ![HS Channel Strip input, drive and output page](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-channel-strip.png) | ![HS Para EQ band controls and response curve](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-para-eq.png) | ![HS Bus Compressor threshold, ratio and makeup page](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-bus-compressor.png) |
 
 The normal EQ page also gets a dB and frequency grid:
 
-![EQ page with the HenrySkillz dB and frequency grid](../assets/screens/eq-page-grid.png)
+![EQ page with the HenrySkillz dB and frequency grid](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/eq-page-grid.png)
 
 Start with one effect in one slot, make a small change, then bypass it to hear what changed. Done. Make something.
 

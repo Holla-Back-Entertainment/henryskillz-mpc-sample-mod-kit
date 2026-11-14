@@ -63,7 +63,7 @@ Every HS effect has three knobs on each page. **K1**, **K2** and **K3** turn the
 
 To go back, press **B1** (Back) or **PAD FX**.
 
-![The Harmonic list in the effect picker: Soft Clipper, HS Saturator, HS Channel Strip, HS Heat and HS Tube Strip, with Modulation and Vintage below](../assets/screens/hs-effects-list.png)
+![The Harmonic list in the effect picker: Soft Clipper, HS Saturator, HS Channel Strip, HS Heat and HS Tube Strip, with Modulation and Vintage below](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-effects-list.png)
 
 A new HS effect always opens on its first page. If you leave an effect and open the same one again, it comes back on the page you left it on.
 
@@ -80,7 +80,7 @@ Most HS effects have more than three controls, so they are split into pages.
 - The row of tabs across the top of the effect lights the page you are on.
 - After the last page, **B2** goes round to the first page again.
 
-![HS Drive Sat on its HARMONICS page, with PAGE 2/3 and SHIFT BACK over B2](../assets/screens/hs-page-label.png)
+![HS Drive Sat on its HARMONICS page, with PAGE 2/3 and SHIFT BACK over B2](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-page-label.png)
 
 On HS Channel Strip, the COMP, GATE and DESS pages have a second row of controls, and **SHIFT** shows next to the page name. Hold **SHIFT** and turn **K1**, **K2** or **K3** to reach the second row. The guide lists these as "SHIFT + K1" and so on.
 
@@ -98,7 +98,7 @@ Channel Strip, Drive Sat, Bus Compressor, Pump, Heat, Crush and Tube Strip each 
 4. Hold **SHIFT** and press **B3** to load the selected slot.
 5. Tap or hold **B2** to leave PRESETS and return to the page you came from.
 
-![Eight effect preset slots, with slot 5 selected and the load and save controls shown](../assets/screens/hs-presets.png)
+![Eight effect preset slots, with slot 5 selected and the load and save controls shown](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-presets.png)
 
 Slots are shared between projects and stay under `MPC-Sample/Presets` on the card. **EMPTY** means that slot has not been saved for this effect. A saved slot says **SAVED**; preset files can optionally put a short name in parentheses on their first line.
 
@@ -122,7 +122,7 @@ If it doesn't work: you need to be on the effect's own page, where **B3** reads 
 
 Soft saturation for drums and bass. It adds harmonics, then filters them, so you can choose how bright the added grit is.
 
-![HS Saturator page with Drive, Tone and Mix knobs at their starting values](../assets/screens/hs-saturator.png)
+![HS Saturator page with Drive, Tone and Mix knobs at their starting values](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-saturator.png)
 
 | Knob | Control | Range | What it does |
 |---|---|---|---|
@@ -146,7 +146,7 @@ If it doesn't work: Drive starts at 0 dB, which makes no audible change by desig
 
 A console-style channel. The signal goes: input and drive, filters, EQ, compressor and gate, de-esser, output. One switch puts the EQ after the compressor instead.
 
-![HS Channel Strip DESS page showing Frequency, Threshold and Range, followed by its shifted Mode row](../assets/screens/hs-channel-deesser.png)
+![HS Channel Strip DESS page showing Frequency, Threshold and Range, followed by its shifted Mode row](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-channel-deesser.png)
 
 **I/O**
 | Knob | Control | Range | What it does |
@@ -235,7 +235,7 @@ If it doesn't work: most sections start switched off. The compressor needs a Rat
 
 A bus compressor for gluing drums or a whole beat together, with a sidechain high-pass so the kick doesn't pump everything.
 
-![HS Bus Compressor on its COMPRESSION page with Threshold, Ratio and Makeup knobs](../assets/screens/hs-bus-compressor.png)
+![HS Bus Compressor on its COMPRESSION page with Threshold, Ratio and Makeup knobs](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-bus-compressor.png)
 
 **COMPRESS**
 | Knob | Control | Range | What it does |
@@ -274,7 +274,7 @@ If it doesn't work: Threshold starts at the top of its range, where it does very
 
 A stepped feedback compressor that can squash hard. It also keys from another track, for ducking.
 
-![HS Pump COMPRESS page: ratio lamps from 1 to 20, Input, Ratio and Output knobs. Rendered at 3x from the panel drawing code, not an emulator capture](../assets/screens/hs-pump.png)
+![HS Pump COMPRESS page: ratio lamps from 1 to 20, Input, Ratio and Output knobs. Rendered at 3x from the panel drawing code, not an emulator capture](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-pump.png)
 
 **COMPRESS**
 | Knob | Control | Range | What it does |
@@ -323,7 +323,7 @@ Eight drive circuits into a multimode filter, with dirt, a 2-band EQ, an envelop
 
 | CHARACTER page | FILTER page |
 |---|---|
-| ![HS Heat CHARACTER page: eight circuit lamps with ROUGH CRUNCH lit, Circuit, Drive and Wet knobs](../assets/screens/hs-heat.png) | ![HS Heat FILTER page: filter type lamps, Filter Type on LP2 12 DB, Frequency and Resonance knobs](../assets/screens/hs-heat-filter.png) |
+| ![HS Heat CHARACTER page: eight circuit lamps with ROUGH CRUNCH lit, Circuit, Drive and Wet knobs](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-heat.png) | ![HS Heat FILTER page: filter type lamps, Filter Type on LP2 12 DB, Frequency and Resonance knobs](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-heat-filter.png) |
 
 Both pictures are rendered at 3x from the panel drawing code, not emulator captures.
 
@@ -387,7 +387,7 @@ If it doesn't work: if the sound vanishes, check Filter Type and Frequency (a lo
 
 A 24-band parametric EQ with a response curve on the screen. Turn **DATA** to pick what you are editing: **GLOBAL** first, then bands **1** to **24**. The strip under the curve shows the band you are on.
 
-![HS Para EQ on BAND 01, SHAPE page: the response graph, the band strip and Freq, Gain and Q knobs](../assets/screens/hs-para-eq.png)
+![HS Para EQ on BAND 01, SHAPE page: the response graph, the band strip and Freq, Gain and Q knobs](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-para-eq.png)
 
 **GLOBAL** (turn **DATA** all the way left)
 | Page | K1 | K2 | K3 |
@@ -424,7 +424,7 @@ If it doesn't work: every band starts with Band On set to OFF. Turn it on. A HIG
 
 A character compressor with eight curves, an Opto mode, detector filters, two distortion modes, a British-style mode and a gain-reduction meter (**GR DB**) on the panel. Input, Output, Attack and Release use a 0 to 10 scale.
 
-![HS Crush COMPRESS page: gain-reduction LEDs, ratio lamps with 4 lit, Input 5.1, Ratio 4:1, Output 6.2. Rendered at 3x from the panel drawing code, not an emulator capture](../assets/screens/hs-crush.png)
+![HS Crush COMPRESS page: gain-reduction LEDs, ratio lamps with 4 lit, Input 5.1, Ratio 4:1, Output 6.2. Rendered at 3x from the panel drawing code, not an emulator capture](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-crush.png)
 
 **COMPRESS**
 | Knob | Control | Range | What it does |
@@ -465,7 +465,7 @@ If it doesn't work: if GR DB shows **NO METER**, the meter could not be read, bu
 
 Splits the sound at a crossover, makes the lows mono and sets their level. The highs pass untouched. The panel draws the response it applies, with a dotted line at the crossover.
 
-![HS Bass Focus: response curve with the crossover marker at 125 Hz, Crossover, Bass at -6.0 dB and Mono Bass on MONO. Rendered at 3x from the panel drawing code, not an emulator capture](../assets/screens/hs-bass-focus.png)
+![HS Bass Focus: response curve with the crossover marker at 125 Hz, Crossover, Bass at -6.0 dB and Mono Bass on MONO. Rendered at 3x from the panel drawing code, not an emulator capture](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-bass-focus.png)
 
 | Knob | Control | Range | What it does |
 |---|---|---|---|
@@ -489,7 +489,7 @@ If it doesn't work: with Bass at 0 dB on a sound with no stereo lows, you will h
 
 A tube channel strip: tube drive, a 6 dB/oct high-pass, an opto compressor and a 4-band EQ. The panel shows the gain reduction (**OPTO GR DB**) and the signal path in order. The EQ can go before or after the compressor, and a side-chain EQ turns it into a de-esser.
 
-![HS Tube Strip TUBE page: gain-reduction LEDs, the TUBE, HPF, COMP, EQ signal path, Drive, HPF and Output knobs. Rendered at 3x from the panel drawing code, not an emulator capture](../assets/screens/hs-tube-strip.png)
+![HS Tube Strip TUBE page: gain-reduction LEDs, the TUBE, HPF, COMP, EQ signal path, Drive, HPF and Output knobs. Rendered at 3x from the panel drawing code, not an emulator capture](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-tube-strip.png)
 
 **TUBE**
 | Knob | Control | Range | What it does |
@@ -618,7 +618,7 @@ Case doesn't matter. The name has to start with the whole word: "Bass 2", "Bass-
 
 **One UNDO** (**SHIFT** + **MINUS**) takes back the rename and the chain together.
 
-![The Track insert page of a track renamed drums, with the Chain loaded DRUMS box over HS Saturator and HS Bus Compressor](../assets/screens/chain-loaded.png)
+![The Track insert page of a track renamed drums, with the Chain loaded DRUMS box over HS Saturator and HS Bus Compressor](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/chain-loaded.png)
 
 **Save your own chain**
 1. Set up the inserts on a track the way you like them.
@@ -653,7 +653,7 @@ When you preview a sample in the browser, its row shows the key and tempo at the
 
 There is nothing to press. It is just there while you browse.
 
-![Browser row for Leroys C#Min 75bpm.wav with the tag C# MIN 112.9 BPM at the right end](../assets/screens/browser-key-tag.png)
+![Browser row for Leroys C#Min 75bpm.wav with the tag C# MIN 112.9 BPM at the right end](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/browser-key-tag.png)
 
 If it doesn't work: the tag only shows for a sample that is previewing. Check Preview is on in the browser.
 
@@ -674,7 +674,7 @@ Press **B2** again to go back to the desk. The SEQ page always opens on the desk
 
 | SEQ desk | METERS page |
 |---|---|
-| ![SEQ page as a desk: VU meter, tempo, Rec Quant, output LEDs, transport, and 128 Bars, 1/32T and Swing at the bottom](../assets/screens/seq-desk.png) | ![METERS page: left and right VU meters, LUFS M, LUFS S, LUFS I and PEAK readouts, and B2: SEQ](../assets/screens/seq-meters.png) |
+| ![SEQ page as a desk: VU meter, tempo, Rec Quant, output LEDs, transport, and 128 Bars, 1/32T and Swing at the bottom](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/seq-desk.png) | ![METERS page: left and right VU meters, LUFS M, LUFS S, LUFS I and PEAK readouts, and B2: SEQ](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/seq-meters.png) |
 
 If it doesn't work: the meters only move while the MPC is playing sound. The readouts show dashes when there is nothing to measure.
 
@@ -700,7 +700,7 @@ Stems splits a sample into **Vocals**, **Drums**, **Bass** and **Other** on the 
 - **B3** (**Go**) starts. **B1** (**Cancel**) closes the chooser.
 - While it runs, **B1** (**Cancel**) stops it and removes the files from this run.
 
-![Stems chooser for pad A01: Vocals, Drums, Bass and Other ticked, Separate over B2, Go over B3](../assets/screens/stems-chooser.png)
+![Stems chooser for pad A01: Vocals, Drums, Bass and Other ticked, Separate over B2, Go over B3](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/stems-chooser.png)
 
 A split takes about as long as the sample plays. Nothing above 11 kHz comes through in any stem.
 
@@ -710,7 +710,7 @@ A split takes about as long as the sample plays. Nothing above 11 kHz comes thro
 
 **Onto pads (pad splits only).** The stems also load onto the next empty pads of that pad's bank, on the same track. Your original pad is never changed. The box says where, for example **On pads A02-A05**. If the bank fills up, the box says **bank full**, and the files stay in `MPC-Sample/Samples/Stems`.
 
-![The Saved in Samples/Stems box: On pads A02-A05, Vocals, Drums, Bass, Other](../assets/screens/stems-on-pads.png)
+![The Saved in Samples/Stems box: On pads A02-A05, Vocals, Drums, Bass, Other](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/stems-on-pads.png)
 
 **UNDO** (**SHIFT** + **MINUS**) takes the last loaded stem off its pad, one stem per press.
 
@@ -726,7 +726,7 @@ If it doesn't work: if holding **SHIFT** + **B1** does nothing in the browser, m
 
 SampQOL's own list screens, such as the insert pages and the effect list, get a red bar along the top, a dark blue palette and a cyan edge on the selected row, to match the rest of the kit. There is nothing to set. It works the same way, it only looks different.
 
-![Pad insert page in HS colours: red top bar, dark blue palette, cyan edge on the selected Empty slot](../assets/screens/sampqol-styling.png)
+![Pad insert page in HS colours: red top bar, dark blue palette, cyan edge on the selected Empty slot](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/sampqol-styling.png)
 
 If it doesn't work: if the screens look like plain SampQOL, you are probably not on SampQOL 0.2.0. The styling only applies to that version.
 
@@ -740,7 +740,7 @@ Press **PAD FX**, then **B2**. SampQOL's **Ch. Mixer** is drawn as a console. Pr
 - The selected strip has a **cyan** frame. It turns **yellow** while you edit it.
 - The knobs and buttons do what they do in SampQOL's mixer. See SampQOL's manual for the controls.
 
-![Ch. Mixer as a console: strips with pan, M and S buttons, faders, stereo meters and MSTR outputs, the second strip selected in cyan](../assets/screens/graphic-mixer.png)
+![Ch. Mixer as a console: strips with pan, M and S buttons, faders, stereo meters and MSTR outputs, the second strip selected in cyan](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/graphic-mixer.png)
 
 If it doesn't work: like the screen styling, the graphic mixer only draws on SampQOL 0.2.0. On any other version you get SampQOL's own mixer.
 
