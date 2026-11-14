@@ -52,7 +52,7 @@ struct heat {
     struct hs_mod mod;
 };
 
-static const float defaults[] = {1, 40, 0, 0, 100, 0, 0, 0, 0, 0, 20, 60, 0, 64, 0, 0, 100, 0, HS_MOD_DEFAULTS};
+static const float defaults[] = {1, 40, 0, 0, 100, 0, 0, 0, 0, 0, 20, 60, 0, 64, 0, 0, 100, -6, HS_MOD_DEFAULTS};
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
 #define INT (B | LADSPA_HINT_INTEGER)
 static const LADSPA_PortRangeHint hints[PORTS] = {
@@ -73,7 +73,9 @@ static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+HE_LFO_WAVE] = {INT|LADSPA_HINT_DEFAULT_0,0,6},
     [FIRST+HE_FREQ_PAN] = {B|LADSPA_HINT_DEFAULT_0,-64,63},
     [FIRST+HE_MIX] = {B|LADSPA_HINT_DEFAULT_MAXIMUM,0,100},
-    [FIRST+HE_VOLUME] = {B|LADSPA_HINT_DEFAULT_0,-24,12},
+    /* A fresh insert loads Saturation at Drive 31.75 (DEFAULT_LOW), about +6 dB into the clipper with
+       no make-up, so Volume loads at -6 dB (DEFAULT_MIDDLE on -24..12) to keep it near unity. */
+    [FIRST+HE_VOLUME] = {B|LADSPA_HINT_DEFAULT_MIDDLE,-24,12},
     HS_MOD_HINTS(FIRST+HE_MOD, HE_MOD)
 };
 #undef B
