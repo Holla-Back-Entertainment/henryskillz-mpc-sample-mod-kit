@@ -484,6 +484,9 @@ static const LADSPA_PortDescriptor descriptors[] = {
 _Static_assert(sizeof names / sizeof *names == FIRST_CONTROL + CH_COUNT, "parameter names");
 _Static_assert(sizeof descriptors / sizeof *descriptors == FIRST_CONTROL + CH_COUNT, "port descriptors");
 
+/* The open editor turns this effect's MOD target knob to the heard value (hs_mod.h). */
+HS_MOD_KNOB_EXPORT(hs_channel_mod_knob, struct channel, hints + FIRST_CONTROL)
+
 LADSPA_Descriptor hs_channel_descriptor = {
     .UniqueID = HS_CHANNEL_ID, .Label = "HS Channel Strip", .Name = "HS Channel Strip",
     .Maker = "Henry Skillz", .Copyright = "Original DSP",
