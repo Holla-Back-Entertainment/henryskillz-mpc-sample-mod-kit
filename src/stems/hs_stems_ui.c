@@ -123,6 +123,15 @@ int stems_is_wav(const char *p) {
     return n > 4 && p[0] == '/' && (!strcasecmp(p + n - 4, ".wav") || !strcasecmp(p + n - 4, ".mp3"));   /* the engine reads both */
 }
 /* "/a/b/Loop.wav" -> dir "/a/b/Loop Stems", base "Loop". 0 on success. */
+/* The card from the stems folder: everything before its first "/autorun" folder. Plain card:
+   <card>/autorun/stems. Boot Thingy app: <card>/autorun/apps/<name>/stems. */
+int stems_card(const char *stems_dir, char *card, size_t n) {
+    const char *a = stems_dir ? strstr(stems_dir, "/autorun/") : NULL;
+    if (!a || a == stems_dir || (size_t)(a - stems_dir) >= n) return -1;
+    memcpy(card, stems_dir, (size_t)(a - stems_dir)); card[a - stems_dir] = 0;
+    return 0;
+}
+
 int stems_out(const char *path, char *dir, size_t dn, char *base, size_t bn) {
     const char *slash = strrchr(path, '/'), *name = slash + 1;
     size_t len = strlen(name) - 4;
@@ -464,9 +473,8 @@ static const char *pad_source(int track, int pad, long input_rt, char *path, siz
     memcpy(base, file, fl - 4); base[fl - 4] = 0;
     snprintf(path, pn, "%s/%s", PROJECT_DATA, file);
     if (access(path, R_OK)) return "Sample file not found: save the project";
-    const char *s = getenv("HS_STEMS_DIR");               /* <card>/autorun/stems */
-    char card[1024]; snprintf(card, sizeof card, "%s", s ? s : "");
-    for (int i = 0; i < 2; ++i) { char *sl = strrchr(card, '/'); if (!sl) return "No card"; *sl = 0; }
+    char card[1024];
+    if (stems_card(getenv("HS_STEMS_DIR"), card, sizeof card)) return "No card";
     char stems[1100]; snprintf(stems, sizeof stems, "%s/MPC-Sample/Samples/Stems", card);
     if (mkdir(stems, 0755) && errno != EEXIST) return "Can't write to the card";
     int r = snprintf(dir, dn, "%s/%s Stems", stems, base);
