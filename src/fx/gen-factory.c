@@ -2,7 +2,7 @@
  * table src/chains/factory_presets.h. Each preset is a fresh insert plus the table's changes, written out
  * in full ("control index, value" per line, as a saved slot file) so loading one always lands on the
  * same sound. Fails on a name that matches no control or a value outside its range.
- *   cc -O2 -I. -DHS_MPC_LADSPA_RECALL gen-factory.c hs_ladspa.c hs_registry.c hs_eq2.c hs_pump.c hs_heat.c hs_distressor.c \
+ *   cc -O2 -I. -DHS_MPC_LADSPA_RECALL gen-factory.c hs_ladspa.c hs_registry.c hs_eq2.c hs_pump.c hs_heat.c hs_crush.c \
  *      hs_bass_focus.c hs_tube_strip.c hs_bus.c hs_xsat.c hs_channel.c hs_saturator.c hs_air_exciter.c hs_env.c \
  *      -lm -pthread -o /tmp/gen-factory && /tmp/gen-factory > factory.inc */
 #include <ctype.h>

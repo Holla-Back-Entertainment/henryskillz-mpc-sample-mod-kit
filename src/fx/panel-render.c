@@ -6,7 +6,7 @@ int main(int c, char **v)
 {
     static struct effect_page page;
     if (c < 10) return 2;   /* kind v0 v1 v2 gr out.ppm label0 label1 label2 */
-    page.kind = !strcmp(v[1], "crush") ? HS_DISTRESSOR : !strcmp(v[1], "tube") ? HS_TUBE_STRIP : HS_BASS_FOCUS;
+    page.kind = !strcmp(v[1], "crush") ? HS_CRUSH : !strcmp(v[1], "tube") ? HS_TUBE_STRIP : HS_BASS_FOCUS;
     for (int i = 0; i < 3; ++i) page.values[i] = page.main_values[i] = atoi(v[2 + i]);
     for (int i = 3; i < KNOBS; ++i) page.values[i] = page.main_values[i] = -1;
     dist_gr_db = tube_gr_db = atof(v[5]);

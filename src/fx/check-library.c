@@ -12,7 +12,7 @@
 #include "hs_eq2.h"
 #include "hs_pump.h"
 #include "hs_heat.h"
-#include "hs_distressor.h"
+#include "hs_crush.h"
 #include "hs_bass_focus.h"
 #include "hs_tube_strip.h"
 static LADSPA_Descriptor_Function load_descriptor;
@@ -138,8 +138,8 @@ int main(int argc, char **argv)
     assert(load_descriptor(7)->UniqueID == HS_HEAT_ID);
     assert(load_descriptor(7) == load_descriptor(HS_HEAT_ID));
     assert(load_descriptor(7)->PortCount == HE_COUNT + 4);
-    assert(load_descriptor(8)->UniqueID == HS_DISTRESSOR_ID);
-    assert(load_descriptor(8) == load_descriptor(HS_DISTRESSOR_ID));
+    assert(load_descriptor(8)->UniqueID == HS_CRUSH_ID);
+    assert(load_descriptor(8) == load_descriptor(HS_CRUSH_ID));
     assert(load_descriptor(8)->PortCount == DS_COUNT + 4);
     assert(load_descriptor(9)->UniqueID == HS_BASS_FOCUS_ID);
     assert(load_descriptor(9) == load_descriptor(HS_BASS_FOCUS_ID));

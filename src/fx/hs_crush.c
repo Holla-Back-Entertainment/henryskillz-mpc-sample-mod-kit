@@ -14,7 +14,7 @@
 #include <string.h>
 
 #include "ladspa.h"
-#include "hs_distressor.h"
+#include "hs_crush.h"
 #include "hs_env.h"
 
 enum { IL, IR, OL, OR, FIRST, PORTS = FIRST + DS_COUNT, RATIOS = 8, OPTO = 5, NUKE = 7 };
@@ -25,7 +25,7 @@ static const float knee_db[RATIOS]      = {0, 30, 24, 18, 10, 12, 3, 1};        
 
 struct biquad { float b0, b1, b2, a1, a2, z1[2], z2[2]; };
 
-struct distressor {
+struct crush {
     float *port[PORTS];
     unsigned long rate;
     float values[DS_COUNT];
@@ -98,7 +98,7 @@ static LADSPA_Handle instantiate(const LADSPA_Descriptor *d, unsigned long rate)
 {
     (void)d;
     if (!rate) return NULL;
-    struct distressor *s = calloc(1, sizeof *s);
+    struct crush *s = calloc(1, sizeof *s);
     if (s) {
         s->rate = rate;
         s->dc_coef = 1 - 6.2831853f*5/rate;
@@ -116,7 +116,7 @@ static LADSPA_Handle instantiate(const LADSPA_Descriptor *d, unsigned long rate)
 
 static void activate(LADSPA_Handle h)
 {
-    struct distressor *s = h;
+    struct crush *s = h;
     s->ready = 0;
     s->gr = s->tail = 0;
     s->pow_in = s->pow_wet = 0;
@@ -130,11 +130,11 @@ static void activate(LADSPA_Handle h)
 
 static void connect(LADSPA_Handle h, unsigned long port, LADSPA_Data *p)
 {
-    struct distressor *s = h;
+    struct crush *s = h;
     if (port < PORTS) s->port[port] = p;
 }
 
-static void configure(struct distressor *s, const float *v)
+static void configure(struct crush *s, const float *v)
 {
     int r = (int)lroundf(v[DS_RATIO]), aud = (int)lroundf(v[DS_AUDIO]);
     s->ratio = r;
@@ -170,7 +170,7 @@ static void configure(struct distressor *s, const float *v)
     s->ready = 1;
 }
 
-static inline float computer(const struct distressor *s, float level)
+static inline float computer(const struct crush *s, float level)
 {
     float over = level - s->threshold, half = .5f*s->knee;
     if (over <= -half) return 0;
@@ -179,7 +179,7 @@ static inline float computer(const struct distressor *s, float level)
     return s->slope*t*t/(2*s->knee);
 }
 
-static inline float colour(struct distressor *s, float x, int c)
+static inline float colour(struct crush *s, float x, int c)
 {
     float y = x + s->d2*x*x;
     if (s->d3 > 0) y = tanhf(s->d3*y)/s->d3;      /* tape-like rounding of top and bottom */
@@ -190,7 +190,7 @@ static inline float colour(struct distressor *s, float x, int c)
 
 static void run(LADSPA_Handle h, unsigned long frames)
 {
-    struct distressor *s = h;
+    struct crush *s = h;
     if (!s->port[IL] || !s->port[IR] || !s->port[OL] || !s->port[OR]) return;
     float v[DS_COUNT];
     for (int i = 0; i < DS_COUNT; ++i) {
@@ -270,9 +270,9 @@ static void run(LADSPA_Handle h, unsigned long frames)
     }
 }
 
-float hs_distressor_gr(const void *handle)
+float hs_crush_gr(const void *handle)
 {
-    const struct distressor *s = handle;
+    const struct crush *s = handle;
     return s ? s->gr + s->tail : 0;
 }
 
@@ -290,10 +290,10 @@ _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *t
                sizeof defaults / sizeof *defaults == DS_COUNT, "Crush port count");
 
 /* The open editor turns this effect's MOD target knob to the heard value (hs_mod.h). */
-HS_MOD_KNOB_EXPORT(hs_distressor_mod_knob, struct distressor, hints + FIRST)
+HS_MOD_KNOB_EXPORT(hs_crush_mod_knob, struct crush, hints + FIRST)
 
-LADSPA_Descriptor hs_distressor_descriptor = {
-    .UniqueID = HS_DISTRESSOR_ID, .Label = "HS Crush", .Name = "HS Crush",
+LADSPA_Descriptor hs_crush_descriptor = {
+    .UniqueID = HS_CRUSH_ID, .Label = "HS Crush", .Name = "HS Crush",
     .Maker = "Henry Skillz", .Copyright = "Prototype",
     .Properties = LADSPA_PROPERTY_HARD_RT_CAPABLE,
     .PortCount = PORTS, .PortDescriptors = types, .PortNames = names, .PortRangeHints = hints,

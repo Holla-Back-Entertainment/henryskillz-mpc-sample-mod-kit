@@ -4,7 +4,7 @@
 set -eu
 cd "$(dirname "$0")"
 T=$(mktemp -d)
-cc -O2 -shared -fPIC -I. -DHS_MPC_LADSPA_RECALL hs_ladspa.c hs_registry.c hs_eq2.c hs_pump.c hs_heat.c hs_distressor.c hs_bass_focus.c hs_tube_strip.c hs_bus.c hs_xsat.c \
+cc -O2 -shared -fPIC -I. -DHS_MPC_LADSPA_RECALL hs_ladspa.c hs_registry.c hs_eq2.c hs_pump.c hs_heat.c hs_crush.c hs_bass_focus.c hs_tube_strip.c hs_bus.c hs_xsat.c \
    hs_channel.c hs_saturator.c hs_air_exciter.c hs_env.c -o "$T/fx.so" -lm -pthread $([ "$(uname)" = Darwin ] && echo -Wl,-undefined,dynamic_lookup)
 cat > "$T/n.c" <<'C'
 #include <dlfcn.h>

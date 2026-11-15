@@ -1,17 +1,17 @@
 /* HS Crush behaviour check: curves, timing, audio HP, distortion, mix/bypass, meter, Auto Gain.
- * cc -O2 -I. check-distressor.c hs_distressor.c hs_env.c -lm -o /tmp/check-distressor && /tmp/check-distressor */
+ * cc -O2 -I. check-crush.c hs_crush.c hs_env.c -lm -o /tmp/check-crush && /tmp/check-crush */
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include "ladspa.h"
-#include "hs_distressor.h"
+#include "hs_crush.h"
 #include "hs_env.h"
-extern const LADSPA_Descriptor hs_distressor_descriptor;
+extern const LADSPA_Descriptor hs_crush_descriptor;
 
 enum { RATE = 48000, N = 6*RATE };
 static float in[2][N], out[2][N], ctl[DS_COUNT];
-static const LADSPA_Descriptor *d = &hs_distressor_descriptor;
+static const LADSPA_Descriptor *d = &hs_crush_descriptor;
 static LADSPA_Handle h;
 
 static void reset(void) { const float v[DS_COUNT] = {5, 5, 5, 7.5f, 4, 0, 0, 0, 100, 0}; memcpy(ctl, v, sizeof v); d->activate(h); }
@@ -90,8 +90,8 @@ int main(void)
         for (int i = 0; i < N; i += 64) {
             for (int c = 0; c < 2; ++c) { d->connect_port(h, c, in[c]+i); d->connect_port(h, 2+c, out[c]+i); }
             d->run(h, 64);
-            if (i + 64 == N/4) gr0 = hs_distressor_gr(h);
-            if (i >= N/4 && !t && hs_distressor_gr(h) < .37f*gr0) t = i + 64 - N/4;
+            if (i + 64 == N/4) gr0 = hs_crush_gr(h);
+            if (i >= N/4 && !t && hs_crush_gr(h) < .37f*gr0) t = i + 64 - N/4;
         }
         printf("release %2d: %.1f dB GR, 63%% recovered in %.0f ms\n", k, gr0, 1000.f*t/RATE);
         assert(t > 0);
@@ -115,8 +115,8 @@ int main(void)
 
     /* meter reads the instance it is given */
     reset(); ctl[DS_INPUT] = 10; tone(.5f, 1000, 0, N); go();
-    printf("meter: %.1f dB GR\n", hs_distressor_gr(h));
-    assert(hs_distressor_gr(h) > 3 && hs_distressor_gr(NULL) == 0);
+    printf("meter: %.1f dB GR\n", hs_crush_gr(h));
+    assert(hs_crush_gr(h) > 3 && hs_crush_gr(NULL) == 0);
 
     /* mix 0 and bypass pass the input untouched; full-scale noise stays finite */
     for (int m = 0; m < 2; ++m) {
@@ -165,6 +165,6 @@ int main(void)
                on[0] - off[0], on[1] - off[1]);
         assert(fabsf((on[0] - off[0]) - (on[1] - off[1])) < .5f);
     }
-    puts("check-distressor: OK");
+    puts("check-crush: OK");
     return 0;
 }

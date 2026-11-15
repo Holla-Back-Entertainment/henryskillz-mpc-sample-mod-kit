@@ -15,7 +15,7 @@
 #include <string.h>
 #include "ladspa.h"
 #include "hs_pump.h"
-#include "hs_distressor.h"
+#include "hs_crush.h"
 #include "hs_tube_strip.h"
 #include "hs_heat.h"
 #include "hs_channel.h"
@@ -27,7 +27,7 @@ enum { RATE = 48000, BLOCK = 128, BLOCKS = 600, MAXP = 64 };
 /* uid, first MOD control, a level parameter that is plain output gain in dB (or close to it) */
 static const struct { unsigned long uid; int mod, level; const char *name; } fx[] = {
     {HS_PUMP_ID, PU_MOD, PU_OUTPUT, "Pump"},
-    {HS_DISTRESSOR_ID, DS_MOD, DS_OUTPUT, "Crush"},
+    {HS_CRUSH_ID, DS_MOD, DS_OUTPUT, "Crush"},
     {HS_TUBE_STRIP_ID, TS_MOD, TS_OUTPUT, "Tube Strip"},
     {HS_HEAT_ID, HE_MOD, HE_VOLUME, "Heat"},
     {HS_CHANNEL_ID, CH_MOD, CH_OUTPUT, "Channel Strip"},

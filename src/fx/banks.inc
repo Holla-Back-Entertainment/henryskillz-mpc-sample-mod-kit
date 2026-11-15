@@ -58,7 +58,7 @@ static unsigned *paged(unsigned uid, unsigned *count)
     if (uid == HS_XSAT_ID) { *count = xsat_count; return &xsat_bank; }
     if (uid == HS_BUS_ID) { *count = bus_count; return &bus_bank; }
     if (uid == HS_PUMP_ID) { *count = pump_count; return &pump_bank; }
-    if (uid == HS_DISTRESSOR_ID) { *count = dist_count; return &dist_bank; }
+    if (uid == HS_CRUSH_ID) { *count = dist_count; return &dist_bank; }
     if (uid == HS_TUBE_STRIP_ID) { *count = tube_count; return &tube_bank; }
     if (uid == HS_HEAT_ID) { *count = heat_count; return &heat_bank; }
     if (uid == HS_CHANNEL_ID) { *count = channel_count; return &channel_bank; }
@@ -113,9 +113,9 @@ extern "C" const char *hs_pump_bank(int *section)
     return page.title;
 }
 
-extern "C" const char *hs_distressor_bank(int *section)
+extern "C" const char *hs_crush_bank(int *section)
 {
-    if (insert_open() != HS_DISTRESSOR_ID) return nullptr;
+    if (insert_open() != HS_CRUSH_ID) return nullptr;
     if (__atomic_load_n(&dist_bank, __ATOMIC_RELAXED) >= dist_count) { *section = -1; return "PRESETS"; }
     const auto &page = dist_banks[__atomic_load_n(&dist_bank, __ATOMIC_RELAXED)];
     *section = page.module;
@@ -196,7 +196,7 @@ static const FlavorBank *open_page()
     } else if (const unsigned *s = uid != flavor_uid ? paged(uid, &count) : nullptr) {
         unsigned at = __atomic_load_n(s, __ATOMIC_RELAXED);
         const FlavorBank *table = uid == HS_XSAT_ID ? xsat_banks : uid == HS_BUS_ID ? bus_banks
-            : uid == HS_PUMP_ID ? pump_banks : uid == HS_DISTRESSOR_ID ? dist_banks
+            : uid == HS_PUMP_ID ? pump_banks : uid == HS_CRUSH_ID ? dist_banks
             : uid == HS_TUBE_STRIP_ID ? tube_banks : uid == HS_HEAT_ID ? heat_banks : channel_banks;
         if (at < count) page = &table[at];
     }
@@ -228,11 +228,11 @@ extern "C" int hs_bank_position(int *count)
         return preset_open() ? -1 : static_cast<int>(sel%4);
     }
     const unsigned *selection = uid == flavor_uid ? &bank : uid == HS_XSAT_ID ? &xsat_bank : uid == HS_BUS_ID ? &bus_bank
-        : uid == HS_PUMP_ID ? &pump_bank : uid == HS_DISTRESSOR_ID ? &dist_bank : uid == HS_TUBE_STRIP_ID ? &tube_bank : uid == HS_HEAT_ID ? &heat_bank
+        : uid == HS_PUMP_ID ? &pump_bank : uid == HS_CRUSH_ID ? &dist_bank : uid == HS_TUBE_STRIP_ID ? &tube_bank : uid == HS_HEAT_ID ? &heat_bank
         : uid == HS_CHANNEL_ID ? &channel_bank : nullptr;
     if (!selection) return -1;
     *count = static_cast<int>(uid == flavor_uid ? bank_count : uid == HS_XSAT_ID ? xsat_count : uid == HS_BUS_ID ? bus_count
-        : uid == HS_PUMP_ID ? pump_count : uid == HS_DISTRESSOR_ID ? dist_count : uid == HS_TUBE_STRIP_ID ? tube_count : uid == HS_HEAT_ID ? heat_count : channel_count);
+        : uid == HS_PUMP_ID ? pump_count : uid == HS_CRUSH_ID ? dist_count : uid == HS_TUBE_STRIP_ID ? tube_count : uid == HS_HEAT_ID ? heat_count : channel_count);
     unsigned at = __atomic_load_n(selection, __ATOMIC_RELAXED);
     return at < static_cast<unsigned>(*count) ? static_cast<int>(at) : -1;
 }
@@ -279,7 +279,7 @@ extern "C" int padmix_note(int note, int value, int shift)
         b2_paged(uid, value, shift);
         return 1;
     }
-    if (note == 13 && (uid == flavor_uid || uid == HS_CHANNEL_ID || uid == HS_XSAT_ID || uid == HS_BUS_ID || uid == HS_PUMP_ID || uid == HS_HEAT_ID || uid == HS_DISTRESSOR_ID || uid == HS_TUBE_STRIP_ID) && !question_active()) {
+    if (note == 13 && (uid == flavor_uid || uid == HS_CHANNEL_ID || uid == HS_XSAT_ID || uid == HS_BUS_ID || uid == HS_PUMP_ID || uid == HS_HEAT_ID || uid == HS_CRUSH_ID || uid == HS_TUBE_STRIP_ID) && !question_active()) {
         b2_paged(uid, value, shift);
         return 1;
     }
@@ -289,7 +289,7 @@ extern "C" int padmix_note(int note, int value, int shift)
 extern "C" int fxmap_get_row(void *context, int id, void *output)
 {
     unsigned uid = insert_open();
-    if (!output || (uid != flavor_uid && uid != HS_CHANNEL_ID && uid != HS_XSAT_ID && uid != HS_BUS_ID && uid != HS_EQ2_ID && uid != HS_PUMP_ID && uid != HS_HEAT_ID && uid != HS_BASS_FOCUS_ID && uid != HS_DISTRESSOR_ID && uid != HS_TUBE_STRIP_ID) || id != -1)
+    if (!output || (uid != flavor_uid && uid != HS_CHANNEL_ID && uid != HS_XSAT_ID && uid != HS_BUS_ID && uid != HS_EQ2_ID && uid != HS_PUMP_ID && uid != HS_HEAT_ID && uid != HS_BASS_FOCUS_ID && uid != HS_CRUSH_ID && uid != HS_TUBE_STRIP_ID) || id != -1)
         return next_map ? next_map(context, id, output) : 0;
     struct MapRow {
         char name[24];
@@ -331,7 +331,7 @@ extern "C" int fxmap_get_row(void *context, int id, void *output)
     else if (uid == HS_XSAT_ID) memcpy(row->name, "HS Drive Sat", sizeof "HS Drive Sat");
     else if (uid == HS_BUS_ID) memcpy(row->name, "HS Bus Compressor", sizeof "HS Bus Compressor");
     else if (uid == HS_PUMP_ID) memcpy(row->name, "HS Pump", sizeof "HS Pump");
-    else if (uid == HS_DISTRESSOR_ID) memcpy(row->name, "HS Crush", sizeof "HS Crush");
+    else if (uid == HS_CRUSH_ID) memcpy(row->name, "HS Crush", sizeof "HS Crush");
     else if (uid == HS_TUBE_STRIP_ID) memcpy(row->name, "HS Tube Strip", sizeof "HS Tube Strip");
     else if (uid == HS_HEAT_ID) memcpy(row->name, "HS Heat", sizeof "HS Heat");
     else memcpy(row->name, "HS Channel Strip", sizeof "HS Channel Strip");
@@ -346,7 +346,7 @@ extern "C" int fxmap_get_row(void *context, int id, void *output)
         : uid == HS_XSAT_ID ? xsat_banks[__atomic_load_n(&xsat_bank, __ATOMIC_RELAXED)]
         : uid == HS_BUS_ID ? bus_banks[__atomic_load_n(&bus_bank, __ATOMIC_RELAXED)]
         : uid == HS_PUMP_ID ? pump_banks[__atomic_load_n(&pump_bank, __ATOMIC_RELAXED)]
-        : uid == HS_DISTRESSOR_ID ? dist_banks[__atomic_load_n(&dist_bank, __ATOMIC_RELAXED)]
+        : uid == HS_CRUSH_ID ? dist_banks[__atomic_load_n(&dist_bank, __ATOMIC_RELAXED)]
         : uid == HS_TUBE_STRIP_ID ? tube_banks[__atomic_load_n(&tube_bank, __ATOMIC_RELAXED)]
         : uid == HS_HEAT_ID ? heat_banks[__atomic_load_n(&heat_bank, __ATOMIC_RELAXED)]
         : channel_banks[__atomic_load_n(&channel_bank, __ATOMIC_RELAXED)];
@@ -364,7 +364,7 @@ extern "C" int hs_mod_view(const int *knobs, int *source, const char **target_pa
 {
     unsigned uid = insert_open(), count;
     const FlavorBank *pages = uid == HS_XSAT_ID ? xsat_banks : uid == HS_BUS_ID ? bus_banks
-        : uid == HS_PUMP_ID ? pump_banks : uid == HS_DISTRESSOR_ID ? dist_banks
+        : uid == HS_PUMP_ID ? pump_banks : uid == HS_CRUSH_ID ? dist_banks
         : uid == HS_TUBE_STRIP_ID ? tube_banks : uid == HS_HEAT_ID ? heat_banks
         : uid == HS_CHANNEL_ID ? channel_banks : nullptr;
     unsigned *at = pages ? paged(uid, &count) : nullptr;

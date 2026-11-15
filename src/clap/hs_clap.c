@@ -403,6 +403,8 @@ static bool e_init(const char *path) {
         for (const char *c = d->Name; *c && n < (int)sizeof ids[fx_count] - 1; ++c)
             ids[fx_count][n++] = *c == ' ' ? '_' : (char)(*c >= 'A' && *c <= 'Z' ? *c + 32 : *c);
         ids[fx_count][n] = 0;
+        if (!strcmp(ids[fx_count], "com.henryskillz.hs_hf_exciter"))   /* renamed in v0.7.1: keep the old id */
+            snprintf(ids[fx_count], sizeof ids[fx_count], "com.henryskillz.hs_air_exciter");
         descs[fx_count] = (clap_plugin_descriptor_t){
             .clap_version = CLAP_VERSION_INIT, .id = ids[fx_count], .name = d->Name, .vendor = "Henry Skillz",
             .url = "https://github.com/hmukhwana/henryskillz-mpc-sample-mod-kit", .version = "0.6.0",
