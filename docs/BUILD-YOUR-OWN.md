@@ -1,4 +1,4 @@
-# Build your own: add to SampQOL, or make your own OS
+# Build your own: add to SampQOL, or make your own mod
 
 This is for people who want to go further than installing the HS effects: write their own add-ons, or build their own MPC Sample mod from scratch.
 It's more technical than the [install guide](INSTALL-GUIDE.md), but it still starts with the rules.
@@ -57,7 +57,7 @@ This is what the HS kit does, and you can do the same on your own card.
 **Sharing it:** don't share the folder, because it contains SampQOL. Share **your own files plus a way to apply them**: an installer like this one, a script or written steps. Users then get SampQOL from the official link.
 Hooking SampQOL's internal functions ties your add-on to one SampQOL version. Expect to update it whenever he releases a new one.
 
-## Option B: make your own OS from scratch
+## Option B: make your own mod from scratch
 
 You don't need SampQOL at all. Your own `autorun` folder can start anything you write.
 
