@@ -20,6 +20,11 @@ jobs:
           node-version: "22"
       - run: python -m unittest discover -s tests -v
       - run: node installer/test_installer.mjs
+      - name: Warp on import only warps loops
+        working-directory: src/warp
+        run: |
+          gcc -O2 -Wall -Wextra -Werror check_import.c import_warp.c -o /tmp/check-import -lm -pthread
+          /tmp/check-import
       - name: Build and check LADSPA registry
         working-directory: src/fx
         run: |
