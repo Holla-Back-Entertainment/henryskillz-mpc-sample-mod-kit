@@ -6,6 +6,7 @@ int stems_is_shift_browser(const uint32_t *px, int stride);
 uint32_t stems_row(const uint32_t *px, int stride);
 int stems_is_wav(const char *path);
 int stems_out(const char *path, char *dir, size_t dn, char *base, size_t bn);
+int stems_card(const char *stems_dir, char *card, size_t n);
 void stems_paint_b1(uint32_t *px, int stride, const char *label);
 void stems_paint_box(uint32_t *px, int stride, const char *title, int pct, const char *line);
 void stems_paint_tabs(uint32_t *px, int stride, const char *b1, const char *b2, const char *b3);

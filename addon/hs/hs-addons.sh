@@ -3,6 +3,8 @@
 # Copies the add-ons to RAM and sets HS_PRELOAD (before SampQOL) and HS_POSTLOAD (after it). Nothing is written to the MPC itself.
 # If anything is missing, HS_PRELOAD stays empty and SampQOL runs exactly as stock.
 HS="$DIR/hs"
+# The card: the folder above autorun/ (a Boot Thingy app sits at autorun/apps/<name>/).
+CARD="${DIR%/autorun}"; CARD="${CARD%%/autorun/*}"
 HS_PRELOAD=
 HS_POSTLOAD=
 if cp "$HS/hs-flavor.so" /tmp/hs-flavor.so &&
@@ -14,7 +16,7 @@ if cp "$HS/hs-flavor.so" /tmp/hs-flavor.so &&
    cp "$HS/hs-pro-fx-ladspa.so" /tmp/hs-ladspa-test/; then
     chmod 644 /tmp/hs-flavor.so /tmp/hs-browser.so /tmp/hs-eq.so /tmp/hs-fx.so /tmp/hs-seq.so /tmp/hs-ladspa-test/hs-pro-fx-ladspa.so
     HS_PRELOAD="/tmp/hs-flavor.so:/tmp/hs-browser.so:/tmp/hs-eq.so:/tmp/hs-fx.so:/tmp/hs-seq.so:"
-    export HS_PRESETS_DIR="${DIR%/*}/MPC-Sample/Presets"
+    export HS_PRESETS_DIR="$CARD/MPC-Sample/Presets"
 fi 2>/dev/null
 # SampQOL screen styling and the graphic channel mixer (SampQOL 0.2.0 only; each checks that itself and
 # steps aside on any other build). Optional, each on its own: they go after hs-fx and before hs-seq.
@@ -29,7 +31,7 @@ done
 if [ -n "$HS_PRELOAD" ] && mkdir -p /tmp/hs-chains && cp "$HS/"*.xfx /tmp/hs-chains/ &&
    cp "$HS/hs-chains.so" /tmp/hs-chains.so; then
     chmod 644 /tmp/hs-chains.so /tmp/hs-chains/*
-    export HS_CHAINS_USER="${DIR%/*}/MPC-Sample/Chains"
+    export HS_CHAINS_USER="$CARD/MPC-Sample/Chains"
     # After SampQOL (before Stems), so its "Chain loaded" box draws on top of SampQOL's screens.
     HS_POSTLOAD=":/tmp/hs-chains.so"
 fi 2>/dev/null

@@ -25,6 +25,11 @@ jobs:
         run: |
           gcc -O2 -Wall -Wextra -Werror check_import.c import_warp.c -o /tmp/check-import -lm -pthread
           /tmp/check-import
+      - name: Stems screen checks and card path
+        working-directory: src/stems
+        run: |
+          gcc -O2 -Wall -Wextra -DSTEMS_HOST check_ui.c hs_stems_ui.c stems_pad.c -o /tmp/check-ui -lm
+          /tmp/check-ui
       - name: HS Crush curves, timing and Auto Gain
         working-directory: src/fx
         run: |
