@@ -1,4 +1,4 @@
-# HenrySkillz MPC Sample Mod Kit
+# HenrySkillz D.S.B (Drums. Sample. Bass.) for the MPC Sample
 
 **Nine studio effects for the Akai MPC Sample, installed from a web page in about 15 minutes.**
 No coding, no terminal, no apps to install, no AI tools. Free.
@@ -12,7 +12,7 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 > **Unofficial.** Not made, endorsed or supported by Akai Professional, inMusic or the SampQOL author.
 > Everything runs from the SD card. Switch off and take the card out, and the MPC is stock again.
 
-> **Tested:** the installer on a pristine official SampQOL 0.2.0 package (Chrome and Safari), including a virtual-MPC boot of the generated output. The v0.5 build passed a hardware boot test on Henry's own MPC Sample. Changes since then—including Stems onto pads, chain boxes, screen styling, the graphic mixer and effect presets—remain emulator-tested until the current [hardware checklist](docs/BOOT-TEST.md) passes. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues).
+> **Tested:** the installer on a pristine official SampQOL 0.2.0 package (Chrome and Safari), including a virtual-MPC boot of the generated output. v0.7.0 (commit 93fa9da) passed the full [hardware checklist](docs/BOOT-TEST.md) on Henry's own MPC Sample on 15 Nov 2026, including a power-off cold boot. Warp on import and HS Crush Auto Gain (merged after v0.7.0) were tested on the same unit from RAM on 15 Nov 2026. They and this rename ship in v0.7.1, after a cold boot of the v0.7.1 card. The HS Tools card for stock firmware passed its features on the unit from RAM on 15 Nov 2026, but booting from the HS Tools card itself is not yet tested. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues).
 
 ---
 
@@ -32,7 +32,7 @@ For how to use every feature, button by button, see the [user guide](docs/USER-G
 | **HS Bass Focus** | EQ / Filter | Splits at a crossover (30 to 500 Hz), makes the lows mono and sets their level. The highs pass untouched |
 | **HS Tube Strip** | Harmonic | Tube channel strip: tube drive, a 6 dB/oct high-pass, an opto compressor with a gain-reduction meter and a 4-band EQ, with the EQ before or after the compressor and a side-chain EQ for de-essing |
 
-**Where did HS Air Exciter, HS Drive Sat and the stock Bus Compressor go?** SampQOL's insert menu has 40 rows. To fit nine HS effects, the stock Bus Compressor leaves the Dynamics list (HS Bus Compressor and HS Crush cover it), and HS Air Exciter and HS Drive Sat leave the menu. All three are still installed: a project that already uses them opens with them, as before.
+**Where did HS HF Exciter, HS Drive Sat and the stock Bus Compressor go?** SampQOL's insert menu has 40 rows. To fit nine HS effects, the stock Bus Compressor leaves the Dynamics list (HS Bus Compressor and HS Crush cover it), and HS HF Exciter and HS Drive Sat leave the menu. All three are still installed: a project that already uses them opens with them, as before.
 
 Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, and the HenrySkillz start screen (after SampQOL's own).
 
@@ -46,7 +46,7 @@ Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid 
 
 **One Bypass.** Every HS effect uses the Bypass button above the screen. The old Bypass knobs on Drive Sat, Bus Compressor and Para EQ are gone (projects that used them still open).
 
-**Track chains.** Rename a track **VOX**, **DRUMS** or **BASS** (or any name that starts with one, like "Vox Lead") and, if the track has no inserts yet, its chain loads: Channel Strip, Bus Compressor and Air Exciter on VOX, Saturator and Bus Compressor on DRUMS, Drive Sat and Para EQ on BASS. One UNDO takes back the rename and the chain together. To save your own, dial in a track's inserts and rename it with a **#** on the end, like **KEYS#**: the chain is saved to `MPC-Sample/Chains/KEYS.xfx` on the card, the track is named KEYS again, and any track you name KEYS gets it. A short box on the screen says what happened: **Chain loaded**, **Chain saved**, or why not (the track already has effects, no effects to save).
+**Track chains.** Rename a track **VOX**, **DRUMS** or **BASS** (or any name that starts with one, like "Vox Lead") and, if the track has no inserts yet, its chain loads: Channel Strip, Bus Compressor and HF Exciter on VOX, Saturator and Bus Compressor on DRUMS, Drive Sat and Para EQ on BASS. One UNDO takes back the rename and the chain together. To save your own, dial in a track's inserts and rename it with a **#** on the end, like **KEYS#**: the chain is saved to `MPC-Sample/Chains/KEYS.xfx` on the card, the track is named KEYS again, and any track you name KEYS gets it. A short box on the screen says what happened: **Chain loaded**, **Chain saved**, or why not (the track already has effects, no effects to save).
 
 **Key and BPM in the browser.** Preview a sample and its row shows the key and the tempo the preview plays at, like **C# MIN 75 BPM**. WAV and MP3.
 

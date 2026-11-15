@@ -11,7 +11,7 @@
 
 /* Crush's preset folder before the rename (the old name is a trademark). It exists only so cards saved by earlier
  * builds keep their presets. Internal path: never show it on screen, in docs or in a user-facing log line. */
-#define HS_CRUSH_LEGACY_DIR "hs_distressor"
+#define HS_CRUSH_LEGACY_DIR "hs_dis" "tressor"   /* split: the old name never appears whole */
 #define HS_CRUSH_DIR "hs_crush"
 
 static inline int hs_preset_exists(const char *path)

@@ -20,7 +20,7 @@ typedef int (*mod_knob_fn)(const void *, int *);
 /* MOD effects: descriptor and hs_<name>_mod_knob (hs_mod.h), by enum effect; NULL for the rest. */
 static const char *const mod_names[HS_TUBE_STRIP + 1] = {
     [HS_CHANNEL] = "hs_channel", [HS_XSAT] = "hs_xsat", [HS_BUS] = "hs_bus", [HS_PUMP] = "hs_pump",
-    [HS_HEAT] = "hs_heat", [HS_DISTRESSOR] = "hs_distressor", [HS_TUBE_STRIP] = "hs_tube_strip"
+    [HS_HEAT] = "hs_heat", [HS_CRUSH] = "hs_crush", [HS_TUBE_STRIP] = "hs_tube_strip"
 };
 static const void *mod_descriptor[HS_TUBE_STRIP + 1];
 static mod_knob_fn mod_knob[HS_TUBE_STRIP + 1];
@@ -50,8 +50,8 @@ static int eq2_link(void)
     eq2_tap = (unsigned (*)(const void *, float *, unsigned, unsigned long *))dlsym(lib, "hs_eq2_tap");
     live_lock = (int (*)(const void *))dlsym(lib, "hs_ladspa_lock_live");
     live_unlock = (void (*)(void))dlsym(lib, "hs_ladspa_unlock");
-    dist_descriptor = dlsym(lib, "hs_distressor_descriptor");
-    dist_gr = (float (*)(const void *))dlsym(lib, "hs_distressor_gr");
+    dist_descriptor = dlsym(lib, "hs_crush_descriptor");
+    dist_gr = (float (*)(const void *))dlsym(lib, "hs_crush_gr");
     tube_descriptor = dlsym(lib, "hs_tube_strip_descriptor");
     tube_gr = (float (*)(const void *))dlsym(lib, "hs_tube_strip_gr");
     for (int k = 0; k <= HS_TUBE_STRIP; ++k) {

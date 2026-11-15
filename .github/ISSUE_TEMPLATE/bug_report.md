@@ -10,7 +10,7 @@ Check the [FAQ](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-samp
 
 **SampQOL OS version:**
 
-**Mod kit version** (for example v0.6.0), and whether Stems was ticked:
+**D.S.B version** (for example v0.6.0), and whether Stems was ticked:
 
 **Browser and computer used for the installer:**
 

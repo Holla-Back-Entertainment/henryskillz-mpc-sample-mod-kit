@@ -19,7 +19,7 @@ typedef struct FlavorBank FlavorBank;
 #include "hs_clap_panel.h"
 
 int hs_eq2_response_of(const float *v, unsigned long rate, int which, int points, float *db);
-float hs_distressor_gr(const void *handle);
+float hs_crush_gr(const void *handle);
 float hs_tube_strip_gr(const void *handle);
 
 enum { HEAD = 40, MAX_PAGES = 32 };
@@ -196,7 +196,7 @@ static void *hs_gui_sym(const char *name)
     static const struct { const char *name; void *fn; } table[] = {
         {"hs_channel_bank", (void *)bank_title}, {"hs_xsat_bank", (void *)bank_title},
         {"hs_bus_bank", (void *)bank_title}, {"hs_pump_bank", (void *)bank_title},
-        {"hs_heat_bank", (void *)bank_title}, {"hs_distressor_bank", (void *)bank_title},
+        {"hs_heat_bank", (void *)bank_title}, {"hs_crush_bank", (void *)bank_title},
         {"hs_tube_strip_bank", (void *)bank_title}, {"hs_knob_unit", (void *)knob_unit},
         {"hs_eq2_selection", (void *)eq_selection}, {"hs_mod_view", (void *)mod_view},
     };
@@ -210,11 +210,11 @@ hs_panel *hs_panel_new(const LADSPA_Descriptor *d, float *ctl, const uint32_t *p
 {
     static const struct { const char *name; enum effect kind; const FlavorBank *tab; int n; } kinds[] = {
 #define T(name, kind, tab) {name, kind, tab, (int)(sizeof tab / sizeof *tab)}
-        {"HS Saturator", HS_SATURATOR, NULL, 0}, {"HS Air Exciter", HS_AIR_EXCITER, NULL, 0},
+        {"HS Saturator", HS_SATURATOR, NULL, 0}, {"HS HF Exciter", HS_AIR_EXCITER, NULL, 0},
         T("HS Channel Strip", HS_CHANNEL, channel_banks), T("HS Drive Sat", HS_XSAT, xsat_banks),
         T("HS Bus Compressor", HS_BUS, bus_banks), {"HS Para EQ", HS_EQ2, NULL, 0},
         T("HS Pump", HS_PUMP, pump_banks), T("HS Heat", HS_HEAT, heat_banks),
-        T("HS Crush", HS_DISTRESSOR, dist_banks), {"HS Bass Focus", HS_BASS_FOCUS, NULL, 0},
+        T("HS Crush", HS_CRUSH, dist_banks), {"HS Bass Focus", HS_BASS_FOCUS, NULL, 0},
         T("HS Tube Strip", HS_TUBE_STRIP, tube_banks),
 #undef T
     };
@@ -261,7 +261,7 @@ const uint32_t *hs_panel_draw(hs_panel *s, const void *handle)
         s->ep.values[i] = s->ep.main_values[i] = k < 0 ? -1 : (int)lroundf(to_pos(s, s->param_port[k], s->ctl[s->param_port[k]]));
         s->ep.bypassed[i] = 0;
     }
-    if (s->kind == HS_DISTRESSOR) dist_gr_db = handle ? hs_distressor_gr(handle) : -1;
+    if (s->kind == HS_CRUSH) dist_gr_db = handle ? hs_crush_gr(handle) : -1;
     if (s->kind == HS_TUBE_STRIP) tube_gr_db = handle ? hs_tube_strip_gr(handle) : -1;
     const uint32_t *panel = draw_gear(&s->ep);
     memcpy(s->out + HEAD * W, panel, sizeof s->ep.rendered);

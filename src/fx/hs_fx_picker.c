@@ -15,7 +15,7 @@
 #include "hs_eq2.h"
 #include "hs_pump.h"
 #include "hs_heat.h"
-#include "hs_distressor.h"
+#include "hs_crush.h"
 #include "hs_tube_strip.h"
 #include "hs_bass_focus.h"
 
@@ -40,14 +40,14 @@ struct fx_row {
 
 static const struct fx_row hs_rows[] = {
     {HS_SATURATOR, -1, HARMONIC, "HS Saturator"},
-    {HS_AIR_EXCITER, -1, HARMONIC, "HS Air Exciter"},
+    {HS_AIR_EXCITER, -1, HARMONIC, "HS HF Exciter"},
     {HS_CHANNEL_ID, -1, HARMONIC, "HS Channel Strip"},
     {HS_XSAT_ID, -1, HARMONIC, "HS Drive Sat"},
     {HS_BUS_ID, -1, DYNAMICS, "HS Bus Compressor"},
     {HS_EQ2_ID, -1, EQ_FILTER, "HS Para EQ"},
     {HS_PUMP_ID, -1, DYNAMICS, "HS Pump"},
     {HS_HEAT_ID, -1, HARMONIC, "HS Heat"},
-    {HS_DISTRESSOR_ID, -1, DYNAMICS, "HS Crush"},
+    {HS_CRUSH_ID, -1, DYNAMICS, "HS Crush"},
     {HS_BASS_FOCUS_ID, -1, EQ_FILTER, "HS Bass Focus"},
     {HS_TUBE_STRIP_ID, -1, HARMONIC, "HS Tube Strip"}
 };
@@ -55,7 +55,7 @@ enum { FX_COUNT = sizeof hs_rows / sizeof *hs_rows };
 
 /* SampQOL 0.2.0 builds the insert menu in 40 rows and 32 are stock. Hiding the stock Bus
    Compressor leaves 9 HS rows; one more and SampQOL has no room, which hides every HS row.
-   Air Exciter and Drive Sat stay in the catalog, so saved projects that use them still open
+   HF Exciter and Drive Sat stay in the catalog, so saved projects that use them still open
    them, but have no menu row. The stock Bus Compressor stays in the MPC for the same reason. */
 enum { MENU_ROWS = 9, STOCK_BUS_COMPRESSOR = 0x4143564a };
 static int in_menu(const struct fx_row *row)

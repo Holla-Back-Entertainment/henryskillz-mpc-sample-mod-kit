@@ -1,4 +1,4 @@
-# How to use the HenrySkillz Mod Kit
+# How to use HenrySkillz D.S.B
 
 This guide shows how to use everything the kit adds to your MPC Sample, one button at a time.
 It assumes the kit is already installed. If it isn't, start with the [step-by-step install guide](INSTALL-GUIDE.md).
@@ -21,7 +21,7 @@ You don't need to know anything about modding. If you can load a sample and play
 - [HS Crush](#hs-crush)
 - [HS Bass Focus](#hs-bass-focus)
 - [HS Tube Strip](#hs-tube-strip)
-- [HS Air Exciter and HS Drive Sat](#hs-air-exciter-and-hs-drive-sat)
+- [HS HF Exciter and HS Drive Sat](#hs-hf-exciter-and-hs-drive-sat)
 - [MOD and the key bus](#mod-and-the-key-bus)
 - [Track chains](#track-chains)
 - [Key and BPM in the browser](#key-and-bpm-in-the-browser)
@@ -555,11 +555,11 @@ If it doesn't work: Threshold starts at +20 dB, where the compressor is idle. Tu
 
 ---
 
-## HS Air Exciter and HS Drive Sat
+## HS HF Exciter and HS Drive Sat
 
 These two are no longer in the effect list, to make room for the nine above. They are still installed, so projects that use them open as before, and the VOX and BASS [track chains](#track-chains) load them. You edit them like any other HS effect.
 
-- **HS Air Exciter:** Frequency (2,000 to 12,000 Hz), Drive (0 to 18 dB) and Amount (0 to 1). It does nothing until Amount is above 0.
+- **HS HF Exciter:** Frequency (2,000 to 12,000 Hz), Drive (0 to 18 dB) and Amount (0 to 1). It does nothing until Amount is above 0.
 - **HS Drive Sat:** pages **DRIVE** (Drive, Shape, Depth), **HARMONICS** (Harmonics, Mix, +6dB Headroom), **I/O** (Input, Output), then **MOD** and **MOD TIME**.
 
 If it doesn't work: you can't add them from the list. Load them with a chain, or open a project that already has them.
@@ -615,7 +615,7 @@ The shipped chains:
 
 | Track name starts with | Chain loads |
 |---|---|
-| VOX, VOCAL or VOCALS | HS Channel Strip, HS Bus Compressor, HS Air Exciter |
+| VOX, VOCAL or VOCALS | HS Channel Strip, HS Bus Compressor, HS HF Exciter |
 | DRUMS, DRUM or DRM | HS Saturator, HS Bus Compressor |
 | BASS | HS Drive Sat, HS Para EQ |
 | KICK | HS Tube Strip, set for a kick |

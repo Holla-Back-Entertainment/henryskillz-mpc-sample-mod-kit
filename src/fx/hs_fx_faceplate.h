@@ -75,7 +75,7 @@ static const struct faceplate faceplates[] = {
     [HS_EQ2] = {0x252e36, 0x77bcb0, "PARA EQ"},
     [HS_PUMP] = {0x060708, 0x2fa8e8, "PUMP"},
     [HS_HEAT] = {0x0c0c0d, 0xe8e6e0, "HEAT"},
-    [HS_DISTRESSOR] = {0x0a0a0b, 0xd8d8d4, "CRUSH"},
+    [HS_CRUSH] = {0x0a0a0b, 0xd8d8d4, "CRUSH"},
     [HS_BASS_FOCUS] = {0x0b0e0f, 0x48c8a0, "BASS FOCUS"},
     [HS_TUBE_STRIP] = {0x0d1116, 0xf0a040, "TUBE STRIP"}
 };
@@ -627,7 +627,7 @@ static int dist_section(const char **name)
 {
     typedef const char *(*bank_fn)(int *);
     static bank_fn active_bank;
-    if (!active_bank) active_bank = (bank_fn)dlsym(RTLD_DEFAULT, "hs_distressor_bank");
+    if (!active_bank) active_bank = (bank_fn)dlsym(RTLD_DEFAULT, "hs_crush_bank");
     int section = 0;
     const char *title = active_bank ? active_bank(&section) : NULL;
     if (name) *name = title ? title : "COMPRESS";
@@ -955,7 +955,7 @@ static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
     rect(p,8,34,304,42,0x101719);
     frame(p,8,34,304,42,0x465259);
     if (mod_panel(p, accent, page->values)) return;
-    if (kind != TAPE_DELAY && kind != TAPE && kind != AIR_FLAVOR && kind != HS_CHANNEL && kind != HS_XSAT && kind != HS_BUS && kind != HS_EQ2 && kind != HS_PUMP && kind != HS_HEAT && kind != HS_DISTRESSOR && kind != HS_BASS_FOCUS && kind != HS_TUBE_STRIP)
+    if (kind != TAPE_DELAY && kind != TAPE && kind != AIR_FLAVOR && kind != HS_CHANNEL && kind != HS_XSAT && kind != HS_BUS && kind != HS_EQ2 && kind != HS_PUMP && kind != HS_HEAT && kind != HS_CRUSH && kind != HS_BASS_FOCUS && kind != HS_TUBE_STRIP)
         text(p,17,38,face->legend,24,0xaebfc2);
 
     switch (kind) {
@@ -1011,7 +1011,7 @@ static void fx_faceplate_art(uint32_t *p, const struct effect_page *page)
     case HS_PUMP:
         pump_panel(p, page->values);
         break;
-    case HS_DISTRESSOR:
+    case HS_CRUSH:
         dist_panel(p, page->values);
         break;
     case HS_BASS_FOCUS:

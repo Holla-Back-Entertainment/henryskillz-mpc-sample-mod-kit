@@ -15,7 +15,7 @@
 #include <string.h>
 #include "ladspa.h"
 #include "hs_pump.h"
-#include "hs_distressor.h"
+#include "hs_crush.h"
 #include "hs_tube_strip.h"
 #include "hs_heat.h"
 #include "hs_channel.h"
@@ -26,7 +26,7 @@ enum { RATE = 48000, BLOCK = 128, MAXP = 64 };
 
 static const struct { unsigned long uid; int mod, level; const char *name, *knob; } fx[] = {
     {HS_PUMP_ID, PU_MOD, PU_OUTPUT, "Pump", "hs_pump_mod_knob"},
-    {HS_DISTRESSOR_ID, DS_MOD, DS_OUTPUT, "Crush", "hs_distressor_mod_knob"},
+    {HS_CRUSH_ID, DS_MOD, DS_OUTPUT, "Crush", "hs_crush_mod_knob"},
     {HS_TUBE_STRIP_ID, TS_MOD, TS_OUTPUT, "Tube Strip", "hs_tube_strip_mod_knob"},
     {HS_HEAT_ID, HE_MOD, HE_VOLUME, "Heat", "hs_heat_mod_knob"},
     {HS_CHANNEL_ID, CH_MOD, CH_OUTPUT, "Channel Strip", "hs_channel_mod_knob"},

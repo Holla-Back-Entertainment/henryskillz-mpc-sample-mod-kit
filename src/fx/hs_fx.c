@@ -16,7 +16,7 @@ enum { W = 320, H = 160 };
 #include "hs_eq2.h"
 #include "hs_pump.h"
 #include "hs_heat.h"
-#include "hs_distressor.h"
+#include "hs_crush.h"
 #include "hs_tube_strip.h"
 #include "hs_bass_focus.h"
 
@@ -76,7 +76,7 @@ enum effect {
     OTHER, DUCKER, COMPRESSOR, WIDTH, TUBE_DRIVE, SOFT_CLIPPER, HS_SATURATOR, HS_AIR_EXCITER,
     DELAY, DIFF_DELAY, TAPE_DELAY, SAMPLE_DELAY, REVERB, SPRING_REVERB, FILTER, BUS_COMP,
     DUCKER_INPUT, LIMITER, PUMPER, TRANSIENT, GATE, AMP_SIM, ENSEMBLE, CHORUS, PHASER,
-    FLANGER, WAH, AUTO_PAN, VINTAGE, VINYL, TAPE, AIR_FLAVOR, HS_CHANNEL, HS_XSAT, HS_BUS, HS_EQ2, HS_PUMP, HS_HEAT, HS_DISTRESSOR, HS_BASS_FOCUS, HS_TUBE_STRIP
+    FLANGER, WAH, AUTO_PAN, VINTAGE, VINYL, TAPE, AIR_FLAVOR, HS_CHANNEL, HS_XSAT, HS_BUS, HS_EQ2, HS_PUMP, HS_HEAT, HS_CRUSH, HS_BASS_FOCUS, HS_TUBE_STRIP
 };
 enum { KNOBS = 3 };
 
@@ -136,7 +136,7 @@ static enum effect identify_effect(const uint32_t *p)
     case 0xaa0fcd4d: return TUBE_DRIVE;
     case 0xe82c045f: return SOFT_CLIPPER;
     case 0x671b315c: return HS_SATURATOR;
-    case 0x7d9fd763: return HS_AIR_EXCITER;
+    case 0x745a3642: return HS_AIR_EXCITER;   /* "HS HF Exciter", measured on the unit 15 Nov 2026 */
     default: break;
     }
     if (!qol_base) return OTHER;
@@ -173,7 +173,7 @@ static enum effect identify_effect(const uint32_t *p)
     case HS_EQ2_ID: return HS_EQ2;
     case HS_PUMP_ID: return HS_PUMP;
     case HS_HEAT_ID: return HS_HEAT;
-    case HS_DISTRESSOR_ID: return HS_DISTRESSOR;
+    case HS_CRUSH_ID: return HS_CRUSH;
     case HS_BASS_FOCUS_ID: return HS_BASS_FOCUS;
     case HS_TUBE_STRIP_ID: return HS_TUBE_STRIP;
     default: return OTHER;
@@ -274,7 +274,7 @@ static void name_display(uint32_t *p, enum effect kind)
         [TUBE_DRIVE] = "TUBE DRIVE",
         [SOFT_CLIPPER] = "SOFT CLIPPER",
         [HS_SATURATOR] = "HS SATURATOR",
-        [HS_AIR_EXCITER] = "HS AIR EXCITER"
+        [HS_AIR_EXCITER] = "HS HF EXCITER"
     };
     const char *name = titles[kind];
     int inset = kind == TUBE_DRIVE || kind == SOFT_CLIPPER ? 10 : 7;
@@ -394,9 +394,9 @@ static const uint32_t *draw_stock_rack(struct effect_page *page)
     for (int i = 0; i < KNOBS; ++i) {
         int x = 8 + 103 * i, cx = x + 49;
         int flavor = page->kind == AIR_FLAVOR;
-        int pump = page->kind == HS_PUMP || page->kind == HS_DISTRESSOR, heat = page->kind == HS_HEAT;
+        int pump = page->kind == HS_PUMP || page->kind == HS_CRUSH, heat = page->kind == HS_HEAT;
         rect(p, x, 81, 98, 72, flavor ? 0x444749 : pump ? 0x08090b : heat ? 0x111112 : 0x192227);
-        frame(p, x, 81, 98, 72, flavor ? 0x9e9984 : page->kind == HS_DISTRESSOR ? 0x4a4a4c : pump ? 0x2fa8e8 : heat ? 0x4a4a4c : 0x465157);
+        frame(p, x, 81, 98, 72, flavor ? 0x9e9984 : page->kind == HS_CRUSH ? 0x4a4a4c : pump ? 0x2fa8e8 : heat ? 0x4a4a4c : 0x465157);
         if (!row_has_label(src, rows[bank + i])) {
             rect(p, x+15, 116, 68, 1, 0x344147);
             continue;
@@ -415,7 +415,7 @@ static const uint32_t *draw_stock_rack(struct effect_page *page)
         } else if (page->kind == HS_BUS) {
             static const uint32_t accents[] = {0xb5bcc2,0x7ba5c1,0xa6bf9e};
             rack_knob(p, cx, 116, value, page->bypassed[i], accents[bus_section(NULL)]);
-        } else if (page->kind == HS_PUMP || page->kind == HS_DISTRESSOR) {
+        } else if (page->kind == HS_PUMP || page->kind == HS_CRUSH) {
             pump_knob(p, cx, 116, value, page->bypassed[i]);
         } else if (page->kind == HS_HEAT) {
             heat_knob(p, cx, 116, value, page->bypassed[i]);
@@ -436,14 +436,14 @@ static const uint32_t *draw_stock_rack(struct effect_page *page)
             : page->kind == HS_BUS ? bus_marking(i, value)
             : page->kind == HS_PUMP ? pump_marking(i, value)
             : page->kind == HS_HEAT ? heat_marking(i, value)
-            : page->kind == HS_DISTRESSOR ? dist_marking(i, value)
+            : page->kind == HS_CRUSH ? dist_marking(i, value)
             : page->kind == HS_BASS_FOCUS ? bf_marking(i, value)
             : page->kind == HS_TUBE_STRIP ? tube_marking(i, value)
             : page->kind == HS_EQ2 ? eq2_marking(i,value)
             : page->kind == HS_CHANNEL ? channel_marking(i, page->shifted, value) : NULL;
         if (marked)
             text(p, cx - 2*(int)strlen(marked), 142, marked, 22,
-                 page->kind == HS_PUMP || page->kind == HS_DISTRESSOR ? 0xf0f0ec : page->kind == HS_HEAT ? 0xd8f040
+                 page->kind == HS_PUMP || page->kind == HS_CRUSH ? 0xf0f0ec : page->kind == HS_HEAT ? 0xd8f040
                  : page->kind == HS_BASS_FOCUS ? bf_green : page->kind == HS_TUBE_STRIP ? tube_amber : 0xb7e0ce);
         else {
             static const char *(*unit_of)(int);
@@ -674,7 +674,7 @@ static int live_tick(struct effect_page *page)
     enum effect kind = page->kind;
     int moved = mod_tick(page);
     if (kind == HS_EQ2) return eq2_spectrum_tick() | moved;
-    if (kind != HS_DISTRESSOR && kind != HS_TUBE_STRIP) return moved;
+    if (kind != HS_CRUSH && kind != HS_TUBE_STRIP) return moved;
     static const int steps[] = {1, 2, 3, 4, 6, 8, 10, 14, 20, 30};
     static int drawn[2] = {-2, -2};
     int tube = kind == HS_TUBE_STRIP;

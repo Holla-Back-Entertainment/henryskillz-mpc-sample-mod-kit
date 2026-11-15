@@ -4,7 +4,7 @@
 set -eu
 cd "$(dirname "$0")"
 : "${CLAP_SDK:?set CLAP_SDK to the CLAP SDK folder}"
-SRC="hs_ladspa.c hs_eq2.c hs_pump.c hs_heat.c hs_distressor.c hs_bass_focus.c hs_tube_strip.c hs_bus.c hs_xsat.c hs_channel.c hs_saturator.c hs_air_exciter.c hs_env.c"
+SRC="hs_ladspa.c hs_eq2.c hs_pump.c hs_heat.c hs_crush.c hs_bass_focus.c hs_tube_strip.c hs_bus.c hs_xsat.c hs_channel.c hs_saturator.c hs_air_exciter.c hs_env.c"
 OUT="../../dist/HS Effects.clap"
 rm -rf "$OUT" && mkdir -p "$OUT/Contents/MacOS"
 FILES=hs_clap.c; for f in $SRC; do FILES="$FILES ../fx/$f"; done

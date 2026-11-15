@@ -130,7 +130,7 @@ Wherever you choose an insert effect (for example a pad's insert slots in the **
 - **Dynamics:** HS Bus Compressor, HS Pump, HS Crush
 - **EQ / Filter:** HS Para EQ, HS Bass Focus
 
-HS Air Exciter, HS Drive Sat and the stock Bus Compressor are no longer in the menu (it has 40 rows), but projects that already use them still open with them.
+HS HF Exciter, HS Drive Sat and the stock Bus Compressor are no longer in the menu (it has 40 rows), but projects that already use them still open with them.
 
 ![Insert effects list showing the HS Harmonic effects](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-effects-list.png)
 

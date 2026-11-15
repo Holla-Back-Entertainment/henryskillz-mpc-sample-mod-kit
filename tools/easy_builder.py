@@ -103,7 +103,7 @@ def build(
         output.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(staged, output)
         (output / ".henryskillz-build").write_text(
-            "Generated locally by HenrySkillz MPC Sample Mod Kit.\n",
+            "Generated locally by HenrySkillz D.S.B.\n",
             encoding="utf-8",
         )
     return output
