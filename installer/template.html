@@ -37,6 +37,7 @@
     <li>Save the <b>autorun-hs.zip</b> this page gives you, unzip it, and copy the <b>autorun</b> folder to the top of your SD card.</li>
   </ol>
   <p><label><input type="checkbox" id="stems"> <b>Add Stems</b>: split a sample into vocals, drums, bass and other on the MPC itself. Adds a 92 MB download, and needs this page online (not the saved copy).</label></p>
+  <p><label><input type="checkbox" id="styling"> <b>SampQOL list styling (optional)</b>: restyles SampQOL's own list screens (red top bar, dark blue palette, cyan selection). Off unless you tick it. It changes how SampQOL's screens look, and SampQOL's author has not approved it.</label></p>
   <div class="drop" id="drop">
     <p>Drop the SampQOL zip here</p>
     <label class="btn">Choose zip<input type="file" id="zip" accept=".zip"></label>
@@ -51,7 +52,7 @@
     <li>Unzip it and copy <b>everything</b> in its <b>hs</b> folder into <b>autorun/hs</b> on the card, replacing the old files. Replace them all together.</li>
     <li>Eject the card, switch the MPC on and press <b>B1</b>.</li>
   </ol>
-  <p class="small">Stems is not in this update: to add Stems, run the installer above again with <b>Add Stems</b> ticked. These files are not part of the signed autorun, so nothing needs re-signing. If the MPC boots stock or restarts twice, put your backup of <b>autorun/hs</b> back.</p>
+  <p class="small">SampQOL list styling is a setting too: it stays as it was on your card (add or delete <b>autorun/hs/list-styling.on</b> to turn it on or off). Stems is not in this update: to add Stems, run the installer above again with <b>Add Stems</b> ticked. These files are not part of the signed autorun, so nothing needs re-signing. If the MPC boots stock or restarts twice, put your backup of <b>autorun/hs</b> back.</p>
   <p class="small">Back up your SD card first. To undo: switch off and take the SD card out, or delete the <b>autorun</b> folder from it.
      Step-by-step help with pictures: <a href="https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/blob/main/docs/INSTALL-GUIDE.md" target="_blank" rel="noopener">install guide</a> ·
      <a href="https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/blob/main/docs/FAQ.md" target="_blank" rel="noopener">FAQ</a> ·
@@ -159,6 +160,10 @@ async function run(getEntries) {
         out.set(path, data);
       }
       say("Stems added.", "ok");
+    }
+    if (document.getElementById("styling").checked) {
+      out.set("hs/list-styling.on", enc.encode("SampQOL list styling is on. Delete this file to turn it off.\n"));
+      say("SampQOL list styling on.", "ok");
     }
     const zip = new JSZip();
     for (const [p, d] of out) zip.file("autorun/" + p, d, { unixPermissions: p.endsWith(".sh") || p === "stems/hs-stems" ? 0o755 : 0o644 });
