@@ -82,7 +82,7 @@ static constexpr FlavorBank dist_banks[] = {
     {"COMPRESS", 0, {DS_INPUT, DS_RATIO, DS_OUTPUT, -1, -1, -1}, {"Input", "Ratio", "Output", "", "", ""}, {}},
     {"TIMING", 1, {DS_ATTACK, DS_RELEASE, DS_DETECTOR, -1, -1, -1}, {"Attack", "Release", "Detector", "", "", ""}, {}},
     {"AUDIO", 2, {DS_AUDIO, DS_BRIT, DS_MIX, -1, -1, -1}, {"Audio", "British", "Mix", "", "", ""}, {"", "", "%"}},
-    {"KEY", 3, {DS_KEY, DS_SEND, -1, -1, -1, -1}, {"Key In", "Send", "", "", "", ""}, {}},
+    {"KEY", 3, {DS_KEY, DS_SEND, DS_AUTO, -1, -1, -1}, {"Key In", "Send", "Auto Gain", "", "", ""}, {}},
     HS_MOD_BANKS(DS_MOD, 0)
 };
 static constexpr FlavorBank tube_banks[] = {

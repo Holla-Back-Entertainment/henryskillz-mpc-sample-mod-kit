@@ -31,16 +31,24 @@ struct distressor {
     float values[DS_COUNT];
     float in_gain, out_gain, mix, slope, knee, threshold, attack, release, opto_charge, opto_tail;
     float d2, d3, dc_coef, hp1_coef;
+    float trim, auto_gain, pow_in, pow_wet;   /* Auto Gain: slow mean squares of the input and the wet */
+    int automatic;
     struct biquad det_hp, det_band, aud_hp;
     float gr, tail, hp1_x[2], hp1_y[2], dc_x[2], dc_y[2];
     int ready, ratio, det_mode, aud_hp_on, brit, bypass, key, send;
     struct hs_mod mod;
 };
 
+/* Auto Gain: ~2 s matching window (about a bar at 120), gated below -70 dBFS, held to -12..+24 dB.
+   ponytail: plain RMS, not loudness-weighted; a K-weighted meter if bright Dist 3 settings read loud. */
+#define AUTO_SECONDS 2.f
+#define AUTO_GATE 1e-7f
+#define AUTO_MIN .2511886f
+#define AUTO_MAX 15.848932f
 #ifndef OUT_MAKEUP_DB
 #define OUT_MAKEUP_DB 4
 #endif
-static const float defaults[] = {5, 5, 5, 7.5f, 4, 0, 0, 0, 100, 0, 0, 0, HS_MOD_DEFAULTS};
+static const float defaults[] = {5, 5, 5, 7.5f, 4, 0, 0, 0, 100, 0, 0, 0, HS_MOD_DEFAULTS, 0};
 #define B (LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE)
 #define TOG (B | LADSPA_HINT_TOGGLED | LADSPA_HINT_DEFAULT_0)
 #define STEP (B | LADSPA_HINT_INTEGER)
@@ -57,7 +65,8 @@ static const LADSPA_PortRangeHint hints[PORTS] = {
     [FIRST+DS_BYPASS] = {TOG,0,1},
     [FIRST+DS_KEY] = {B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_0,0,HS_ENV_BUSES},
     [FIRST+DS_SEND] = {B|LADSPA_HINT_INTEGER|LADSPA_HINT_DEFAULT_0,0,HS_ENV_BUSES},
-    HS_MOD_HINTS(FIRST+DS_MOD, DS_MOD)
+    HS_MOD_HINTS(FIRST+DS_MOD, DS_MOD),
+    [FIRST+DS_AUTO] = {TOG,0,1},
 };
 #undef B
 #undef TOG
@@ -100,6 +109,7 @@ static LADSPA_Handle instantiate(const LADSPA_Descriptor *d, unsigned long rate)
         s->hp1_coef = expf(-6.2831853f*(65/1.3227f)/rate);
         s->opto_charge = coef(rate, 400);             /* guess */
         s->opto_tail = coef(rate, 3000);              /* guess */
+        s->auto_gain = powf(10, OUT_MAKEUP_DB*.05f);   /* also here: a host that skips activate() isn't muted */
     }
     return s;
 }
@@ -109,6 +119,8 @@ static void activate(LADSPA_Handle h)
     struct distressor *s = h;
     s->ready = 0;
     s->gr = s->tail = 0;
+    s->pow_in = s->pow_wet = 0;
+    s->auto_gain = powf(10, OUT_MAKEUP_DB*.05f);   /* the fixed make-up until there's signal to match */
     struct biquad *f[] = {&s->det_hp, &s->det_band, &s->aud_hp};
     for (int c = 0; c < 2; ++c) {
         for (int k = 0; k < 3; ++k) f[k]->z1[c] = f[k]->z2[c] = 0;
@@ -139,6 +151,10 @@ static void configure(struct distressor *s, const float *v)
     /* Output 7.5 is what SampQOL loads (DEFAULT_HIGH). Its make-up keeps a -12 dBFS
        signal near unity at load defaults, so inserting it doesn't drop the level. */
     s->out_gain = powf(10, (4*(v[DS_OUTPUT] - 7.5f) + OUT_MAKEUP_DB)*.05f);
+    /* Auto Gain: the wet is held at the input's level and Output trims around that (7.5 = matched),
+       so Input, Ratio and Audio can be judged by sound, not by loudness. */
+    s->automatic = v[DS_AUTO] >= .5f;
+    s->trim = powf(10, 4*(v[DS_OUTPUT] - 7.5f)*.05f);
     s->mix = v[DS_MIX]*.01f;
     s->det_mode = (int)lroundf(v[DS_DETECTOR]);
     s->aud_hp_on = aud == 1 || aud >= 4;
@@ -185,7 +201,12 @@ static void run(LADSPA_Handle h, unsigned long frames)
     hs_mod_apply(&s->mod, v, DS_MOD, hints + FIRST, frames, s->rate);
     if (!s->ready || memcmp(v, s->values, sizeof v)) configure(s, v);
 
-    float gr = s->gr, tail = s->tail, sent = 0;
+    float gr = s->gr, tail = s->tail, sent = 0, sum_in = 0, sum_wet = 0;
+    /* Auto Gain moves from last block's match to this one's across the block (no zipper). */
+    float g0 = s->automatic ? s->auto_gain*s->trim : s->out_gain, g1 = g0;
+    if (s->automatic && s->pow_in > 0 && s->pow_wet > 0)
+        g1 = fminf(AUTO_MAX, fmaxf(AUTO_MIN, sqrtf(s->pow_in/s->pow_wet)))*s->trim;
+    float dg = frames ? (g1 - g0)/frames : 0;
     float key = s->key ? hs_env_read(s->key)*s->in_gain : 0;   /* another track's level, a block old */
     for (unsigned long i = 0; i < frames; ++i) {
         float dry[2] = {s->port[IL][i], s->port[IR][i]}, x[2];
@@ -221,12 +242,22 @@ static void run(LADSPA_Handle h, unsigned long frames)
         } else {
             gr = tail = 0;
         }
-        float vca = powf(10, -.05f*(gr + tail));
+        float vca = powf(10, -.05f*(gr + tail)), g = g0 + dg*i;
         for (int c = 0; c < 2; ++c) {
-            float y = colour(s, x[c]*vca, c)*s->out_gain;    /* output after the colour: it sets level, not drive */
+            float wet = colour(s, x[c]*vca, c);
+            sum_in += dry[c]*dry[c]; sum_wet += wet*wet;
+            float y = wet*g;    /* output after the colour: it sets level, not drive */
             float out = dry[c] + s->mix*(y - dry[c]);
             s->port[c ? OR : OL][i] = out;
         }
+    }
+    if (s->automatic) s->auto_gain = g1/s->trim;
+    /* The trackers run with Auto Gain off too, so turning it on starts from a current match.
+       Silence between hits holds the match: only blocks with signal move it. */
+    if (frames && sum_in > AUTO_GATE*2*frames && isfinite(sum_in) && isfinite(sum_wet)) {
+        float a = -expm1f(-(float)frames/(s->rate*AUTO_SECONDS));
+        s->pow_in += a*(sum_in/frames - s->pow_in);
+        s->pow_wet += a*(sum_wet/frames - s->pow_wet);
     }
     if (s->send && !s->bypass) hs_env_send(s->send, sent);
     s->gr = isfinite(gr) && gr > 1e-9f ? gr : 0;
@@ -248,12 +279,12 @@ float hs_distressor_gr(const void *handle)
 #define AI (LADSPA_PORT_INPUT | LADSPA_PORT_AUDIO)
 #define AO (LADSPA_PORT_OUTPUT | LADSPA_PORT_AUDIO)
 #define C (LADSPA_PORT_INPUT | LADSPA_PORT_CONTROL)
-static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C,C,C,HS_MOD_TYPES};
+static const LADSPA_PortDescriptor types[] = {AI,AI,AO,AO,C,C,C,C,C,C,C,C,C,C,C,C,HS_MOD_TYPES,C};
 static const char *const names[] = {
     "Input L", "Input R", "Output L", "Output R", "Input", "Attack", "Release", "Output",
     "Ratio (1,2,3,4,6,10 Opto,20,Max)", "Detector (Norm,HP,Band,HP+Band)",
     "Audio (Clean,HP,Dist 2,Dist 3,HP+D2,HP+D3)", "British Mode", "Mix (%)", "Bypass",
-    "Key In (Own,A,B,C,D)", "Key Send (Off,A,B,C,D)", HS_MOD_NAMES
+    "Key In (Own,A,B,C,D)", "Key Send (Off,A,B,C,D)", HS_MOD_NAMES, "Auto Gain"
 };
 _Static_assert(sizeof names / sizeof *names == PORTS && sizeof types / sizeof *types == PORTS &&
                sizeof defaults / sizeof *defaults == DS_COUNT, "Crush port count");

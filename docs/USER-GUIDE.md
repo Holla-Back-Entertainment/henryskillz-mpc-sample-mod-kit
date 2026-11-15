@@ -448,7 +448,11 @@ A character compressor with eight curves, an Opto mode, detector filters, two di
 | K2 | British | OFF / ON | A British-style compression mode. The BRIT lamp shows it. |
 | K3 | Mix | 0 to 100 % | Blend of compressed and dry. |
 
-**KEY**: the same as HS Pump. **K1** Key In (OWN or BUS A to D), **K2** Send (OFF or BUS A to D). See [MOD and the key bus](#mod-and-the-key-bus).
+**KEY**: **K1** Key In (OWN or BUS A to D) and **K2** Send (OFF or BUS A to D), the same as HS Pump. See [MOD and the key bus](#mod-and-the-key-bus). **K3** is Auto Gain.
+
+**Auto Gain** (KEY page, **K3**, OFF or ON). Holds Crush's output at the same level as its input, so you hear what Input, Ratio and Audio do to the sound without the level change fooling your ears. With it on, Output works as a trim around that level: 7.5 is matched, every step is 4 dB. The **AUTO** lamp at the top of the panel shows it on every page. It is off on a fresh insert and in older projects, so those sound the same as before.
+
+It matches over about two seconds. After a big change (Ratio or Input) the level settles within that time, and it holds through silence between hits. Peaks can come out higher than the input: with a slow Attack, transients get through and then get the make-up. Keep an eye on the track meter with a hot kick. With Key In on a bus, Auto Gain makes up the ducking too, so leave it off on a track that should duck.
 
 **Starting points**
 - **Vocal:** Ratio 4:1, Attack 3, Release 5, Detector HP, then Input until GR DB shows a few dB on the loud words.
@@ -456,7 +460,7 @@ A character compressor with eight curves, an Opto mode, detector filters, two di
 
 **Bypass:** **B3**. A bypassed HS Crush does not send to a bus.
 
-If it doesn't work: if GR DB shows **NO METER**, the meter could not be read, but the effect still works. At Ratio 1:1 nothing is compressed.
+If it doesn't work: if GR DB shows **NO METER**, the meter could not be read, but the effect still works. At Ratio 1:1 nothing is compressed. With Auto Gain on, turning Input or Ratio up won't make the track louder: that's the point. Use Output to change the level.
 
 ---
 
