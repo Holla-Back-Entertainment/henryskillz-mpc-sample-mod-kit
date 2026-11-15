@@ -30,7 +30,7 @@ It refuses to run if `mpcqol.so` isn't a supported version, if any pinned file w
 | `src/eq/` | The EQ page grid (`hs-eq.so`) |
 | `src/seq/` | The desk-style SEQ page and the METERS page on B2 (`hs-seq.so`) |
 | `src/chains/` | Track chains and their "Chain loaded" box (`hs-chains.so`), the VOX, DRUMS and BASS chains |
-| `src/chrome/` | Styling for SampQOL's list screens (`hs-chrome.so`) |
+| `src/chrome/` | Styling for SampQOL's list screens (`hs-chrome.so`). Off by default: `hs-addons.sh` loads it only if `autorun/hs/list-styling.on` exists |
 | `src/mixer/` | The graphic Ch. Mixer and Pad Mixer (`hs-mixer.so`) |
 | `src/warp/` | Key and BPM tag in the browser, and warp on import (`hs-browser.so`) |
 | `src/stems/` | Stems: the engine (`hs-stems`), the screen hook (`hs-stems-ui.so`) and the model converter |

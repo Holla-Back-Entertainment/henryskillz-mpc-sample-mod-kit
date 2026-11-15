@@ -52,7 +52,7 @@ Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid 
 
 **Stems (optional).** Tick **Add Stems** on the installer and the MPC can split a sample into Vocals, Drums, Bass and Other by itself, no computer. In the browser, preview a WAV or MP3, hold **SHIFT** and hold **B1** for 1.5 seconds. On the Sample screen, hold **SHIFT** and hold **B3** for 1.5 seconds to split the selected pad's sample. Tick the stems you want, choose **Separate** (one file each) or **Sum** (one mixed file), then **Go**. A pad split also loads the stems onto the next empty pads of that pad's bank, on the same track, and the box says where ("On pads A02-A05"). If the bank is full, the files stay in `MPC-Sample/Samples/Stems` and the box says so. Each stem on a pad is one UNDO. A split takes about as long as the sample plays; nothing above 11 kHz comes through. It adds a 92 MB download and uses the Spleeter model by Deezer (MIT).
 
-**SampQOL screens in HS colours.** SampQOL's own list screens (the insert pages, the effect list) get a red bar along the top, a cyan edge on the selected row and a dark blue palette, to match the rest of the kit.
+**SampQOL screens in HS colours (optional, off by default).** Tick **SampQOL list styling** in the installer to turn it on. SampQOL's own list screens (the insert pages, the effect list) get a red bar along the top, a cyan edge on the selected row and a dark blue palette, to match the rest of the kit.
 
 **Graphic mixer.** **PAD FX** then **B2** shows SampQOL's Ch. Mixer, and **B2** again the Pad Mixer, as a console: eight strips per page with pan, mute and solo, a fader, a stereo meter with peak hold and the output. The selected strip has a cyan frame, yellow while you edit it.
 

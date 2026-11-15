@@ -18,9 +18,11 @@ if cp "$HS/hs-flavor.so" /tmp/hs-flavor.so &&
     HS_PRELOAD="/tmp/hs-flavor.so:/tmp/hs-browser.so:/tmp/hs-eq.so:/tmp/hs-fx.so:/tmp/hs-seq.so:"
     export HS_PRESETS_DIR="$CARD/MPC-Sample/Presets"
 fi 2>/dev/null
-# SampQOL screen styling and the graphic channel mixer (SampQOL 0.2.0 only; each checks that itself and
-# steps aside on any other build). Optional, each on its own: they go after hs-fx and before hs-seq.
+# The graphic channel mixer (SampQOL 0.2.0 only; it checks that itself and steps aside on any other build).
+# SampQOL list styling (hs-chrome) is OFF by default: it only loads when the card has autorun/hs/list-styling.on
+# (the installer writes that file when "SampQOL list styling" is ticked). Both go after hs-fx and before hs-seq.
 for so in hs-chrome hs-mixer; do
+    if [ "$so" = hs-chrome ] && [ ! -f "$HS/list-styling.on" ]; then continue; fi
     if [ -n "$HS_PRELOAD" ] && cp "$HS/$so.so" "/tmp/$so.so"; then
         chmod 644 "/tmp/$so.so"
         HS_PRELOAD="${HS_PRELOAD%/tmp/hs-seq.so:}/tmp/$so.so:/tmp/hs-seq.so:"

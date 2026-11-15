@@ -50,4 +50,8 @@ if (src) for (const f of ["BASS.xfx", "DRUMS.xfx", "VOX.xfx", "hs-addons.sh", "h
   assert.ok(out.get("hs/" + f)?.length > 100, `real mode must carry the built hs/${f}`);
 
 if (outDir) for (const [p, d] of out) { fs.mkdirSync(path.dirname(path.join(outDir, p)), { recursive: true }); fs.writeFileSync(path.join(outDir, p), d); }
+// List styling is opt-in: an unticked checkbox in the page, and the marker file only written when ticked.
+const html = fs.readFileSync(new URL("./template.html", import.meta.url), "utf8");
+assert.match(html, /<input type="checkbox" id="styling">/, "styling checkbox must exist and be unticked");
+assert.match(html, /getElementById\("styling"\)\.checked[\s\S]{0,80}hs\/list-styling\.on/, "marker written only when ticked");
 console.log(`installer ok (${src ? "real" : "synthetic"} SampQOL, ${out.size} files)`);
