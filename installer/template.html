@@ -31,9 +31,9 @@
   <p>Adds the HenrySkillz FX rack (with HS Crush, Bass Focus and Tube Strip), track chains, key and BPM tags in the browser, LUFS meters, the EQ display, the SEQ desk page, the splash and, if you tick it, Stems to <b>SampQOL OS __SAMPQOL_VERSION__</b> on an <b>MPC Sample (firmware 1.3.0)</b>.
      Everything happens in this page. Nothing is uploaded anywhere.</p>
   <ol>
-    <li>Download <b>SampQOL-OS-v__SAMPQOL_VERSION__.zip</b> from the official page:
+    <li>Download the <b>SampQOL OS</b> zip, version <b>__SAMPQOL_VERSION__</b>, from the official page:
       <a href="https://github.com/snarebes/SampQOL-OS/releases" target="_blank" rel="noopener">github.com/snarebes/SampQOL-OS/releases</a></li>
-    <li>Drop that zip here (or, if your Mac already unzipped it, choose the <b>SampQOL-OS-v__SAMPQOL_VERSION__</b> folder).</li>
+    <li>Drop that zip here (or, if your Mac already unzipped it, choose its <b>SampQOL-OS</b> folder).</li>
     <li>Save the <b>autorun-hs.zip</b> this page gives you, unzip it, and copy the <b>autorun</b> folder to the top of your SD card.</li>
   </ol>
   <p><label><input type="checkbox" id="stems"> <b>Add Stems</b>: split a sample into vocals, drums, bass and other on the MPC itself. Adds a 92 MB download, and needs this page online (not the saved copy).</label></p>
@@ -98,7 +98,7 @@ async function patch(files) {
   for (const f of need) if (!files.has(f)) throw new Error(`${f} is missing. Choose the SampQOL zip or its autorun folder.`);
   if (files.has("hs/hs-addons.sh")) throw new Error("These add-ons are already installed in this folder. Start again from a fresh SampQOL download.");
   const version = SAMPQOL[await sha256hex(files.get("mpcqol.so"))];
-  if (!version) throw new Error(`This is not SampQOL ${Object.values(SAMPQOL).join(" / ")}. Download that exact version from the official page.`);
+  if (!version) throw new Error(`This SampQOL build is not supported. Use SampQOL ${Object.values(SAMPQOL).join(" or ")}, downloaded from the official page.`);
 
   let autorun = dec.decode(files.get("autorun.sh"));
   const pins = [...autorun.matchAll(/([0-9a-f]{64})  ([^\n"]+)/g)];

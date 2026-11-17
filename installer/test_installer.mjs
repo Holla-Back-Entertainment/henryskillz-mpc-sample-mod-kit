@@ -25,13 +25,17 @@ if (src) {
 // Real mode: the BUILT page (run ./build.sh first), so the output carries the real add-ons and can boot.
 const page = src ? "../docs/install/index.html" : "./template.html";
 let core = fs.readFileSync(new URL(page, import.meta.url), "utf8").match(/<script id="core">([\s\S]*?)<\/script>/)[1];
-core = core.replace("__SAMPQOL_HASHES__", "{}")
+// The supported list from make_installer.py (synthetic mode; the built page already has it).
+const known = Object.fromEntries([...fs.readFileSync(new URL("./make_installer.py", import.meta.url), "utf8")
+  .matchAll(/"([0-9a-f]{64})": "([\d.]+)"/g)].map(m => [m[1], m[2]]));
+core = core.replace("__SAMPQOL_HASHES__", JSON.stringify(known))
            .replace("__STEMS_FILES__", "{}").replace("__ADDON_FILES__", JSON.stringify({ "hs/hs-addons.sh": Buffer.from("HS_PRELOAD=\n").toString("base64") }));
 // Also accept the given SampQOL build, so older downloads can exercise the patch path (official 0.2.0 is already listed).
 core += `\nSAMPQOL[${JSON.stringify(sha(files.get("mpcqol.so")))}] ??= "test";`;
 const patch = new Function(core + "; return patch;")();
 
-const { out } = await patch(files);
+const { out, version } = await patch(files);
+if (known[sha(files.get("mpcqol.so"))]) assert.equal(version, known[sha(files.get("mpcqol.so"))], "supported SampQOL reports its version");
 const text = f => Buffer.from(out.get(f)).toString();
 // firmware signature + SampQOL's own pins must both pass
 assert.equal(text("autorun.check"), sha(Buffer.concat([out.get("autorun.json"), out.get("autorun.sh"), Buffer.from(SALT)])));
@@ -40,12 +44,16 @@ for (const [, hash, name] of text("autorun.sh").matchAll(/([0-9a-f]{64})  ([^\n"
 assert.match(text("qol-run.sh"), /\. "\$DIR\/hs\/hs-addons.sh"/);
 assert.match(text("qol-run.sh"), /LD_PRELOAD="\$HS_PRELOAD\$SO\$HS_POSTLOAD"/);
 assert.match(text("qol-run.sh"), /cat "\$DIR\/qol-splash.raw" > \/dev\/fb0\n.*hs-splash.raw/, "SampQOL splash stays first");
+for (const line of [/hs-addons\.sh/g, /HS_PRELOAD\$SO/g, /sleep 2; cat "\$DIR\/hs\/hs-splash\.raw"/g])
+  assert.equal(text("qol-run.sh").match(line).length, 1, `${line} once in qol-run.sh`);
+for (const [f, d] of files) if (!["qol-run.sh", "autorun.sh", "autorun.check"].includes(f))
+  assert.deepEqual(out.get(f), d, `${f} untouched (SampQOL splash, licence, pinned files)`);
 assert.equal(spawnSync("sh", ["-n"], { input: text("qol-run.sh") }).status, 0, "qol-run.sh syntax");
 await assert.rejects(patch(out), /already installed/);
 const bad = new Map(files); bad.set("qol-run.sh", new Uint8Array([1]));
 await assert.rejects(patch(bad), /changed/);
 const wrong = new Map(files); wrong.set("mpcqol.so", new Uint8Array([2]));
-await assert.rejects(patch(wrong), /not SampQOL/);
+await assert.rejects(patch(wrong), /not supported\. Use SampQOL [\d.]+ or [\d.]+/);
 if (src) for (const f of ["BASS.xfx", "DRUMS.xfx", "VOX.xfx", "hs-addons.sh", "hs-browser.so", "hs-chains.so", "hs-chrome.so", "hs-eq.so", "hs-flavor.so", "hs-fx.so", "hs-mixer.so", "hs-pro-fx-ladspa.so", "hs-seq.so", "hs-splash.raw"])
   assert.ok(out.get("hs/" + f)?.length > 100, `real mode must carry the built hs/${f}`);
 
@@ -54,4 +62,4 @@ if (outDir) for (const [p, d] of out) { fs.mkdirSync(path.dirname(path.join(outD
 const html = fs.readFileSync(new URL("./template.html", import.meta.url), "utf8");
 assert.match(html, /<input type="checkbox" id="styling">/, "styling checkbox must exist and be unticked");
 assert.match(html, /getElementById\("styling"\)\.checked[\s\S]{0,80}hs\/list-styling\.on/, "marker written only when ticked");
-console.log(`installer ok (${src ? "real" : "synthetic"} SampQOL, ${out.size} files)`);
+console.log(`installer ok (${src ? "real" : "synthetic"} SampQOL ${version}, ${out.size} files)`);

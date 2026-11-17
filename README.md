@@ -103,7 +103,7 @@ Every picture in this section is an emulator capture.
 - An **Akai MPC Sample** on firmware **1.3.0** (1.3.0.12)
 - An **exFAT SD card**
 - A **Mac or Windows** computer with a web browser
-- **SampQOL OS 0.2.0**, downloaded free from [Snare Bes's official page](https://github.com/snarebes/SampQOL-OS/releases)
+- **SampQOL OS 0.2.0 or 0.3.0**, downloaded free from [Snare Bes's official page](https://github.com/snarebes/SampQOL-OS/releases). 0.3.0 support is new: the installer is tested offline against the pristine 0.3.0 package, but it has not been tested on a real MPC Sample yet.
 
 **Not on SampQOL?** HS Tools runs on stock firmware 1.3.0: on-device stems, browser key and BPM tags, and the SEQ desk with LUFS meters. Download `henryskillz-mpc-sample-hs-tools.zip` from the [v0.6.1 release](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/releases/tag/v0.6.1), copy its `autorun` folder to an exFAT SD card and power on. The effects and track chains need SampQOL.
 
@@ -114,7 +114,7 @@ Every picture in this section is an emulator capture.
 ## Install in 5 steps
 
 1. **Back up** everything on your SD card to your computer.
-2. **Download** `SampQOL-OS-v0.2.0.zip` from the [official SampQOL page](https://github.com/snarebes/SampQOL-OS/releases).
+2. **Download** `SampQOL-OS-v0.2.0.zip` or `SampQOL-OS-v0.3.0.zip` from the [official SampQOL page](https://github.com/snarebes/SampQOL-OS/releases).
 3. **Open** the [installer](https://holla-back-entertainment.github.io/henryskillz-mpc-sample-mod-kit/install/) and drop the zip on it. Click **Download autorun-hs.zip**.
 4. **Unzip** it and copy the `autorun` folder to the top level of your SD card.
 5. **Eject** the card, put it in the MPC, switch on and press **B1** to start.
