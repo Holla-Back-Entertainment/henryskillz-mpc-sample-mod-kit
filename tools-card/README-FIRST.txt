@@ -8,6 +8,9 @@ Running SampQOL OS? Use the main installer instead, it includes all of these.
 3. Safely eject the card, insert it into an MPC Sample on firmware 1.3.0/1.3.0.12, then power on.
 4. To return to stock, power off normally and remove the card.
 
+Using SampleBoot? Copy the "autorun" folder into autorun/mods/ on your SampleBoot card instead,
+rename it "HS Tools" and pick HS Tools in the menu. Delete that folder to remove it.
+
 If the unit hangs, hold power to switch off, remove the card and boot stock.
 
 How to use each tool:

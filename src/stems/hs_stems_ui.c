@@ -124,7 +124,8 @@ int stems_is_wav(const char *p) {
 }
 /* "/a/b/Loop.wav" -> dir "/a/b/Loop Stems", base "Loop". 0 on success. */
 /* The card from the stems folder: everything before its first "/autorun" folder. Plain card:
-   <card>/autorun/stems. Boot Thingy app: <card>/autorun/apps/<name>/stems. */
+   <card>/autorun/stems. Boot Thingy app: <card>/autorun/apps/<name>/stems.
+   SampleBoot mod: <card>/autorun/mods/<name>/stems. */
 int stems_card(const char *stems_dir, char *card, size_t n) {
     const char *a = stems_dir ? strstr(stems_dir, "/autorun/") : NULL;
     if (!a || a == stems_dir || (size_t)(a - stems_dir) >= n) return -1;

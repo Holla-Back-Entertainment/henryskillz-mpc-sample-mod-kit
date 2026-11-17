@@ -109,8 +109,12 @@ Every picture in this section is an emulator capture.
 
 **Not on SampQOL?** HS Tools runs on stock firmware 1.3.0: on-device stems, browser key and BPM tags, and the SEQ desk with LUFS meters. Download `henryskillz-mpc-sample-hs-tools.zip` from the [v0.6.1 release](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/releases/tag/v0.6.1), copy its `autorun` folder to an exFAT SD card and power on. The effects and track chains need SampQOL.
 
-**Using [Boot Thingy](https://github.com/garrettjwilke/mpc-boot-thingy)?** Copy `henryskillz-mpc-sample-hs-tools-boot-thingy.zip` (on the release page once it is attached) into `autorun/apps/` on your Boot Thingy card and power on; Boot Thingy installs it and it shows as **HS Tools Boot Thingy** in its menu. It has the SEQ desk, LUFS meters and browser key/BPM tags, but **no Stems**: Boot Thingy's app installer takes at most 32 MB per file and the stems model is 79 MB. For Stems, use the HS Tools card above. Tested with Boot Thingy v1.1.6 on firmware 1.3.0.12.
-- To open the menu, wait for the splash with the SHIFT light on, then press SHIFT. Holding it from power-on is missed and the MPC boots Stock. From Stock, SHIFT + Pad 16 opens the menu.
+**Using [SampleBoot](https://github.com/pxcm/SampleBoot)?** Unzip `henryskillz-mpc-sample-hs-tools.zip`, copy its `autorun` folder into `autorun/mods/` on your SampleBoot card and rename it `HS Tools`, so you have `autorun/mods/HS Tools/autorun.sh`. Power on and pick **HS Tools** in the menu. Everything is included, Stems too. Nothing goes outside that folder: delete it to remove HS Tools. Tested with SampleBoot 1.0.2 in the virtual MPC (firmware 1.3.0.12); a real-unit test is pending, see [Compatibility](docs/COMPATIBILITY.md).
+
+![HS Tools in the SampleBoot menu](assets/screens/sampleboot-menu.png)
+
+**On [Boot Thingy](https://github.com/garrettjwilke/mpc-boot-thingy)?** Its author archived it on 17 Nov 2026 and points users to SampleBoot. The `henryskillz-mpc-sample-hs-tools-boot-thingy.zip` package still works if you already use it: copy it into `autorun/apps/` and power on. It has no Stems (Boot Thingy caps a file at 32 MB, the stems model is 79 MB). Tested with Boot Thingy v1.1.6 on firmware 1.3.0.12.
+- To open the Boot Thingy menu, wait for the splash with the SHIFT light on, then press SHIFT. Holding it from power-on is missed and the MPC boots Stock. From Stock, SHIFT + Pad 16 opens the menu.
 - Nothing is written to the MPC itself: pick Stock in the menu, or power off and take the card out.
 
 ## Install in 5 steps

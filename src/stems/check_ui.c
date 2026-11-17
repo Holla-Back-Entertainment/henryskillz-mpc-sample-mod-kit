@@ -31,6 +31,7 @@ int main(int argc, char **argv) {
     assert(stems_out("/x/.wav", d, sizeof d, b, sizeof b));                 /* no name */
     assert(!stems_card("/media/c/autorun/stems", d, sizeof d) && !strcmp(d, "/media/c"));
     assert(!stems_card("/media/c/autorun/apps/hs-tools/stems", d, sizeof d) && !strcmp(d, "/media/c"));  /* Boot Thingy */
+    assert(!stems_card("/media/MPC SAMPLE/autorun/mods/HS Tools/stems", d, sizeof d) && !strcmp(d, "/media/MPC SAMPLE"));  /* SampleBoot */
     assert(stems_card("/run/tools/stems", d, sizeof d) && stems_card(NULL, d, sizeof d));
     assert(stems_is_wav("/a/B.WAV") && !stems_is_wav("rel.wav") && stems_is_wav("/a/b.MP3") && !stems_is_wav("/a/b.flac") && !stems_is_wav(0));
 

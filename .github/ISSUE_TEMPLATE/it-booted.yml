@@ -35,6 +35,7 @@ body:
       options:
         - Online installer
         - HS Tools card
+        - SampleBoot (autorun/mods)
         - Boot Thingy zip
     validations:
       required: true

@@ -11,6 +11,8 @@ fi
 rm -rf "$OUT" && mkdir -p "$OUT/autorun/hs"
 cp tools-card/README-FIRST.txt "$OUT/"
 cp tools-card/autorun/autorun.sh tools-card/autorun/autorun.json "$OUT/autorun/"
+# SampleBoot menu name + image (autorun/mods/<name>/); the firmware ignores them.
+cp tools-card/autorun/sampleboot.txt tools-card/autorun/sampleboot.png "$OUT/autorun/"
 cp addon/hs/hs-browser.so addon/hs/hs-seq.so "$OUT/autorun/hs/"
 if [ "$STEMS" = 1 ]; then
     mkdir -p "$OUT/autorun/stems"
