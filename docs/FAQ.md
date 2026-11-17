@@ -30,7 +30,7 @@ You gave it a folder it already patched. Start again from the original SampQOL z
 
 ### SampQOL released a new version. Can I use it?
 Not until this kit is updated for it. Every new SampQOL version is checked and tested on a real MPC Sample before the installer accepts it.
-The installer accepts 0.3.0, the latest. 0.3.0 support is new: the installer is tested offline against the pristine 0.3.0 package, but it has not been tested on a real MPC Sample yet.
+The installer accepts 0.3.0, the latest. 0.3.0 passed a power-off cold boot and the full feature checks on a real MPC Sample on 18 Nov 2026.
 Keep using 0.3.0 with the HS effects, or plain new SampQOL without them. Watch this repository (**Watch > Custom > Releases**) to hear when it's updated.
 
 ### The MPC starts normally, with no SampQOL and no HS screen

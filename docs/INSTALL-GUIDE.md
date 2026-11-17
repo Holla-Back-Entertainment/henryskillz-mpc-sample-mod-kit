@@ -48,7 +48,7 @@ Then copy your backup back onto the card.
 1. Go to the [official SampQOL OS releases page](https://github.com/snarebes/SampQOL-OS/releases).
 2. Find **v0.3.0** (the latest) and, under *Assets*, click **`SampQOL-OS-v0.3.0.zip`**.
 
-0.3.0 support is new: the installer is tested offline against the pristine 0.3.0 package, but it has not been tested on a real MPC Sample yet. Older versions are not accepted.
+0.3.0 passed a power-off cold boot and the full feature checks on a real MPC Sample on 18 Nov 2026. Older versions are not accepted.
 
 Get it only from that page. It's the author's official download, and the installer checks it's the exact file.
 
