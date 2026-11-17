@@ -1,7 +1,7 @@
-// HS graphic channel mixer for SampQOL 0.2.0: redraws SampQOL's Ch. Mixer and Pad Mixer (PAD FX, then B2)
+// HS graphic channel mixer for SampQOL 0.2.0 and 0.3.0: redraws SampQOL's Ch. Mixer and Pad Mixer (PAD FX, then B2)
 // as a console: 8 strips per page with pan knob, mute/solo, fader, stereo meter with peak and the output.
-// It reads SampQOL's own mixer snapshot, so it only draws when mixview_frame sits at its 0.2.0 offset
-// in mpcqol.so; any other build gets SampQOL's own mixer, untouched.
+// It reads SampQOL's own mixer snapshot, so it only draws on a build src/common/qol_map.h knows;
+// any other build gets SampQOL's own mixer, untouched.
 // Build: see build.sh at the top of the kit (gcc -O2 -fPIC -shared graphic_mixer.c -lm -ldl)
 #define _GNU_SOURCE
 #include <dlfcn.h>
@@ -9,9 +9,9 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include "../common/qol_map.h"
 
-#define QOL_MIXVIEW_FRAME 0xdf230u   /* mixview_frame in mpcqol.so of SampQOL 0.2.0 */
-enum { W = 320, H = 256, STRIP_BYTES = 116 };
+enum { W = 320, H = 256 };
 typedef void (*frame_fn)(int, int, const char *, int, int, void *, void *, void *);
 typedef void (*overlay_fn)(int, const void *, int);
 static frame_fn original_frame;
@@ -89,13 +89,13 @@ static uint32_t strip_colour(const uint8_t *s)
     uint32_t bgr;memcpy(&bgr,s+40,4);unsigned r=bgr&255,g=(bgr>>8)&255,b=(bgr>>16)&255;return (r|g|b)?rgb(r,g,b):rgb(205,211,216);
 }
 
-static void draw_console(uintptr_t base,int view)
+static void draw_console(const struct qol_map *q,uintptr_t base,int view)
 {
-    const uint8_t *snap=(const uint8_t *)(base+0x1957ddcu); uint32_t *p=console_pixels;
-    int count=i32(snap,4),selected=*(int *)(base+0x1957948u+(uintptr_t)view*4u),editing=*(int *)(base+0x1957930u+(uintptr_t)view*4u);
+    const uint8_t *snap=(const uint8_t *)(base+q->mix_snapshot); uint32_t *p=console_pixels;
+    int count=i32(snap,4),selected=*(int *)(base+q->mix_selected+(uintptr_t)view*4u),editing=*(int *)(base+q->mix_editing+(uintptr_t)view*4u);
     int first=selected>=0?(selected/8)*8:0; memset(p,0,sizeof(console_pixels)); rect(p,0,0,W,106,rgb(7,9,11)); rect(p,0,0,W,2,rgb(200,6,28)); /* red brand bar */
     for(int slot=0;slot<8;++slot){
-        int idx=first+slot,x=4+slot*39;const uint8_t *s=idx<count?snap+12+idx*STRIP_BYTES:0;int sel=idx==selected&&s;
+        int idx=first+slot,x=4+slot*39;const uint8_t *s=idx<count?snap+12+idx*q->strip_bytes:0;int sel=idx==selected&&s;
         rect(p,x,1,36,105,sel?rgb(29,35,40):rgb(18,22,26));frame(p,x,1,36,105,rgb(48,56,62));
         uint32_t accent=s?strip_colour(s):rgb(51,58,64);rect(p,x+1,2,34,2,accent);
         if(s) pan_knob(p,x+18,9,f32(s,52)); else pan_knob(p,x+18,9,.5f);
@@ -108,7 +108,7 @@ static void draw_console(uintptr_t base,int view)
         text(p,x+(36-text_width(out,5))/2,96,out,5,rgb(148,161,170));
         if(sel){uint32_t c=editing?rgb(255,205,25):rgb(76,184,231);frame(p,x-1,0,38,106,c);if(editing)frame(p,x+1,2,34,102,rgb(145,111,9));}
     }
-    if(!overlay_update_fn)overlay_update_fn=(overlay_fn)dlsym(RTLD_NEXT,"overlay_update");if(overlay_update_fn)overlay_update_fn(33,p,1);
+    if(!overlay_update_fn)overlay_update_fn=(overlay_fn)dlsym(RTLD_NEXT,"overlay_update");if(overlay_update_fn)overlay_update_fn(q->mixer,p,1);
 }
 
 static long mixer_drawn_ms;   /* atomic: when the console last drew */
@@ -124,8 +124,9 @@ int hs_mixer_up(void) { return now_ms() - __atomic_load_n(&mixer_drawn_ms, __ATO
 __attribute__((visibility("default")))
 void mixview_frame(int view,int mode,const char *label,int arg3,int arg4,void *arg5,void *arg6,void *arg7)
 {
-    static int matched = -1;    /* -1 not checked yet, 0 other build, 1 SampQOL 0.2.0 */
+    static int matched = -1;    /* -1 not checked yet, 0 other build, 1 a build qol_map.h knows */
+    static const struct qol_map *q; static uintptr_t base;
     if(!original_frame)original_frame=(frame_fn)dlsym(RTLD_NEXT,"mixview_frame");if(!original_frame)return;
-    if(matched<0){Dl_info info;matched=dladdr((void *)original_frame,&info)&&(uintptr_t)original_frame-(uintptr_t)info.dli_fbase==QOL_MIXVIEW_FRAME;}
-    original_frame(view,mode,label,arg3,arg4,arg5,arg6,arg7);if(matched){draw_console((uintptr_t)original_frame-QOL_MIXVIEW_FRAME,view);__atomic_store_n(&mixer_drawn_ms,now_ms(),__ATOMIC_RELAXED);}
+    if(matched<0){q=qol_map(&base);matched=q&&qol_owns((void *)original_frame,base);}
+    original_frame(view,mode,label,arg3,arg4,arg5,arg6,arg7);if(matched){draw_console(q,base,view);__atomic_store_n(&mixer_drawn_ms,now_ms(),__ATOMIC_RELAXED);}
 }

@@ -19,26 +19,25 @@ enum { W = 320, H = 160 };
 #include "hs_crush.h"
 #include "hs_tube_strip.h"
 #include "hs_bass_focus.h"
+#include "../common/qol_map.h"
 
 typedef void (*overlay_fn)(int, const void *, int);
 typedef void (*overlay_rect_fn)(int, const void *, int, int, int, int);
 
 static overlay_rect_fn next_rect;
 static uintptr_t qol_base;
+static const struct qol_map *qol;     /* NULL on an unknown SampQOL build: every hook below stays off */
 
 __attribute__((constructor)) static void locate_effect_state(void)
 {
-    void *map = dlsym(RTLD_NEXT, "fxmap_get_row");
-    Dl_info info;
-    if (map && dladdr(map, &info) && (uintptr_t)map - (uintptr_t)info.dli_fbase == 0x6d31c)
-        qol_base = (uintptr_t)info.dli_fbase;
+    qol = qol_map(&qol_base);
 }
 
 static const uint32_t orbit_red = 0xc8061c;
 static const uint32_t cyan = 0x4cb8e7;
 static const uint32_t rail = 0x555e62;
 
-/* Return sites in the SHA-pinned SampQOL 0.2.0 overlay renderer. The shared
+/* Return sites in the SHA-pinned SampQOL overlay renderer (qol_map.h). The shared
  * mode numbers alone also match menus and unrelated knob overlays. */
 static uintptr_t return_site(const void *caller)
 {
@@ -139,10 +138,10 @@ static enum effect identify_effect(const uint32_t *p)
     case 0x745a3642: return HS_AIR_EXCITER;   /* "HS HF Exciter", measured on the unit 15 Nov 2026 */
     default: break;
     }
-    if (!qol_base) return OTHER;
-    /* Current insert UID in the SHA-pinned 0.2.0 renderer. Presets that
+    if (!qol) return OTHER;
+    /* Current insert UID in the SHA-pinned renderer. Presets that
      * share an engine, including the three room sizes, keep their drawn title. */
-    switch (__atomic_load_n((const uint32_t *)(qol_base + 0x16328f4), __ATOMIC_ACQUIRE)) {
+    switch (__atomic_load_n((const uint32_t *)(qol_base + qol->insert_uid), __ATOMIC_ACQUIRE)) {
     case 0x6146446c: return DELAY;
     case 0x61464444: return DIFF_DELAY;
     case 0x41435658: return TAPE_DELAY;
@@ -705,7 +704,7 @@ static void *fx_ui_loop(void *arg)
         pthread_mutex_unlock(&page_draw);
         if (!moved) continue;
         if (!next_rect) next_rect = (overlay_rect_fn)dlsym(RTLD_NEXT, "overlay_update_rect");
-        if (next_rect) next_rect(27, live_frame, 0, 40, W, H);
+        if (next_rect) next_rect(qol->list, live_frame, 0, 40, W, H);
     }
     return NULL;
 }
@@ -761,7 +760,7 @@ static void effect_knobs(uint32_t *p)
         if (!next_rect)
             next_rect = (overlay_rect_fn)dlsym(RTLD_NEXT, "overlay_update_rect");
         pthread_mutex_lock(&page_draw);
-        if (next_rect) next_rect(27, draw_gear(page), 0, 40, W, H);
+        if (next_rect) next_rect(qol->list, draw_gear(page), 0, 40, W, H);
         pthread_mutex_unlock(&page_draw);
     }
 }
@@ -770,17 +769,18 @@ void overlay_update(int mode, const void *buf, int flag)
 {
     static overlay_fn next;
     if (!next) next = (overlay_fn)dlsym(RTLD_NEXT, "overlay_update");
-    if (buf && flag && (mode >= 26 && mode <= 28)) {
+    const struct qol_map *q = qol;
+    if (q && buf && flag && (mode >= q->header && mode <= q->softkeys)) {
         uintptr_t site = return_site(__builtin_return_address(0));
-        if (mode == 27) __atomic_store_n(&fx_on_screen, site == 0xada58, __ATOMIC_RELAXED);
-        if (mode == 27 && (site == 0xac2f0 || site == 0xad460)) {
+        if (mode == q->list) __atomic_store_n(&fx_on_screen, site == q->at_list_effect, __ATOMIC_RELAXED);
+        if (mode == q->list && (site == q->at_list_body || site == q->at_list_selector)) {
             struct effect_page *page = get_effect_page(0);
             if (page) page->kind = OTHER;
         }
-        if (mode == 26 && (site == 0xac684 || site == 0xad644 || site == 0xabc60)) {
+        if (mode == q->header && (site == q->at_header_list || site == q->at_header_ducker || site == q->at_header)) {
             uint32_t *p = (uint32_t *)buf;
             header(p);
-            int gain = site == 0xad644 ? hs_ducker_gain_page() : -1;
+            int gain = site == q->at_header_ducker ? hs_ducker_gain_page() : -1;
             static int (*position)(int *);
             if (!position) position = (int (*)(int *))dlsym(RTLD_DEFAULT, "hs_bank_position");
             int count = 0, at = gain < 0 && position ? position(&count) : -1;
@@ -797,25 +797,25 @@ void overlay_update(int mode, const void *buf, int flag)
                 frame(p, 124, 4, 71, 20, gain ? cyan : rail);
                 text(p, 146, 12, "MAKE-UP", 7, gain ? 0xc9f5ff : 0xa6b6bb);
             }
-        } else if (mode == 27 && (site == 0xad9e8 || site == 0xab89c)) {
+        } else if (mode == q->list && (site == q->at_list_name || site == q->at_list_name_rack)) {
             uint32_t *p = (uint32_t *)buf;
             stock_name_display(p, p);
-            if (site == 0xab89c) {
+            if (site == q->at_list_name_rack) {
                 frame(p, 2, 0, 316, 159, rail);
                 fastener(p, 5, 150);
                 fastener(p, 312, 150);
             }
-        } else if (mode == 27 && site == 0xac2f0)
+        } else if (mode == q->list && site == q->at_list_body)
             insert_body((uint32_t *)buf);
-        else if (mode == 27 && site == 0xada58) {
+        else if (mode == q->list && site == q->at_list_effect) {
             const void *stock = buf;
             buf = effect_overlay(buf);
             __atomic_store_n(&hs_editor, buf != stock, __ATOMIC_RELAXED);
-        } else if (mode == 27 && site == 0xad460)
+        } else if (mode == q->list && site == q->at_list_selector)
             selector_rows((uint32_t *)buf, 0, H);
-        else if (mode == 28 && site == 0xad4ac)
+        else if (mode == q->softkeys && site == q->at_soft_selector)
             selector_rows((uint32_t *)buf, H, 40);
-        else if (mode == 28 && site == 0xad698)
+        else if (mode == q->softkeys && site == q->at_soft_knobs)
             effect_knobs((uint32_t *)buf);
     }
     if (next) next(mode, buf, flag);
@@ -824,18 +824,19 @@ void overlay_update(int mode, const void *buf, int flag)
 void overlay_update_rect(int mode, const void *buf, int x, int y, int w, int h)
 {
     if (!next_rect) next_rect = (overlay_rect_fn)dlsym(RTLD_NEXT, "overlay_update_rect");
-    if (buf && mode == 27 && x == 0 && y == 40 && w == W && h == H) {
+    const struct qol_map *q = qol;
+    if (q && buf && mode == q->list && x == 0 && y == 40 && w == W && h == H) {
         uintptr_t site = return_site(__builtin_return_address(0));
-        __atomic_store_n(&fx_on_screen, site == 0xaca6c, __ATOMIC_RELAXED);
-        if (site == 0xaca6c) {
+        __atomic_store_n(&fx_on_screen, site == q->rect_list_effect, __ATOMIC_RELAXED);
+        if (site == q->rect_list_effect) {
             const void *stock = buf;
             buf = effect_overlay(buf);
             __atomic_store_n(&hs_editor, buf != stock, __ATOMIC_RELAXED);
-        } else if (site == 0xabb98)
+        } else if (site == q->rect_list_name)
             stock_name_display((uint32_t *)buf, buf);
     }
-    if (buf && mode == 28 && x == 0 && y == 200 && w == W && h == 40 &&
-        return_site(__builtin_return_address(0)) == 0xad93c)
+    if (q && buf && mode == q->softkeys && x == 0 && y == 200 && w == W && h == 40 &&
+        return_site(__builtin_return_address(0)) == q->rect_soft_knobs)
         effect_knobs((uint32_t *)buf);
     if (next_rect) next_rect(mode, buf, x, y, w, h);
 }

@@ -18,6 +18,7 @@
 #include "hs_crush.h"
 #include "hs_tube_strip.h"
 #include "hs_bass_focus.h"
+#include "../common/qol_map.h"
 
 enum {
     HS_SATURATOR = 0x485301,
@@ -53,13 +54,20 @@ static const struct fx_row hs_rows[] = {
 };
 enum { FX_COUNT = sizeof hs_rows / sizeof *hs_rows };
 
-/* SampQOL 0.2.0 builds the insert menu in 40 rows and 32 are stock. Hiding the stock Bus
-   Compressor leaves 9 HS rows; one more and SampQOL has no room, which hides every HS row.
+/* SampQOL builds the insert menu in 40 rows: 32 are stock on 0.2.0, 34 on 0.3.0 (AIR Lo-Fi and
+   AIR Pitch Shifter), fewer if stock effects are hidden in SampQOL's settings. Hiding the stock
+   Bus Compressor leaves 9 HS rows on 0.2.0; one more and SampQOL has no room, which hides every
+   HS row. When there is less room the HS rows give up places in drop_order (0.3.0: Tube Strip
+   and Saturator) rather than all disappear.
    HF Exciter and Drive Sat stay in the catalog, so saved projects that use them still open
-   them, but have no menu row. The stock Bus Compressor stays in the MPC for the same reason. */
+   them, but have no menu row. The same holds for dropped rows and the stock Bus Compressor. */
 enum { MENU_ROWS = 9, STOCK_BUS_COMPRESSOR = 0x4143564a };
-static int in_menu(const struct fx_row *row)
+static const uint32_t drop_order[] = {HS_TUBE_STRIP_ID, HS_SATURATOR};
+enum { MAX_DROP = sizeof drop_order / sizeof *drop_order };
+static int in_menu(const struct fx_row *row, int drop)
 {
+    for (int i = 0; i < drop; ++i)
+        if (row->uid == drop_order[i]) return 0;
     return row->uid != HS_AIR_EXCITER && row->uid != HS_XSAT_ID;
 }
 
@@ -140,12 +148,9 @@ __attribute__((constructor)) static void install_fx_picker(void)
     next_list = dlsym(RTLD_NEXT, "fxlist_get");
     find_manager = dlsym(RTLD_NEXT, "context_locate_plugin_manager");
     delete_object = dlsym(RTLD_DEFAULT, "_ZdlPv");
-    Dl_info info;
-    if (!next_list || !find_manager || !delete_object || !dladdr(next_list, &info))
-        return;
-    uintptr_t qol_base = (uintptr_t)info.dli_fbase;
-    if ((uintptr_t)next_list - qol_base != 0x6ca94 ||
-        (uintptr_t)find_manager - qol_base != 0x5f284)
+    uintptr_t qol_base = 0;
+    if (!delete_object || !qol_map(&qol_base) || !qol_owns(next_list, qol_base) ||
+        !qol_owns((void *)find_manager, qol_base))
         return;
     dl_iterate_phdr(locate_stock, NULL);
 }
@@ -234,9 +239,10 @@ int fxlist_get(void *context, struct fx_row *out, int capacity)
     int kept = 0;
     for (int i = 0; i < count; ++i)
         if (out[i].uid != STOCK_BUS_COMPRESSOR) ++kept;
-    /* no stock row to give up (another firmware, or a list without it): drop Tube Strip, keep the rest */
-    int rows = capacity - kept >= MENU_ROWS ? MENU_ROWS : MENU_ROWS - 1;
-    if (capacity - kept < rows) return count;
+    /* short of room (0.3.0's two AIR rows, or no stock row to give up): drop the fewest HS rows */
+    int drop = MENU_ROWS - (capacity - kept);
+    if (drop < 0) drop = 0;
+    if (drop > MAX_DROP) return count;
 
     pthread_mutex_lock(&catalog_lock);
     int ready = ensure_category();
@@ -248,7 +254,6 @@ int fxlist_get(void *context, struct fx_row *out, int capacity)
         if (out[i].uid != STOCK_BUS_COMPRESSOR) out[kept++] = out[i];
     count = kept;
     for (int i = 0; i < FX_COUNT; ++i)
-        if (in_menu(&hs_rows[i]) && (rows == MENU_ROWS || hs_rows[i].uid != HS_TUBE_STRIP_ID))
-            out[count++] = hs_rows[i];
+        if (in_menu(&hs_rows[i], drop)) out[count++] = hs_rows[i];
     return count;
 }

@@ -2,6 +2,7 @@
 #include <dlfcn.h>
 #include <stdint.h>
 #include <string.h>
+#include "../common/qol_map.h"
 /* Console EQ: eq_spectrum_draw renders the response curve into a w x h buffer;
    we overlay a dark Hz/dB grid (mixer-style) that only paints over background
    pixels, so the curve + axis stay crisp. The orange response curve is drawn in
@@ -23,26 +24,24 @@ void eq_spectrum_draw(uint32_t*buf,int w,int h,int a3){
 
 /* Parametric EQ pages: the pad EQ page (Pad Mixer, B3/ENCODER on the row EQ) and the eq_ui page
    never call eq_spectrum_draw. They draw the whole page with eq_draw(buf, w, h, y0, top, knobs,
-   focus, bypass): buf holds screen rows y0..y0+h-1, cleared to black. In SampQOL 0.2.0 the graph is
+   focus, bypass): buf holds screen rows y0..y0+h-1, cleared to black. In SampQOL 0.2.0 and 0.3.0
+   (eq_draw is the same code in both) the graph is
    screen x 15..302 (288 px, 30 Hz..18 kHz) and screen y top+1 (+6 dB) .. 187 (-36 dB), with stock's own
    0 dB line at 1/7. Same grid look as above, clipped to that rect: 9 Hz lines, a dB line every 6 dB,
    frame included, all background-gated, so the curve, stock 0 dB line, band markers and labels are never painted over.
-   Callers: 0x76018 (eq_ui, 320x164 at y0 76) and 0xab798/0xab7c4 (pad EQ, 320x160 at y0 40 + the
-   320x40 soft-key bar at y0 200, which misses the graph). The geometry is 0.2.0's, so on any other
-   build (eq_draw not at 0x73710 in mpcqol.so) every call goes straight through. */
-#define QOL_EQ_DRAW 0x73710
+   Callers (0.2.0): 0x76018 (eq_ui, 320x164 at y0 76) and 0xab798/0xab7c4 (pad EQ, 320x160 at y0 40 +
+   the 320x40 soft-key bar at y0 200, which misses the graph). On a build src/common/qol_map.h does
+   not know every call goes straight through. */
 typedef void (*eqd_fn)(uint32_t*,int,int,int,int,const float*,int,int);
 static eqd_fn real_eqd;
-static int eqd_matched=-1;           /* -1 not checked yet, 0 other build, 1 SampQOL 0.2.0 */
+static int eqd_matched=-1;           /* -1 not checked yet, 0 other build, 1 a build qol_map.h knows */
 enum{GX0=15,GX1=302,GBOT=187};
 static void gpx(uint32_t*p,int w,int h,int x,int y,uint32_t c){if(x>=0&&x<w&&y>=0&&y<h&&bg(p[y*w+x]))p[y*w+x]=c;}
 void eq_draw(uint32_t*buf,int w,int h,int y0,int top,const float*knobs,int focus,int bypass){
   if(eqd_matched<0){
     real_eqd=(eqd_fn)dlsym(RTLD_NEXT,"eq_draw");
-    Dl_info in;const char*n;
-    eqd_matched=real_eqd&&dladdr((void*)real_eqd,&in)&&in.dli_fname&&
-      !strcmp((n=strrchr(in.dli_fname,'/'))?n+1:in.dli_fname,"mpcqol.so")&&
-      (uintptr_t)real_eqd-(uintptr_t)in.dli_fbase==QOL_EQ_DRAW;
+    uintptr_t base=0;
+    eqd_matched=qol_map(&base)&&qol_owns((void*)real_eqd,base);
   }
   if(real_eqd)real_eqd(buf,w,h,y0,top,knobs,focus,bypass);
   if(eqd_matched!=1||!buf||w<=GX1||w>1024||h<=0||h>1024||top<0||top>=GBOT-8)return;
