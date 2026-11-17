@@ -30,7 +30,7 @@ const known = Object.fromEntries([...fs.readFileSync(new URL("./make_installer.p
   .matchAll(/"([0-9a-f]{64})": "([\d.]+)"/g)].map(m => [m[1], m[2]]));
 core = core.replace("__SAMPQOL_HASHES__", JSON.stringify(known))
            .replace("__STEMS_FILES__", "{}").replace("__ADDON_FILES__", JSON.stringify({ "hs/hs-addons.sh": Buffer.from("HS_PRELOAD=\n").toString("base64") }));
-// Also accept the given SampQOL build, so older downloads can exercise the patch path (official 0.2.0 is already listed).
+// Also accept the given SampQOL build, so older downloads can exercise the patch path (only the latest official build is listed).
 core += `\nSAMPQOL[${JSON.stringify(sha(files.get("mpcqol.so")))}] ??= "test";`;
 const patch = new Function(core + "; return patch;")();
 
@@ -53,7 +53,7 @@ await assert.rejects(patch(out), /already installed/);
 const bad = new Map(files); bad.set("qol-run.sh", new Uint8Array([1]));
 await assert.rejects(patch(bad), /changed/);
 const wrong = new Map(files); wrong.set("mpcqol.so", new Uint8Array([2]));
-await assert.rejects(patch(wrong), /not supported\. Use SampQOL [\d.]+ or [\d.]+/);
+await assert.rejects(patch(wrong), /not supported\. Use SampQOL 0\.3\.0/);
 if (src) for (const f of ["BASS.xfx", "DRUMS.xfx", "VOX.xfx", "hs-addons.sh", "hs-browser.so", "hs-chains.so", "hs-chrome.so", "hs-eq.so", "hs-flavor.so", "hs-fx.so", "hs-mixer.so", "hs-pro-fx-ladspa.so", "hs-seq.so", "hs-splash.raw"])
   assert.ok(out.get("hs/" + f)?.length > 100, `real mode must carry the built hs/${f}`);
 

@@ -4,7 +4,6 @@ import base64, json, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SAMPQOL = {  # mpcqol.so sha256 -> version
-    "fc9285ac4a3145e04c1b162e3f5058a9c447a9752fec1e06510156ff20575dbd": "0.2.0",
     "facea6b4ba33ba59a497ffaa5df00d21fa15828bf049bd8e854acf8f2883e7e3": "0.3.0",
 }
 

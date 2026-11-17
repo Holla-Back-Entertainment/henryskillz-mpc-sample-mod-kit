@@ -43,16 +43,16 @@ If it isn't exFAT, format it. **Formatting erases the card, so do Step 2 first.*
 
 Then copy your backup back onto the card.
 
-## Step 4. Download SampQOL 0.2.0 or 0.3.0 (from its author)
+## Step 4. Download SampQOL 0.3.0 (from its author)
 
 1. Go to the [official SampQOL OS releases page](https://github.com/snarebes/SampQOL-OS/releases).
-2. Find **v0.3.0** (or **v0.2.0**) and, under *Assets*, click its zip, for example **`SampQOL-OS-v0.3.0.zip`**.
+2. Find **v0.3.0** (the latest) and, under *Assets*, click **`SampQOL-OS-v0.3.0.zip`**.
 
-0.3.0 support is new: the installer is tested offline against the pristine 0.3.0 package, but it has not been tested on a real MPC Sample yet. 0.2.0 is the hardware-tested one.
+0.3.0 support is new: the installer is tested offline against the pristine 0.3.0 package, but it has not been tested on a real MPC Sample yet. Older versions are not accepted.
 
 Get it only from that page. It's the author's official download, and the installer checks it's the exact file.
 
-> **Safari on a Mac** may unzip it for you and leave a folder called `SampQOL-OS-v0.3.0` (or `-v0.2.0`) in Downloads. That's fine: use the folder in Step 6.
+> **Safari on a Mac** may unzip it for you and leave a folder called `SampQOL-OS-v0.3.0` in Downloads. That's fine: use the folder in Step 6.
 
 ## Step 5. Open the installer
 
@@ -75,11 +75,9 @@ After a second or two you should see:
 
 > SampQOL 0.3.0 checked. Add-ons installed, autorun signed.
 
-(or 0.2.0, whichever you gave it)
-
 and a **Download autorun-hs.zip** link. Click it.
 
-**If you see a red message,** it tells you what's wrong. The common one is *"This SampQOL build is not supported"*: download the 0.2.0 or 0.3.0 zip again from the official page (Step 4).
+**If you see a red message,** it tells you what's wrong. The common one is *"This SampQOL build is not supported"*: download the 0.3.0 zip again from the official page (Step 4).
 
 ## Step 7. Unzip it
 

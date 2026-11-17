@@ -20,7 +20,7 @@ You download it from him, and the installer adds the HenrySkillz files to your c
 Please **don't** take HenrySkillz problems to the SampQOL author or to Akai. To check whether a problem is ours or SampQOL's, try plain SampQOL (from its official zip) without these add-ons.
 
 ### The installer says "This SampQOL build is not supported"
-You have a different version or a changed file. Download `SampQOL-OS-v0.2.0.zip` or `SampQOL-OS-v0.3.0.zip` again from the [official page](https://github.com/snarebes/SampQOL-OS/releases) and use that.
+You have a different version or a changed file. Download `SampQOL-OS-v0.3.0.zip` again from the [official page](https://github.com/snarebes/SampQOL-OS/releases) and use that.
 
 ### The installer says a file "was changed"
 Something in that SampQOL copy was edited. Use a fresh download, not a folder that has been on an SD card.
@@ -30,8 +30,8 @@ You gave it a folder it already patched. Start again from the original SampQOL z
 
 ### SampQOL released a new version. Can I use it?
 Not until this kit is updated for it. Every new SampQOL version is checked and tested on a real MPC Sample before the installer accepts it.
-The installer accepts 0.2.0 and 0.3.0. 0.3.0 support is new: the installer is tested offline against the pristine 0.3.0 package, but it has not been tested on a real MPC Sample yet.
-Keep using one of those with the HS effects, or plain new SampQOL without them. Watch this repository (**Watch > Custom > Releases**) to hear when it's updated.
+The installer accepts 0.3.0, the latest. 0.3.0 support is new: the installer is tested offline against the pristine 0.3.0 package, but it has not been tested on a real MPC Sample yet.
+Keep using 0.3.0 with the HS effects, or plain new SampQOL without them. Watch this repository (**Watch > Custom > Releases**) to hear when it's updated.
 
 ### The MPC starts normally, with no SampQOL and no HS screen
 The MPC skipped the card's `autorun` folder. Check:

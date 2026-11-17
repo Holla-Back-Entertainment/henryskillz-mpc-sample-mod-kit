@@ -758,7 +758,7 @@ To turn it on, tick **SampQOL list styling (optional)** in the installer. (Alrea
 
 ![Pad insert page in HS colours: red top bar, dark blue palette, cyan edge on the selected Empty slot](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/sampqol-styling.png)
 
-If it doesn't work: if the screens look like plain SampQOL, check that you ticked the option (or that **autorun/hs/list-styling.on** exists) and that you are on SampQOL 0.2.0. The styling only applies to that version.
+If it doesn't work: if the screens look like plain SampQOL, check that you ticked the option (or that **autorun/hs/list-styling.on** exists) and that you are on SampQOL 0.3.0. The styling only applies to the version the installer supports.
 
 ---
 
@@ -772,7 +772,7 @@ Press **PAD FX**, then **B2**. SampQOL's **Ch. Mixer** is drawn as a console. Pr
 
 ![Ch. Mixer as a console: strips with pan, M and S buttons, faders, stereo meters and MSTR outputs, the second strip selected in cyan](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/graphic-mixer.png)
 
-If it doesn't work: like the list styling, the graphic mixer only draws on SampQOL 0.2.0. On any other version you get SampQOL's own mixer.
+If it doesn't work: like the list styling, the graphic mixer only draws on the SampQOL version the installer supports (0.3.0). On any other version you get SampQOL's own mixer.
 
 ---
 
