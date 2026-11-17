@@ -3,7 +3,9 @@
 import base64, json, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SAMPQOL = {"fc9285ac4a3145e04c1b162e3f5058a9c447a9752fec1e06510156ff20575dbd": "0.2.0"}  # mpcqol.so sha256 -> version
+SAMPQOL = {  # mpcqol.so sha256 -> version
+    "facea6b4ba33ba59a497ffaa5df00d21fa15828bf049bd8e854acf8f2883e7e3": "0.3.0",
+}
 
 PAYLOAD = (
     "BASS.xfx",
@@ -44,7 +46,7 @@ def main() -> None:
     stems = {f"stems/{n}": hashlib.sha256((stems_dir / n).read_bytes()).hexdigest() for n in ("hs-stems", "hs-stems-ui.so", "spl4h.bin")}
     html = (ROOT / "installer/template.html").read_text()
     html = (html.replace("__SAMPQOL_HASHES__", json.dumps(SAMPQOL))
-                .replace("__SAMPQOL_VERSION__", "/".join(SAMPQOL.values()))
+                .replace("__SAMPQOL_VERSION__", " or ".join(SAMPQOL.values()))
                 .replace("__ADDON_FILES__", json.dumps(files))
                 .replace("__STEMS_FILES__", json.dumps(stems)))
     # dist/ = the release download; docs/install/ = the online installer (GitHub Pages)

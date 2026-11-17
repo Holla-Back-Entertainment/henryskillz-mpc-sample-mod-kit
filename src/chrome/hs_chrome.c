@@ -1,21 +1,21 @@
-// HS styling for SampQOL's own list screens (SampQOL 0.2.0 only).
-//   mode 26 = header layer 320x31, 27 = list layer 320x160, 28 = soft-key bar 320x40.
+// HS styling for SampQOL's own list screens (the SampQOL builds in src/common/qol_map.h).
+//   header layer 320x31, list layer 320x160, soft-key bar 320x40 (0.2.0 modes 26/27/28, 0.3.0 25/26/27).
 //   - a red brand bar on the header (as on the channel mixer)
 //   - a cyan edge on the selected row (SampQOL fills it with grey 46,46,51)
 //   - the same dark blue palette on all three layers (stock_lut.h)
-// Version guard: SampQOL's overlay_update must sit at its 0.2.0 offset in mpcqol.so; any other build
-// and every call goes straight through, unstyled.
+// Version guard: qol_map.h must know the mpcqol.so build; any other build and every call goes
+// straight through, unstyled.
 // Build: see build.sh at the top of the kit (gcc -O2 -Wall -Wextra -Werror -shared -fPIC hs_chrome.c -ldl)
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <stdint.h>
 #include "stock_lut.h"
-
-#define QOL_OVERLAY_UPDATE 0x61be4      /* overlay_update in mpcqol.so of SampQOL 0.2.0 */
+#include "../common/qol_map.h"
 
 typedef void (*ov_fn)(int, const void *, int);
 static ov_fn real_ov;
-static int matched = -1;                /* -1 not checked yet, 0 other build, 1 SampQOL 0.2.0 */
+static const struct qol_map *qol;
+static int matched = -1;                /* -1 not checked yet, 0 other build, 1 a build qol_map.h knows */
 enum { W = 320 };
 static const uint32_t RED = 0x00C8061Cu, CYAN = 0x004CB8E7u;
 
@@ -33,8 +33,11 @@ static uint32_t lut(uint32_t c)
     return (lo < LUT_N && LUT_K[lo] == c) ? LUT_V[lo] : c;
 }
 
-/* Exact layer sizes (SampQOL 0.2.0): writing past them corrupts a neighbouring layer. */
-static int npx(int mode) { return mode == 26 ? W * 31 : mode == 27 ? W * 160 : mode == 28 ? W * 40 : 0; }
+/* Exact layer sizes: writing past them corrupts a neighbouring layer. */
+static int npx(int mode)
+{
+    return mode == qol->header ? W * 31 : mode == qol->list ? W * 160 : mode == qol->softkeys ? W * 40 : 0;
+}
 
 /* Idempotent, so buffers SampQOL keeps between frames are safe. Runs after chrome(): its scan wants the stock grey. */
 static void navy(int mode, uint32_t *p)
@@ -50,7 +53,7 @@ static void navy(int mode, uint32_t *p)
 
 static void chrome(int mode, uint32_t *p)
 {
-    if (mode == 26) for (int i = 0; i < W * 2; ++i) p[i] = RED;    /* brand bar */
+    if (mode == qol->header) for (int i = 0; i < W * 2; ++i) p[i] = RED;    /* brand bar */
     for (int y = 3, rows = npx(mode) / W; y < rows - 2; ++y) {       /* cyan selection edge */
         uint32_t *row = &p[y * W];
         int cnt = 0, lx = -1;
@@ -64,13 +67,13 @@ void overlay_update(int mode, const void *buf, int flag)
 {
     if (matched < 0) {
         real_ov = (ov_fn)dlsym(RTLD_NEXT, "overlay_update");
-        Dl_info info;
-        matched = real_ov && dladdr((void *)real_ov, &info) &&
-                  (uintptr_t)real_ov - (uintptr_t)info.dli_fbase == QOL_OVERLAY_UPDATE;
+        uintptr_t base = 0;
+        qol = qol_map(&base);
+        matched = qol && qol_owns((void *)real_ov, base);
     }
     if (matched && buf) {
-        if (mode == 26 || mode == 27) chrome(mode, (uint32_t *)buf);
-        if (mode >= 26 && mode <= 28) navy(mode, (uint32_t *)buf);
+        if (mode == qol->header || mode == qol->list) chrome(mode, (uint32_t *)buf);
+        if (mode >= qol->header && mode <= qol->softkeys) navy(mode, (uint32_t *)buf);
     }
     if (real_ov) real_ov(mode, buf, flag);
 }

@@ -1,3 +1,4 @@
+#include "../common/qol_map.h"
 #include "bank_tables.inc"   /* the page tables, shared with the CLAP faceplate (src/clap/hs_clap_panel.c) */
 /* One atomic word keeps band and page coherent through the overlay callbacks. */
 static unsigned eq_selection = 4; // band 1, page 0
@@ -26,6 +27,7 @@ static unsigned channel_bank;
 static constexpr unsigned bank_count = sizeof banks / sizeof *banks;
 static unsigned bank;
 static uintptr_t qol_base;
+static const struct qol_map *qol;              /* NULL on an unknown SampQOL build: the editor hooks stay off */
 static int (*next_note)(int, int, int);
 static int (*next_map)(void *, int, void *);
 static int (*question_active)();
@@ -40,16 +42,16 @@ static void follow_instance();
 
 static unsigned insert_open()
 {
-    unsigned uid = qol_base && state(0x1632688) && state(0x16328dc) ? state(0x16328f4) : 0;
+    unsigned uid = qol && state(qol->padmix_open) && state(qol->insert_editor) ? state(qol->insert_uid) : 0;
     if (uid) follow_instance();
     return uid;
 }
 
-/* SampQOL 0.2.0: insert editor at qol+0x16333a0, open insert at +0xd0 (same read as hs_eq2_view.h). */
+/* Insert editor at qol_map.h's editor, open insert at +0xd0 (same read as hs_eq2_view.h). */
 static const char *open_insert()
 {
-    if (!qol_base) return nullptr;
-    auto *editor = *reinterpret_cast<char *const *>(qol_base + 0x16333a0);
+    if (!qol) return nullptr;
+    auto *editor = *reinterpret_cast<char *const *>(qol_base + qol->editor);
     return editor ? *reinterpret_cast<char *const *>(editor + 0xd0) : nullptr;
 }
 
@@ -244,11 +246,12 @@ __attribute__((constructor)) static void init_editor()
     next_map = reinterpret_cast<decltype(next_map)>(dlsym(RTLD_NEXT, "fxmap_get_row"));
     question_active = reinterpret_cast<decltype(question_active)>(dlsym(RTLD_NEXT, "context_question_active"));
     refresh = reinterpret_cast<decltype(refresh)>(dlsym(RTLD_NEXT, "padmix_force"));
-    Dl_info info;
-    if (next_note && next_map && question_active && refresh &&
-        dladdr(reinterpret_cast<void *>(refresh), &info) &&
-        reinterpret_cast<uintptr_t>(refresh) - reinterpret_cast<uintptr_t>(info.dli_fbase) == 0xa3300)
-        qol_base = reinterpret_cast<uintptr_t>(info.dli_fbase);
+    uintptr_t base = 0;
+    const struct qol_map *map = qol_map(&base);
+    if (map && next_note && next_map && question_active && qol_owns(reinterpret_cast<void *>(refresh), base)) {
+        qol_base = base;
+        qol = map;
+    }
 }
 
 extern "C" int padmix_cc(int cc,int value)

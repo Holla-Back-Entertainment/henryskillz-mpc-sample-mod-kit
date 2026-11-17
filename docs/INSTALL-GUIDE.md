@@ -43,14 +43,16 @@ If it isn't exFAT, format it. **Formatting erases the card, so do Step 2 first.*
 
 Then copy your backup back onto the card.
 
-## Step 4. Download SampQOL 0.2.0 (from its author)
+## Step 4. Download SampQOL 0.3.0 (from its author)
 
 1. Go to the [official SampQOL OS releases page](https://github.com/snarebes/SampQOL-OS/releases).
-2. Find **v0.2.0** and, under *Assets*, click **`SampQOL-OS-v0.2.0.zip`**.
+2. Find **v0.3.0** (the latest) and, under *Assets*, click **`SampQOL-OS-v0.3.0.zip`**.
+
+0.3.0 passed a power-off cold boot and the full feature checks on a real MPC Sample on 18 Nov 2026. Older versions are not accepted.
 
 Get it only from that page. It's the author's official download, and the installer checks it's the exact file.
 
-> **Safari on a Mac** may unzip it for you and leave a folder called `SampQOL-OS-v0.2.0` in Downloads. That's fine: use the folder in Step 6.
+> **Safari on a Mac** may unzip it for you and leave a folder called `SampQOL-OS-v0.3.0` in Downloads. That's fine: use the folder in Step 6.
 
 ## Step 5. Open the installer
 
@@ -65,17 +67,17 @@ Both versions work the same way. Everything happens inside your browser: your fi
 ## Step 6. Give it SampQOL
 
 Either:
-- **Drag `SampQOL-OS-v0.2.0.zip`** onto the dashed box, or
+- **Drag the SampQOL zip** onto the dashed box, or
 - click **Choose zip** and pick it, or
-- if your Mac unzipped it, click **Choose folder** and pick the `SampQOL-OS-v0.2.0` folder. Your browser may ask you to confirm uploading the folder. Nothing actually leaves your computer; that's just the browser's standard wording.
+- if your Mac unzipped it, click **Choose folder** and pick the `SampQOL-OS-v…` folder. Your browser may ask you to confirm uploading the folder. Nothing actually leaves your computer; that's just the browser's standard wording.
 
 After a second or two you should see:
 
-> SampQOL 0.2.0 checked. Add-ons installed, autorun signed.
+> SampQOL 0.3.0 checked. Add-ons installed, autorun signed.
 
 and a **Download autorun-hs.zip** link. Click it.
 
-**If you see a red message,** it tells you what's wrong. The common one is *"This is not SampQOL 0.2.0"*: download the zip again from the official page (Step 4).
+**If you see a red message,** it tells you what's wrong. The common one is *"This SampQOL build is not supported"*: download the 0.3.0 zip again from the official page (Step 4).
 
 ## Step 7. Unzip it
 

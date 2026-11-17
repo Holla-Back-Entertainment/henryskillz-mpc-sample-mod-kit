@@ -51,7 +51,7 @@ Saving writes the live controls to a temporary `.new` file, flushes it, then ren
 
 ## The menu row limit
 
-SampQOL 0.2.0 builds the insert menu in a fixed list of 40 rows, and 32 are stock effects. The picker (`src/fx/hs_fx_picker.c`) takes the stock Bus Compressor row out of that list, which leaves nine rows, and adds its rows only when they all fit, so more than nine HS rows hides the whole HS menu. It only takes the stock row out when the HS rows go in. Every effect stays in the library and the catalog, and the stock Bus Compressor stays in the MPC, so saved projects reopen them; `in_menu()` picks which nine get a menu row, and `check-picker.sh` fails if that count isn't `MENU_ROWS`.
+SampQOL builds the insert menu in a fixed list of 40 rows. In 0.3.0, 34 are stock effects (0.2.0 had 32; 0.3.0 adds AIR Lo-Fi and AIR Pitch Shifter). The picker (`src/fx/hs_fx_picker.c`) takes the stock Bus Compressor row out of that list, which leaves seven rows on 0.3.0, and counts the rows that are actually free. When the nine HS rows don't fit, it drops rows in the fixed `drop_order` (Tube Strip, then Saturator) instead of hiding the whole HS menu. Hiding stock effects in SampQOL's own settings frees rows again. It only takes the stock row out when the HS rows go in. Every effect stays in the library and the catalog, and the stock Bus Compressor stays in the MPC, so saved projects reopen them; `in_menu()` picks which nine get a menu row, and `check-picker.sh` fails if that count isn't `MENU_ROWS`.
 
 ## Build
 

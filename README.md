@@ -12,6 +12,8 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 > **Unofficial.** Not made, endorsed or supported by Akai Professional, inMusic or the SampQOL author.
 > Everything runs from the SD card. Switch off and take the card out, and the MPC is stock again.
 
+> **SampQOL 0.3.0:** this version targets the latest SampQOL only. Its installer output (pristine official 0.3.0 package) passed a power-off cold boot and the full feature checks on Henry's MPC Sample on 18 Nov 2026: boot, insert menu (7 HS effects on 0.3.0), editors, presets, mixer strips, header bar, EQ grid, SEQ/METERS, browser tags, Stems and an old project. The history below is for SampQOL 0.2.0.
+>
 > **Tested:** the installer on a pristine official SampQOL 0.2.0 package (Chrome and Safari), including a virtual-MPC boot of the generated output. v0.7.0 (commit 93fa9da) passed the full [hardware checklist](docs/BOOT-TEST.md) on Henry's own MPC Sample on 15 Nov 2026, including a power-off cold boot. Warp on import and HS Crush Auto Gain (merged after v0.7.0) were tested on the same unit from RAM on 15 Nov 2026. They and this rename shipped in v0.7.1, whose card passed a cold boot on the same unit. The HS Tools card for stock firmware booted on the same unit on 15 Nov 2026 with all its tools working. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues).
 
 ---
@@ -103,7 +105,7 @@ Every picture in this section is an emulator capture.
 - An **Akai MPC Sample** on firmware **1.3.0** (1.3.0.12)
 - An **exFAT SD card**
 - A **Mac or Windows** computer with a web browser
-- **SampQOL OS 0.2.0**, downloaded free from [Snare Bes's official page](https://github.com/snarebes/SampQOL-OS/releases)
+- **SampQOL OS 0.3.0** (the latest), downloaded free from [Snare Bes's official page](https://github.com/snarebes/SampQOL-OS/releases). Older SampQOL versions are no longer accepted. 0.3.0 passed a power-off cold boot and the full feature checks on a real MPC Sample on 18 Nov 2026.
 
 **Not on SampQOL?** HS Tools runs on stock firmware 1.3.0: on-device stems, browser key and BPM tags, and the SEQ desk with LUFS meters. Download `henryskillz-mpc-sample-hs-tools.zip` from the [v0.6.1 release](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/releases/tag/v0.6.1), copy its `autorun` folder to an exFAT SD card and power on. The effects and track chains need SampQOL.
 
@@ -114,7 +116,7 @@ Every picture in this section is an emulator capture.
 ## Install in 5 steps
 
 1. **Back up** everything on your SD card to your computer.
-2. **Download** `SampQOL-OS-v0.2.0.zip` from the [official SampQOL page](https://github.com/snarebes/SampQOL-OS/releases).
+2. **Download** `SampQOL-OS-v0.3.0.zip` from the [official SampQOL page](https://github.com/snarebes/SampQOL-OS/releases).
 3. **Open** the [installer](https://holla-back-entertainment.github.io/henryskillz-mpc-sample-mod-kit/install/) and drop the zip on it. Click **Download autorun-hs.zip**.
 4. **Unzip** it and copy the `autorun` folder to the top level of your SD card.
 5. **Eject** the card, put it in the MPC, switch on and press **B1** to start.

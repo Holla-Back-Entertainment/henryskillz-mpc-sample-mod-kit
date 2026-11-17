@@ -6,14 +6,12 @@
 #include <string.h>
 
 #include "hs_ducker_gain.h"
+#include "../common/qol_map.h"
 
 typedef int (*map_fn)(void *, int, void *);
 typedef int (*note_fn)(int, int, int);
 
 enum {
-    PADMIX_OPEN = 0x1632688,
-    INSERT_EDITOR = 0x16328dc,
-    INSERT_UID = 0x16328f4,
     DUCKER_UID = 0x41437654,
     DUCKER_MAP_ROW = -11,
     SCREEN_2 = 13,
@@ -35,6 +33,7 @@ static map_fn next_map;
 static int (*question_active)(void);
 static void (*refresh)(void);
 static uintptr_t qol_base;
+static const struct qol_map *qol;     /* NULL on an unknown SampQOL build: the page stays stock */
 static atomic_int gain_page;
 
 static int state(uintptr_t offset)
@@ -44,8 +43,8 @@ static int state(uintptr_t offset)
 
 int hs_ducker_gain_page(void)
 {
-    if (!qol_base || !state(PADMIX_OPEN) || !state(INSERT_EDITOR) ||
-        state(INSERT_UID) != DUCKER_UID)
+    if (!qol || !state(qol->padmix_open) || !state(qol->insert_editor) ||
+        state(qol->insert_uid) != DUCKER_UID)
         return -1;
     return atomic_load_explicit(&gain_page, memory_order_relaxed);
 }
@@ -56,17 +55,14 @@ __attribute__((constructor)) static void install_gain_ui(void)
     next_map = (map_fn)dlsym(RTLD_NEXT, "fxmap_get_row");
     question_active = (int (*)(void))dlsym(RTLD_NEXT, "context_question_active");
     refresh = (void (*)(void))dlsym(RTLD_NEXT, "padmix_force");
-    Dl_info info;
-    if (!next_note || !next_map || !question_active || !refresh ||
-        !dladdr((const void *)next_map, &info))
-        return;
-    uintptr_t base = (uintptr_t)info.dli_fbase;
-    /* Bound to the SHA-pinned SampQOL 0.2.0 build in the lab package. */
-    if ((uintptr_t)next_map - base != 0x6d31c ||
-        (uintptr_t)next_note - base != 0xa3bc8 ||
-        (uintptr_t)refresh - base != 0xa3300)
+    /* Bound to the SHA-pinned SampQOL builds in qol_map.h, with nothing interposed in between. */
+    uintptr_t base = 0;
+    const struct qol_map *map = qol_map(&base);
+    if (!map || !question_active || !qol_owns((const void *)next_map, base) ||
+        !qol_owns((const void *)next_note, base) || !qol_owns((const void *)refresh, base))
         return;
     qol_base = base;
+    qol = map;
 }
 
 int padmix_note(int note, int value, int shift)

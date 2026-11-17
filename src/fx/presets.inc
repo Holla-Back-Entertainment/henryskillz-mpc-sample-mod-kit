@@ -55,12 +55,12 @@ static controls_fn ladspa_controls()
     return fn;
 }
 
-/* SampQOL 0.2.0: insert editor at qol+0x16333a0, open insert at +0xd0, its LADSPA handle at +0x130
+/* Insert editor at qol_map.h's editor, open insert at +0xd0, its LADSPA handle at +0x130
    (same read as hs_eq2_view.h; hs_ladspa_controls rejects anything that is not a live HS instance). */
 static const void *open_handle()
 {
-    if (!qol_base) return nullptr;
-    auto *editor = *reinterpret_cast<char *const *>(qol_base + 0x16333a0);
+    if (!qol) return nullptr;
+    auto *editor = *reinterpret_cast<char *const *>(qol_base + qol->editor);
     auto *insert = editor ? *reinterpret_cast<char *const *>(editor + 0xd0) : nullptr;
     return insert ? *reinterpret_cast<void *const *>(insert + 0x130) : nullptr;
 }
@@ -188,7 +188,7 @@ static void *load_thread(void *arg)
 {
     std::unique_ptr<load_job> job(static_cast<load_job *>(arg));
     static set_fn set = reinterpret_cast<set_fn>(dlsym(RTLD_DEFAULT, "padmix_set"));
-    const int *pending = reinterpret_cast<const int *>(qol_base + 0x1632960);   /* padmix_set's one-at-a-time flag */
+    const int *pending = reinterpret_cast<const int *>(qol_base + qol->set_pending);   /* padmix_set's one-at-a-time flag */
     for (int i = 0; set && i < job->n; ++i) {
         for (int w = 0; w < 200 && __atomic_load_n(pending, __ATOMIC_ACQUIRE); ++w) usleep(2000);
         set(job->slot, job->index[i], job->value[i]);
@@ -216,7 +216,7 @@ static void preset_load(unsigned slot)
             f = fmemopen(const_cast<char *>(starter->text), strlen(starter->text), "r");
     if (!f) { say("SLOT %u EMPTY", slot + 1); return; }
     auto job = std::make_unique<load_job>();
-    job->slot = state(0x1632908) + 1;                         /* SampQOL's selected insert row = the open slot */
+    job->slot = state(qol->insert_row) + 1;                        /* SampQOL's selected insert row = the open slot */
     int i; float v;
     while (fgets(line, sizeof line, f) && job->n < PRESET_MAX)
         if (sscanf(line, "%d %f", &i, &v) == 2 && i >= 0 && i < n && std::isfinite(v)) {
