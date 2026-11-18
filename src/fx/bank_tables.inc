@@ -93,7 +93,8 @@ static constexpr FlavorBank tube_banks[] = {
     {"LOW MID", 4, {TS_LMID_HZ, TS_LMID_DB, TS_Q, -1, -1, -1}, {"Frequency", "Gain", "High Q", "", "", ""}, {}},
     {"HIGH MID", 5, {TS_HMID_HZ, TS_HMID_DB, TS_Q, -1, -1, -1}, {"Frequency", "Gain", "High Q", "", "", ""}, {}},
     {"TREBLE", 6, {TS_TREBLE_HZ, TS_TREBLE_DB, -1, -1, -1, -1}, {"Frequency", "Gain", "", "", "", ""}, {}},
-    HS_MOD_BANKS(TS_MOD, 0)
+    {"GR COLOUR", 7, {TS_GR_DRIVE, -1, -1, -1, -1, -1}, {"GR Drive", "", "", "", "", ""}, {}},
+    HS_MOD_BANKS(TS_MOD, 0)   /* MOD stays the last two pages (banks.inc reads pages[count-2]) */
 };
 static constexpr FlavorBank heat_banks[] = {
     {"CHARACTER", 0, {HE_CIRCUIT, HE_DRIVE, HE_WET, -1, -1, -1}, {"Circuit", "Drive", "Wet", "", "", ""}, {"", "", "DB"}},

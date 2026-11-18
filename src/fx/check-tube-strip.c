@@ -30,6 +30,11 @@ static void tone(float hz, float amp) { for (int i = 0; i < N; ++i) in[0][i] = i
 static void go(void) { for (int i = 0; i < N; i += 256) {
     for (int c = 0; c < 2; ++c) { d->connect_port(h, c, in[c]+i); d->connect_port(h, 2+c, out[c]+i); }
     d->run(h, N - i < 256 ? N - i : 256); } }
+static float harm(int k);
+static float thd(void);
+static float harm(int k) { double m[2]; for (int j = 0; j < 2; ++j) { double w = 6.283185307*1000*(j ? k : 1)/RATE, c = 2*cos(w), a = 0, b = 0;
+    for (int i = N/2; i < N; ++i) { double t = out[0][i] + c*a - b; b = a; a = t; } m[j] = a*a + b*b - c*a*b; } return 10*log10(m[1]/m[0] + 1e-30); }
+static float thd(void) { return 10*log10(pow(10, harm(2)/10) + pow(10, harm(3)/10) + pow(10, harm(4)/10) + pow(10, harm(5)/10)); }
 static float db(void) { double a = 0, b = 0; for (int i = N/2; i < N; ++i) { a += out[0][i]*out[0][i]; b += in[0][i]*in[0][i]; } return 10*log10(a/b + 1e-30); }
 
 int main(void)
@@ -70,6 +75,26 @@ int main(void)
     for (int i = 0; i < N; ++i) assert(isfinite(out[0][i]) && fabsf(out[0][i]) < 1.5f);
     reset(); ctl[TS_BYPASS] = 1; ctl[TS_BASS_DB] = 24; tone(100, .3f); go();
     for (int i = 0; i < N; ++i) assert(out[0][i] == in[0][i]);
+    /* GR Drive: clean while the opto idles (bit-exact at Drive 0), more harmonics the harder it squashes */
+    reset(); ctl[TS_DRIVE] = 0; ctl[TS_GR_DRIVE] = 100; tone(1000, .25f); go();
+    float idle = thd();
+    printf("GR Drive 100, comp idle: %+.2f dB, THD %.0f dB\n", db(), idle);
+    assert(fabsf(db()) < .05f && idle < -90);
+    float h2[3], lvl[3]; const float amt[] = {0, 50, 100};
+    for (int k = 0; k < 3; ++k) {
+        reset(); ctl[TS_DRIVE] = 0; ctl[TS_THRESHOLD] = -30; ctl[TS_RATIO] = 10; ctl[TS_GR_DRIVE] = amt[k];
+        tone(1000, .5f); go(); h2[k] = thd(); lvl[k] = db();
+        printf("comp -30 / 10:1, GR Drive %3.0f: %+.1f dB, GR %.1f, THD %.0f dB\n", amt[k], lvl[k], hs_tube_strip_gr(h), h2[k]);
+    }
+    assert(h2[0] < -80 && h2[1] > -45 && h2[2] > h2[1] + 3 && h2[2] < -15);
+    assert(fabsf(lvl[2] - lvl[0]) < 3);     /* colour, not a level jump */
+    float light, heavy;
+    reset(); ctl[TS_THRESHOLD] = -14; ctl[TS_RATIO] = 4; ctl[TS_GR_DRIVE] = 100; ctl[TS_DRIVE] = 0; tone(1000, .5f); go(); light = thd();
+    reset(); ctl[TS_THRESHOLD] = -30; ctl[TS_RATIO] = 20; ctl[TS_GR_DRIVE] = 100; ctl[TS_DRIVE] = 0; tone(1000, .5f); go(); heavy = thd();
+    printf("GR Drive 100: light comp THD %.0f dB, heavy comp THD %.0f dB\n", light, heavy);
+    assert(heavy > light + 3);
+    reset(); ctl[TS_DRIVE] = 10; ctl[TS_GR_DRIVE] = 100; ctl[TS_THRESHOLD] = -30; ctl[TS_RATIO] = 20; tone(100, .9f); go();
+    for (int i = 0; i < N; ++i) assert(isfinite(out[0][i]) && fabsf(out[0][i]) < 1.5f);
     puts("check-tube-strip: OK");
     return 0;
 }
