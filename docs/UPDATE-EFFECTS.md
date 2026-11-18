@@ -16,7 +16,7 @@ Already installed the kit? You only need the new effect files. No SampQOL downlo
 5. **Copy everything in that folder** into `autorun/hs` on the SD card. Say yes to replace. Replace them all together: a mix of old and new files can hide the HS effects list.
 6. **Eject** the card, put it in the MPC, switch on and press **B1**.
 
-The new effects are in the insert effects list with the others. The menu has 40 rows, so HS HF Exciter, HS Drive Sat and the stock Bus Compressor leave the menu to make room for HS Crush, HS Bass Focus and HS Tube Strip. Projects that already use them still open with them.
+The new effects are in the insert effects list with the others. The menu has 40 rows, so HS HF Exciter, HS Drive Sat and the stock Bus Compressor leave the menu to make room for HS Crush, HS Bass Focus and HS Tube Strip. Projects that already use them still open with them. On SampQOL 0.3.0 only seven HS rows fit, so HS Saturator and HS Tube Strip are left out too: hide AIR Lo-Fi and AIR Pitch Shifter in SampQOL's settings to bring them back.
 
 Stems is not part of this update. To add Stems, run the [installer](https://holla-back-entertainment.github.io/henryskillz-mpc-sample-mod-kit/install/) again from a fresh SampQOL download with **Add Stems** ticked: Stems needs one more line in SampQOL's start script, and that file is part of the signed check.
 

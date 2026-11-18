@@ -22,6 +22,7 @@ SampQOL's own manual warns that a failed project load can delete samples. A back
 Pick one:
 - **Fastest:** switch off, take the SD card out, switch on. Stock MPC.
 - **Keep the card in:** put the card in your computer and delete the `autorun` folder (or rename it to `autorun-off`). Stock MPC.
+- **Back to your old setup:** if you renamed your old folder to `autorun-old` when installing, delete the new `autorun` folder and rename `autorun-old` back to `autorun`.
 - **Back to plain SampQOL:** copy the `autorun` folder from the original SampQOL zip back onto the card.
 
 ## What the MPC does on its own

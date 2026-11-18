@@ -60,6 +60,8 @@ Every HS effect has three knobs on each page. **K1**, **K2** and **K3** turn the
 | EQ / Filter | HS Para EQ, HS Bass Focus |
 
    The HS effects are listed at the **end** of each stock category, so open the category and scroll down. Dynamics ends with HS Bus Compressor, HS Pump and HS Crush. Harmonic ends with HS Saturator, HS Channel Strip, HS Heat and HS Tube Strip. EQ / Filter ends with HS Para EQ and HS Bass Focus.
+
+   On SampQOL 0.3.0 only seven of the nine fit the menu: HS Saturator and HS Tube Strip are left out. Hide SampQOL's two AIR effects (AIR Lo-Fi and AIR Pitch Shifter) in its settings to bring them back.
 6. On a slot that **already has an effect**, press **B3** (Edit) to open it.
 
 To go back, press **B1** (Back) or **PAD FX**.
@@ -558,7 +560,7 @@ If it doesn't work: Threshold starts at +20 dB, where the compressor is idle. Tu
 
 ## HS HF Exciter and HS Drive Sat
 
-These two are no longer in the effect list, to make room for the nine above. They are still installed, so projects that use them open as before, and the VOX and BASS [track chains](#track-chains) load them. You edit them like any other HS effect.
+These two have no row in the effect list. They are still installed, so projects that use them open as before, and the VOX and BASS [track chains](#track-chains) load them. You edit them like any other HS effect.
 
 - **HS HF Exciter:** Frequency (2,000 to 12,000 Hz), Drive (0 to 18 dB) and Amount (0 to 1). It does nothing until Amount is above 0.
 - **HS Drive Sat:** pages **DRIVE** (Drive, Shape, Depth), **HARMONICS** (Harmonics, Mix, +6dB Headroom), **I/O** (Input, Output), then **MOD** and **MOD TIME**.
