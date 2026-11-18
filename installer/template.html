@@ -34,8 +34,9 @@
     <li>Download the <b>SampQOL OS</b> zip, version <b>__SAMPQOL_VERSION__</b>, from the official page:
       <a href="https://github.com/snarebes/SampQOL-OS/releases" target="_blank" rel="noopener">github.com/snarebes/SampQOL-OS/releases</a></li>
     <li>Drop that zip here (or, if your Mac already unzipped it, choose its <b>SampQOL-OS</b> folder).</li>
-    <li>Save the <b>autorun-hs.zip</b> this page gives you, unzip it, and copy the <b>autorun</b> folder to the top of your SD card.</li>
+    <li>Save the <b>autorun-hs.zip</b> this page gives you and unzip it. Already a folder called <b>autorun</b> on your SD card? Rename it to <b>autorun-old</b> (don't delete or replace it: it's your way back). Then copy the new <b>autorun</b> folder straight onto the card, not inside another folder. Switch on and press <b>B1</b> when the screen asks.</li>
   </ol>
+  <p class="small">On SampQOL 0.3.0, seven of the nine HS effects fit the insert menu. To get HS Saturator and HS Tube Strip back, hide SampQOL's two AIR effects (AIR Lo-Fi and AIR Pitch Shifter) in its settings.</p>
   <p><label><input type="checkbox" id="stems"> <b>Add Stems</b>: split a sample into vocals, drums, bass and other on the MPC itself. Adds a 92 MB download, and needs this page online (not the saved copy).</label></p>
   <p><label><input type="checkbox" id="styling"> <b>SampQOL list styling (optional)</b>: restyles SampQOL's own list screens (red top bar, dark blue palette, cyan selection). Off unless you tick it. It changes how SampQOL's screens look, and SampQOL's author has not approved it.</label></p>
   <div class="drop" id="drop">
@@ -53,7 +54,7 @@
     <li>Eject the card, switch the MPC on and press <b>B1</b>.</li>
   </ol>
   <p class="small">SampQOL list styling is a setting too: it stays as it was on your card (add or delete <b>autorun/hs/list-styling.on</b> to turn it on or off). Stems is not in this update: to add Stems, run the installer above again with <b>Add Stems</b> ticked. These files are not part of the signed autorun, so nothing needs re-signing. If the MPC boots stock or restarts twice, put your backup of <b>autorun/hs</b> back.</p>
-  <p class="small">Back up your SD card first. To undo: switch off and take the SD card out, or delete the <b>autorun</b> folder from it.
+  <p class="small">Back up your SD card first. To undo: switch off and take the SD card out. Want your old setup back? Delete the new <b>autorun</b> folder and rename <b>autorun-old</b> back to <b>autorun</b>.
      Step-by-step help with pictures: <a href="https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/blob/main/docs/INSTALL-GUIDE.md" target="_blank" rel="noopener">install guide</a> ·
      <a href="https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/blob/main/docs/FAQ.md" target="_blank" rel="noopener">FAQ</a> ·
      <a href="https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues" target="_blank" rel="noopener">report a problem</a></p>
@@ -172,7 +173,7 @@ async function run(getEntries) {
     a.textContent = "Download autorun-hs.zip";
     a.className = "btn";
     const p = document.createElement("p"); p.append(a); log.append(p);
-    say("Next: unzip it, then copy the autorun folder to the top of the SD card (replace any old one). Put the card in the MPC and switch it on.");
+    say("Next: unzip it. If the card already has an autorun folder, rename it to autorun-old (don't replace it). Copy the new autorun folder straight onto the card, put the card in the MPC, switch on and press B1.");
   } catch (e) { say(e.message, "bad"); }
 }
 

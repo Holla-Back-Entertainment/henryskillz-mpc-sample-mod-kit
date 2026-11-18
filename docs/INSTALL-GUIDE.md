@@ -87,7 +87,7 @@ and a **Download autorun-hs.zip** link. Click it.
 ## Step 8. Copy it to the SD card
 
 1. Open the SD card on your computer.
-2. If there's already a folder called `autorun` on it, rename that to `autorun-old`.
+2. If there's already a folder called `autorun` on it, rename that to `autorun-old`. Don't delete or replace it: it's your way back.
 3. Drag the new **`autorun`** folder onto the **top level** of the card, not inside another folder.
 
 The card should look like this:
@@ -132,7 +132,7 @@ Wherever you choose an insert effect (for example a pad's insert slots in the **
 - **Dynamics:** HS Bus Compressor, HS Pump, HS Crush
 - **EQ / Filter:** HS Para EQ, HS Bass Focus
 
-HS HF Exciter, HS Drive Sat and the stock Bus Compressor are no longer in the menu (it has 40 rows), but projects that already use them still open with them.
+HS HF Exciter, HS Drive Sat and the stock Bus Compressor are no longer in the menu (it has 40 rows), but projects that already use them still open with them. On SampQOL 0.3.0 only seven HS rows fit, so HS Saturator and HS Tube Strip are left out too: hide AIR Lo-Fi and AIR Pitch Shifter in SampQOL's settings to bring them back.
 
 ![Insert effects list showing the HS Harmonic effects](https://raw.githubusercontent.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/main/assets/screens/hs-effects-list.png)
 
@@ -162,4 +162,5 @@ Start with one effect in one slot, make a small change, then bypass it to hear w
 ## Undo it
 
 Switch off and take the SD card out. That's it: without the card, the MPC is stock.
+Want your old setup back? Delete the new `autorun` folder and rename `autorun-old` back to `autorun`.
 More options: [RECOVERY.md](RECOVERY.md). Something not right: [FAQ.md](FAQ.md).

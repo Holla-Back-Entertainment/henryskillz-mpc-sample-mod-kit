@@ -12,9 +12,9 @@ Made by [Henry Skillz](https://www.henryskillz.com) in Melbourne. Built on top o
 > **Unofficial.** Not made, endorsed or supported by Akai Professional, inMusic or the SampQOL author.
 > Everything runs from the SD card. Switch off and take the card out, and the MPC is stock again.
 
-> **SampQOL 0.3.0:** this version targets the latest SampQOL only. Its installer output (pristine official 0.3.0 package) passed a power-off cold boot and the full feature checks on Henry's MPC Sample on 18 Nov 2026: boot, insert menu (7 HS effects on 0.3.0), editors, presets, mixer strips, header bar, EQ grid, SEQ/METERS, browser tags, Stems and an old project. The history below is for SampQOL 0.2.0.
+> **SampQOL 0.3.0:** this version targets the latest SampQOL only. Its installer output (pristine official 0.3.0 package) passed a power-off cold boot and the full feature checks on Henry's MPC Sample on 18 Nov 2026: boot, insert menu (7 HS effects on 0.3.0), editors, presets, mixer strips, header bar, EQ grid, SEQ/METERS, browser tags, Stems and an old project.
 >
-> **Tested:** the installer on a pristine official SampQOL 0.2.0 package (Chrome and Safari), including a virtual-MPC boot of the generated output. v0.7.0 (commit 93fa9da) passed the full [hardware checklist](docs/BOOT-TEST.md) on Henry's own MPC Sample on 15 Nov 2026, including a power-off cold boot. Warp on import and HS Crush Auto Gain (merged after v0.7.0) were tested on the same unit from RAM on 15 Nov 2026. They and this rename shipped in v0.7.1, whose card passed a cold boot on the same unit. The HS Tools card for stock firmware booted on the same unit on 15 Nov 2026 with all its tools working. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues).
+> **Earlier builds:** v0.7.x was tested on SampQOL 0.2.0, which the installer no longer accepts. The HS Tools card for stock firmware booted on the same unit on 15 Nov 2026 with all its tools working. Every unit and card is different, so **back up your card first**, and [report anything odd](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues).
 
 ---
 
@@ -34,7 +34,7 @@ For how to use every feature, button by button, see the [user guide](docs/USER-G
 | **HS Bass Focus** | EQ / Filter | Splits at a crossover (30 to 500 Hz), makes the lows mono and sets their level. The highs pass untouched |
 | **HS Tube Strip** | Harmonic | Tube channel strip: tube drive, a 6 dB/oct high-pass, an opto compressor with a gain-reduction meter and a 4-band EQ, with the EQ before or after the compressor and a side-chain EQ for de-essing |
 
-**Where did HS HF Exciter, HS Drive Sat and the stock Bus Compressor go?** SampQOL's insert menu has 40 rows. To fit nine HS effects, the stock Bus Compressor leaves the Dynamics list (HS Bus Compressor and HS Crush cover it), and HS HF Exciter and HS Drive Sat leave the menu. All three are still installed: a project that already uses them opens with them, as before.
+**Where did HS HF Exciter, HS Drive Sat and the stock Bus Compressor go?** SampQOL's insert menu has 40 rows. To fit nine HS effects, the stock Bus Compressor leaves the Dynamics list (HS Bus Compressor and HS Crush cover it), and HS HF Exciter and HS Drive Sat leave the menu. All three are still installed: a project that already uses them opens with them, as before. On SampQOL 0.3.0 only seven HS rows fit, so HS Saturator and HS Tube Strip are left out too: hide AIR Lo-Fi and AIR Pitch Shifter in SampQOL's settings to bring them back.
 
 Plus live displays for the stock effects while you turn the knobs, a dB/Hz grid on the EQ page, and the HenrySkillz start screen (after SampQOL's own).
 
@@ -107,18 +107,18 @@ Every picture in this section is an emulator capture.
 - A **Mac or Windows** computer with a web browser
 - **SampQOL OS 0.3.0** (the latest), downloaded free from [Snare Bes's official page](https://github.com/snarebes/SampQOL-OS/releases). Older SampQOL versions are no longer accepted. 0.3.0 passed a power-off cold boot and the full feature checks on a real MPC Sample on 18 Nov 2026.
 
-**Not on SampQOL?** HS Tools runs on stock firmware 1.3.0: on-device stems, browser key and BPM tags, and the SEQ desk with LUFS meters. Download `henryskillz-mpc-sample-hs-tools.zip` from the [v0.6.1 release](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/releases/tag/v0.6.1), copy its `autorun` folder to an exFAT SD card and power on. The effects and track chains need SampQOL.
+**Not on SampQOL?** HS Tools runs on stock firmware 1.3.0: on-device stems, browser key and BPM tags, and the SEQ desk with LUFS meters. Download `henryskillz-mpc-sample-hs-tools.zip` from the [v0.6.1 release](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/releases/tag/v0.6.1), copy its `autorun` folder to an exFAT SD card and power on. The effects and track chains need SampQOL. A card runs one `autorun` at a time: rename any existing one to `autorun-old` first, and SampQOL won't start while HS Tools is on the card.
 
 **Using [Boot Thingy](https://github.com/garrettjwilke/mpc-boot-thingy)?** Copy `henryskillz-mpc-sample-hs-tools-boot-thingy.zip` (on the release page once it is attached) into `autorun/apps/` on your Boot Thingy card and power on; Boot Thingy installs it and it shows as **HS Tools Boot Thingy** in its menu. It has the SEQ desk, LUFS meters and browser key/BPM tags, but **no Stems**: Boot Thingy's app installer takes at most 32 MB per file and the stems model is 79 MB. For Stems, use the HS Tools card above. Tested with Boot Thingy v1.1.6 on firmware 1.3.0.12.
-- To open the menu, wait for the splash with the SHIFT light on, then press SHIFT. Holding it from power-on is missed and the MPC boots Stock. From Stock, SHIFT + Pad 16 opens the menu.
-- Nothing is written to the MPC itself: pick Stock in the menu, or power off and take the card out.
+- Boot Thingy: to open its menu, wait for the splash with the SHIFT light on, then press SHIFT. Holding it from power-on is missed and the MPC boots Stock. From Stock, SHIFT + Pad 16 opens the menu.
+- Boot Thingy: nothing is written to the MPC itself. Pick Stock in the menu, or power off and take the card out.
 
 ## Install in 5 steps
 
 1. **Back up** everything on your SD card to your computer.
 2. **Download** `SampQOL-OS-v0.3.0.zip` from the [official SampQOL page](https://github.com/snarebes/SampQOL-OS/releases).
 3. **Open** the [installer](https://holla-back-entertainment.github.io/henryskillz-mpc-sample-mod-kit/install/) and drop the zip on it. Click **Download autorun-hs.zip**.
-4. **Unzip** it and copy the `autorun` folder to the top level of your SD card.
+4. **Unzip** it. Already an `autorun` folder on the card? Rename it to `autorun-old` (don't replace it). Then copy the new `autorun` folder to the top level of your SD card.
 5. **Eject** the card, put it in the MPC, switch on and press **B1** to start.
 
 The HS effects are in the insert effects list.
@@ -132,7 +132,7 @@ Prefer offline? Download `henryskillz-mpc-sample-installer.html` from [Releases]
 
 ## Undo it
 
-Switch off and take the SD card out. That's it. More options in [RECOVERY.md](docs/RECOVERY.md).
+Switch off and take the SD card out. That's it. Want your old setup back? Delete the new `autorun` folder and rename `autorun-old` back to `autorun`. More options in [RECOVERY.md](docs/RECOVERY.md).
 
 ## Help
 

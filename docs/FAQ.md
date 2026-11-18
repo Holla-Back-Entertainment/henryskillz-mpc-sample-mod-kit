@@ -28,6 +28,9 @@ Something in that SampQOL copy was edited. Use a fresh download, not a folder th
 ### The installer says the add-ons are "already installed"
 You gave it a folder it already patched. Start again from the original SampQOL zip.
 
+### HS Saturator and HS Tube Strip aren't in the insert menu
+On SampQOL 0.3.0 the menu fits seven of the nine HS effects. Hide SampQOL's two AIR effects (AIR Lo-Fi and AIR Pitch Shifter) in its settings and they come back. Projects that already use them open as normal.
+
 ### SampQOL released a new version. Can I use it?
 Not until this kit is updated for it. Every new SampQOL version is checked and tested on a real MPC Sample before the installer accepts it.
 The installer accepts 0.3.0, the latest. 0.3.0 passed a power-off cold boot and the full feature checks on a real MPC Sample on 18 Nov 2026.
