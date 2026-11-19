@@ -471,6 +471,13 @@ static void run(LADSPA_Handle handle, unsigned long frames)
 #define AUDIO_IN (LADSPA_PORT_INPUT | LADSPA_PORT_AUDIO)
 #define AUDIO_OUT (LADSPA_PORT_OUTPUT | LADSPA_PORT_AUDIO)
 #define CONTROL (LADSPA_PORT_INPUT | LADSPA_PORT_CONTROL)
+/* Compressor gain reduction in dB (gate and de-esser not included), for a panel meter. */
+float hs_channel_gr(const void *handle)
+{
+    const struct channel *s = handle;
+    return s && s->configured && s->comp_slope > 0 && s->parameters[CH_COMP_RATIO] > 1.0001f ? s->comp_reduction : 0;
+}
+
 static const LADSPA_PortDescriptor descriptors[] = {
     AUDIO_IN, AUDIO_IN, AUDIO_OUT, AUDIO_OUT,
     CONTROL, CONTROL, CONTROL, CONTROL, CONTROL, CONTROL,

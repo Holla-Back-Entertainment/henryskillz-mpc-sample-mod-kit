@@ -226,6 +226,13 @@ static void run(LADSPA_Handle h, unsigned long frames)
     }
 }
 
+/* Gain reduction in dB the last block ended on, for a panel meter (same as hs_tube_strip_gr). */
+float hs_pump_gr(const void *handle)
+{
+    const struct pump *s = handle;
+    return s->atmod ? s->onset : s->gr + s->tail;
+}
+
 #define AI (LADSPA_PORT_INPUT | LADSPA_PORT_AUDIO)
 #define AO (LADSPA_PORT_OUTPUT | LADSPA_PORT_AUDIO)
 #define C (LADSPA_PORT_INPUT | LADSPA_PORT_CONTROL)

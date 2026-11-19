@@ -14,4 +14,7 @@ enum hs_channel_parameter {
 
 #define HS_CHANNEL_ID 0x485304
 
+/* Compressor gain reduction in dB of one instance, for the panel meter. */
+float hs_channel_gr(const void *handle);
+
 #endif

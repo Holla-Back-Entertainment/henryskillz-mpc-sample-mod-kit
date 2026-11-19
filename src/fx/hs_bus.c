@@ -13,7 +13,7 @@ struct bus {
     float *port[PORTS];
     unsigned long rate;
     float values[BUS_COUNT], curve[25], attack, release, peak_decay, peak;
-    float makeup, mix, hp, reduction, slow, balance, fixed_offset, auto_offset;
+    float makeup, mix, hp, reduction, slow, balance, fixed_offset, auto_offset, shown;
     float auto_fast_attack, auto_fast_release, auto_slow_release, auto_slow_lo, auto_slow_hi, auto_voicing;
     struct biquad sc;
     int ready, automatic;
@@ -66,7 +66,7 @@ static void activate(LADSPA_Handle handle)
 {
     struct bus *s = handle;
     s->ready = 0;
-    s->peak = s->reduction = s->slow = s->balance = s->auto_voicing = 0;
+    s->peak = s->reduction = s->slow = s->balance = s->auto_voicing = s->shown = 0;
     memset(&s->sc, 0, sizeof s->sc);
 }
 
@@ -148,6 +148,7 @@ static void run(LADSPA_Handle handle, unsigned long frames)
     hs_mod_apply(&s->mod, v, BUS_MOD, hints + FIRST, frames, s->rate);
     if (!s->ready || memcmp(v,s->values,sizeof v)) configure(s,v);
     float peak = s->peak, gr = s->reduction, slow = s->slow, balance = s->balance, voicing = s->auto_voicing;
+    float amount = 0;
     for (unsigned long i = 0; i < frames; ++i) {
         float l = s->port[IL][i], r = s->port[IR][i];
         float dl = s->hp ? detect(&s->sc,l,0) : l, dr = s->hp ? detect(&s->sc,r,1) : r;
@@ -159,7 +160,6 @@ static void run(LADSPA_Handle handle, unsigned long frames)
         }
         float want = target(s, peak);
         want *= 1-balance*fmaxf(0, .0066f*(want-8.0f));
-        float amount;
         if (s->automatic) {
             /* Two release memories: a fast stage for short hits and a
                slow stage whose contribution grows with sustained signal. */
@@ -189,6 +189,7 @@ static void run(LADSPA_Handle handle, unsigned long frames)
     }
     s->peak = peak > 1e-20f ? peak : 0;
     s->reduction = gr > 1e-12f ? gr : 0;
+    s->shown = isfinite(amount) && amount > 1e-9f ? amount : 0;
     s->slow = slow > 1e-12f ? slow : 0;
     s->balance = balance;
     s->auto_voicing = voicing;
@@ -196,6 +197,13 @@ static void run(LADSPA_Handle handle, unsigned long frames)
         if (!(fabsf(s->sc.z1[c]) >= 1e-24f && isfinite(s->sc.z1[c]))) s->sc.z1[c] = 0;
         if (!(fabsf(s->sc.z2[c]) >= 1e-24f && isfinite(s->sc.z2[c]))) s->sc.z2[c] = 0;
     }
+}
+
+/* Gain reduction in dB the last block applied (wet path), for a panel meter. */
+float hs_bus_gr(const void *handle)
+{
+    const struct bus *s = handle;
+    return s ? s->shown : 0;
 }
 
 #define AI (LADSPA_PORT_INPUT | LADSPA_PORT_AUDIO)

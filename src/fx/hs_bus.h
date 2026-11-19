@@ -4,4 +4,6 @@
 enum { HS_BUS_ID = 0x485306 };
 enum { BUS_THRESHOLD, BUS_RATIO, BUS_MAKEUP, BUS_ATTACK, BUS_RELEASE, BUS_HPF,
        BUS_MIX, BUS_BYPASS, BUS_MOD, BUS_COUNT = BUS_MOD + HS_MOD_PORTS };
+/* Gain reduction in dB of one instance, for the panel meter. */
+float hs_bus_gr(const void *handle);
 #endif
