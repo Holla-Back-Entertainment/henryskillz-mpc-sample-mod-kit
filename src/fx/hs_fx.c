@@ -777,10 +777,10 @@ void overlay_update(int mode, const void *buf, int flag)
             struct effect_page *page = get_effect_page(0);
             if (page) page->kind = OTHER;
         }
-        if (mode == q->header && (site == q->at_header_list || site == q->at_header_ducker || site == q->at_header)) {
+        if (mode == q->header && (site == q->at_header_list || site == q->at_header_effect || site == q->at_header)) {
             uint32_t *p = (uint32_t *)buf;
             header(p);
-            int gain = site == q->at_header_ducker ? hs_ducker_gain_page() : -1;
+            int gain = site == q->at_header_effect ? hs_ducker_gain_page() : -1;
             static int (*position)(int *);
             if (!position) position = (int (*)(int *))dlsym(RTLD_DEFAULT, "hs_bank_position");
             int count = 0, at = gain < 0 && position ? position(&count) : -1;
@@ -797,10 +797,10 @@ void overlay_update(int mode, const void *buf, int flag)
                 frame(p, 124, 4, 71, 20, gain ? cyan : rail);
                 text(p, 146, 12, "MAKE-UP", 7, gain ? 0xc9f5ff : 0xa6b6bb);
             }
-        } else if (mode == q->list && (site == q->at_list_name || site == q->at_list_name_rack)) {
+        } else if (mode == q->list && (site == q->at_list_filter || site == q->at_list_killeq)) {
             uint32_t *p = (uint32_t *)buf;
             stock_name_display(p, p);
-            if (site == q->at_list_name_rack) {
+            if (site == q->at_list_killeq) {
                 frame(p, 2, 0, 316, 159, rail);
                 fastener(p, 5, 150);
                 fastener(p, 312, 150);
@@ -815,7 +815,7 @@ void overlay_update(int mode, const void *buf, int flag)
             selector_rows((uint32_t *)buf, 0, H);
         else if (mode == q->softkeys && site == q->at_soft_selector)
             selector_rows((uint32_t *)buf, H, 40);
-        else if (mode == q->softkeys && site == q->at_soft_knobs)
+        else if (mode == q->softkeys && (site == q->at_soft_killeq || site == q->at_soft_effect))
             effect_knobs((uint32_t *)buf);
     }
     if (next) next(mode, buf, flag);
@@ -832,7 +832,7 @@ void overlay_update_rect(int mode, const void *buf, int x, int y, int w, int h)
             const void *stock = buf;
             buf = effect_overlay(buf);
             __atomic_store_n(&hs_editor, buf != stock, __ATOMIC_RELAXED);
-        } else if (site == q->rect_list_name)
+        } else if (site == q->rect_list_filter)
             stock_name_display((uint32_t *)buf, buf);
     }
     if (q && buf && mode == q->softkeys && x == 0 && y == 200 && w == W && h == 40 &&
