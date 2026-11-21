@@ -76,7 +76,8 @@ static void text(uint32_t *p, int x, int y, const char *s, int max, uint32_t c)
 }
 static float f32(const uint8_t *s,int off){ float v; memcpy(&v,s+off,4); return isfinite(v)?v:0.0f; }
 static int i32(const uint8_t *s,int off){ int v; memcpy(&v,s+off,4); return v; }
-static int meter_y(float v){ if(!(v>.0001f))return 90; float db=10*log10f(v); if(db>6)db=6;if(db<-54)db=-54;return 28+(int)((6-db)*60/60); }
+/* Meter and peak hold (+56..+68) are linear amplitude, so dB = 20 log10, the same as the fader gain. */
+static int meter_y(float v){ if(!(v>.0001f))return 90; float db=20*log10f(v); if(db>6)db=6;if(db<-54)db=-54;return 28+(int)((6-db)*60/60); }
 static int fader_y(float v){ if(!(v>.001f))return 87; float db=20*log10f(v);if(db>10)db=10;if(db<-50)db=-50;return 31+(int)((10-db)*56/60); }
 static void meter(uint32_t *p,int x,const uint8_t *s,int ch)
 {
@@ -86,7 +87,7 @@ static void meter(uint32_t *p,int x,const uint8_t *s,int ch)
 }
 static uint32_t strip_colour(const uint8_t *s)
 {
-    uint32_t bgr;memcpy(&bgr,s+40,4);unsigned r=bgr&255,g=(bgr>>8)&255,b=(bgr>>16)&255;return (r|g|b)?rgb(r,g,b):rgb(205,211,216);
+    uint32_t c;memcpy(&c,s+40,4);c&=0xffffffu;return c?c:rgb(205,211,216);   /* 0x00RRGGBB, the screen format; 0 = none */
 }
 
 static void draw_console(const struct qol_map *q,uintptr_t base,int view)
@@ -99,7 +100,7 @@ static void draw_console(const struct qol_map *q,uintptr_t base,int view)
         rect(p,x,1,36,105,sel?rgb(29,35,40):rgb(18,22,26));frame(p,x,1,36,105,rgb(48,56,62));
         uint32_t accent=s?strip_colour(s):rgb(51,58,64);rect(p,x+1,2,34,2,accent);
         if(s) pan_knob(p,x+18,9,f32(s,52)); else pan_knob(p,x+18,9,.5f);
-        int flags=s?i32(s,72):0;rect(p,x+4,16,12,9,(flags&1)?rgb(245,91,30):rgb(61,66,70));rect(p,x+20,16,12,9,(flags&2)?rgb(255,194,25):rgb(61,66,70));
+        int mute=s&&i32(s,72),solo=s&&i32(s,76);rect(p,x+4,16,12,9,mute?rgb(245,91,30):rgb(61,66,70));rect(p,x+20,16,12,9,solo?rgb(255,194,25):rgb(61,66,70));   /* +72 mute, +76 solo: int 0/1 each */
         frame(p,x+4,16,12,9,rgb(104,108,111));frame(p,x+20,16,12,9,rgb(104,108,111));text(p,x+9,18,"M",1,rgb(234,234,228));text(p,x+25,18,"S",1,rgb(234,234,228));
         rect(p,x+11,27,4,63,rgb(7,9,10));rect(p,x+12,28,1,61,rgb(69,74,78));for(int y=32;y<=87;y+=9)rect(p,x+5,y,4,1,rgb(116,121,124));
         if(s){int fy=fader_y(f32(s,48));rect(p,x+6,fy+1,13,5,rgb(79,82,83));rect(p,x+5,fy,15,4,rgb(224,224,216));rect(p,x+5,fy+2,15,1,rgb(126,129,128));meter(p,x+25,s,0);meter(p,x+30,s,1);}
