@@ -32,6 +32,20 @@ counterpart there is; **medium** = same pattern, but semantics carried over by i
 | `mix_editing` | `0x1957930` | `0x19ff230` | Same users and counts (note 1, cc 2, frame 1); `add x20,#0x930` vs `#0x230` at aligned places. | high |
 | `strip_bytes` | 116 | **120** | Every strip stride in `mixview_frame` is `#0x74` in 0.2.0 and `#0x78` in 0.3.0; the field at strip `+0x70` grew from `w` to `x`. Strips still start at snapshot `+12`; the copy into the strip writes the same offsets below `+0x70` (`stp q0,q1,[x10,#0x40]`, `[x10,#0x20]`), so every field the console reads (4, 40–92) is unchanged. | high (stride), medium (fields) |
 
+Strip fields the console reads, the same in 0.2.0 and 0.3.0 (checked against the SampQOL source of
+both releases):
+
+| Offset | Field |
+|---|---|
+| `+40` | colour, `0x00RRGGBB` (the screen pixel format), 0 = none |
+| `+48` | volume gain, linear |
+| `+52` | pan 0..1, 0.5 = centre |
+| `+56`, `+60` | meter L, R: linear amplitude, post fader (dB = 20 log10) |
+| `+64`, `+68` | peak hold L, R: linear amplitude |
+| `+72` | mute, int 0 or 1 |
+| `+76` | solo, int 0 or 1 |
+| `+92` | output route text, 12 bytes, "" = fixed |
+
 ## Overlay layers
 
 `overlay_update(mode, …)` indexes a 56-entry layer table (0.2.0 `0x112af0`, 0.3.0 `0x13ab90`). Matching
@@ -55,19 +69,20 @@ then checked by buffer register, mode and the instructions after the call.
 
 | Kit use | 0.2.0 | 0.3.0 | Match |
 |---|---|---|---|
-| header (B2 page label) | `0xabc60` | `0xc2ec4` | aligned; `mov x1,x19` header buffer, `ldr w19,[sp,…]` both |
-| header, global buffer | `0xac684` | `0xc4d98` | only header call drawing a global 320x31 buffer after `text_width`/`text_draw` |
-| header, ducker page | `0xad644` | `0xc4890` | aligned (16-instruction run) |
-| list, stock name | `0xad9e8` | `0xc4b98` | reached by `cbz` from the block that sets `mov w0,#list; mov x1,list` and `ldr w21,[sp,#0x150]` |
-| list, name + rack | `0xab89c` | `0xc28b0` | `mov w2,#1; mov w28/w19,#1`; tail `mov w8,#1; … ldr w21,[sp,#0x150]` |
-| list, insert body | `0xac2f0` | `0xc3558` | `ldr w21,[sp,…]; mov w0,#list; mov x1,list; mov w2,#1` |
-| list, selector | `0xad460` | `0xc43d8` | `b back; mov w0,#list; mov x1,list` |
-| list, effect editor | `0xada58` | `0xc4c80` | tail `mov w8,#1; str wzr,[sp,…]; stur w8,[x29,#-0x8c]`; entered by `cbz` after the rect call |
-| soft keys, selector | `0xad4ac` | `0xc4434` | aligned |
-| soft keys, knobs | `0xad698` | `0xc48e8` | aligned |
-| rect list 0,40,320,160, effect | `0xaca6c` | `0xc39fc` | tail `str wzr,[sp,…]; b` |
-| rect list 0,40,320,160, name | `0xabb98` | `0xc2df0` | aligned |
-| rect soft keys 0,200,320,40 | `0xad93c` | `0xc4b88` | the only rect call with that geometry in each |
+| `at_header`: insert list top bar | `0xabc60` | `0xc2ec4` | aligned; `mov x1,x19` header buffer, `ldr w19,[sp,…]` both |
+| `at_header_list`: level page top bar | `0xac684` | `0xc4d98` | only header call drawing a global 320x31 buffer after `text_width`/`text_draw` |
+| `at_header_effect`: top bar of every effect page (normal, filter, Kill EQ) | `0xad644` | `0xc4890` | aligned (16-instruction run) |
+| `at_list_filter`: filter page (live curve) list, first draw | `0xad9e8` | `0xc4b98` | reached by `cbz` from the block that sets `mov w0,#list; mov x1,list` and `ldr w21,[sp,#0x150]` |
+| `at_list_killeq`: Kill EQ page list (full push every frame) | `0xab89c` | `0xc28b0` | `mov w2,#1; mov w28/w19,#1`; tail `mov w8,#1; … ldr w21,[sp,#0x150]` |
+| `at_list_body`: level page list | `0xac2f0` | `0xc3558` | `ldr w21,[sp,…]; mov w0,#list; mov x1,list; mov w2,#1` |
+| `at_list_selector`: insert list | `0xad460` | `0xc43d8` | `b back; mov w0,#list; mov x1,list` |
+| `at_list_effect`: normal effect page list, first draw | `0xada58` | `0xc4c80` | tail `mov w8,#1; str wzr,[sp,…]; stur w8,[x29,#-0x8c]`; entered by `cbz` after the rect call |
+| `at_soft_selector`: insert list knob bar | `0xad4ac` | `0xc4434` | aligned |
+| `at_soft_killeq`: Kill EQ knob bar | `0xad698` | `0xc48e8` | aligned |
+| `at_soft_effect`: normal and filter page knob bar, first draw | `0xad698` | `0xc4bbc` | 0.2.0 has one full knob bar push for both pages (`cbz` from the Kill EQ check and from the "not shown yet" check both reach `0xad688`); 0.3.0 has two: `0xc48e8` after the Kill EQ check, `0xc4bbc` after the `cbz` on the "shown" flag next to the rect call at `0xc4b84` |
+| `rect_list_effect`: normal effect page list redraw | `0xaca6c` | `0xc39fc` | tail `str wzr,[sp,…]; b` |
+| `rect_list_filter`: filter page list redraw | `0xabb98` | `0xc2df0` | aligned |
+| `rect_soft_knobs`: normal and filter page knob bar redraw | `0xad93c` | `0xc4b88` | the only rect call with that geometry in each |
 
 ## Unchanged in 0.3.0
 
@@ -78,6 +93,12 @@ then checked by buffer register, mode and the instructions after the call.
   (`cmp w22,#0x20`) and 34 in 0.3.0 (`cmp w22,#0x22`): AIR Lo-Fi and AIR Pitch Shifter.
 - `context_locate_plugin_manager`, `padmix_force`, `overlay_update`, `overlay_update_rect`:
   instruction-identical.
+- `padmix_force` is not a redraw in either build: it arms the Pad Mix shortcut (the next PAD FX
+  press opens Pad Mix). The kit does not call it. The effect page re-reads its knob map 5 times a
+  second and redraws itself when a label changes.
+- `eq_spectrum_draw` takes 10 arguments in both builds:
+  `(px, w, h, oy, x0, x1, y0, y1, fmin, fmax)`.
+- `insert_row` and `set_pending` are used only by the HS preset page (`src/fx/presets.inc`).
 
 ## Not in this repo
 

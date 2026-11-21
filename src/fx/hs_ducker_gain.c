@@ -31,7 +31,6 @@ _Static_assert(offsetof(struct fx_row, parameters) == 24 &&
 static note_fn next_note;
 static map_fn next_map;
 static int (*question_active)(void);
-static void (*refresh)(void);
 static uintptr_t qol_base;
 static const struct qol_map *qol;     /* NULL on an unknown SampQOL build: the page stays stock */
 static atomic_int gain_page;
@@ -54,12 +53,11 @@ __attribute__((constructor)) static void install_gain_ui(void)
     next_note = (note_fn)dlsym(RTLD_NEXT, "padmix_note");
     next_map = (map_fn)dlsym(RTLD_NEXT, "fxmap_get_row");
     question_active = (int (*)(void))dlsym(RTLD_NEXT, "context_question_active");
-    refresh = (void (*)(void))dlsym(RTLD_NEXT, "padmix_force");
     /* Bound to the SHA-pinned SampQOL builds in qol_map.h, with nothing interposed in between. */
     uintptr_t base = 0;
     const struct qol_map *map = qol_map(&base);
     if (!map || !question_active || !qol_owns((const void *)next_map, base) ||
-        !qol_owns((const void *)next_note, base) || !qol_owns((const void *)refresh, base))
+        !qol_owns((const void *)next_note, base))
         return;
     qol_base = base;
     qol = map;
@@ -70,8 +68,9 @@ int padmix_note(int note, int value, int shift)
     int page = hs_ducker_gain_page();
     if (note == SCREEN_2 && !shift && page >= 0 && !question_active()) {
         if (value > 0) {
+            /* No redraw call: SampQOL re-reads the knob map (fxmap_get_row) 5 times a second and
+               redraws the top bar and knob bar when the K3 label changes. */
             atomic_store_explicit(&gain_page, !page, memory_order_relaxed);
-            refresh();
         }
         return 1;
     }

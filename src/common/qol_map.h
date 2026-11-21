@@ -18,11 +18,15 @@ struct qol_map {
     int strip_bytes;
     /* overlay layer ids: 320x31 header, 320x160 list, 320x40 soft keys, mixer console */
     int header, list, softkeys, mixer;
-    /* return sites of the pad mixer's overlay_update / overlay_update_rect calls */
-    uintptr_t at_header, at_header_list, at_header_ducker;
-    uintptr_t at_list_name, at_list_name_rack, at_list_body, at_list_selector, at_list_effect;
-    uintptr_t at_soft_selector, at_soft_knobs;
-    uintptr_t rect_list_effect, rect_list_name, rect_soft_knobs;
+    /* return sites of the pad mixer's overlay_update / overlay_update_rect calls. at_header = insert
+     * list top bar, at_header_effect = top bar of every effect page (normal, filter, Kill EQ),
+     * at_list_filter = filter page (live curve), at_list_killeq / at_soft_killeq = Kill EQ page,
+     * at_soft_effect = first full draw of the normal and filter page knob bar (0.2.0 shares
+     * one call for it and the Kill EQ knob bar, so both fields hold the same site there). */
+    uintptr_t at_header, at_header_list, at_header_effect;
+    uintptr_t at_list_filter, at_list_killeq, at_list_body, at_list_selector, at_list_effect;
+    uintptr_t at_soft_selector, at_soft_killeq, at_soft_effect;
+    uintptr_t rect_list_effect, rect_list_filter, rect_soft_knobs;
 };
 
 static const struct qol_map qol_maps[] = {
@@ -33,7 +37,7 @@ static const struct qol_map qol_maps[] = {
         26, 27, 28, 33,
         0xabc60, 0xac684, 0xad644,
         0xad9e8, 0xab89c, 0xac2f0, 0xad460, 0xada58,
-        0xad4ac, 0xad698,
+        0xad4ac, 0xad698, 0xad698,
         0xaca6c, 0xabb98, 0xad93c,
     },
     {   /* SampQOL 0.3.0, mpcqol.so sha256 facea6b4... */
@@ -43,7 +47,7 @@ static const struct qol_map qol_maps[] = {
         25, 26, 27, 32,
         0xc2ec4, 0xc4d98, 0xc4890,
         0xc4b98, 0xc28b0, 0xc3558, 0xc43d8, 0xc4c80,
-        0xc4434, 0xc48e8,
+        0xc4434, 0xc48e8, 0xc4bbc,
         0xc39fc, 0xc2df0, 0xc4b88,
     },
 };

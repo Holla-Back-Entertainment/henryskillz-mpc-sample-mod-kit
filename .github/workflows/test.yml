@@ -25,6 +25,11 @@ jobs:
         run: |
           gcc -O2 -Wall -Wextra -Werror check_import.c import_warp.c -o /tmp/check-import -lm -pthread
           /tmp/check-import
+      - name: Mixer console strip reads (mute/solo, colour, meter dB)
+        working-directory: src/mixer
+        run: |
+          gcc -O2 check_mixer.c -o /tmp/check-mixer -lm -ldl
+          /tmp/check-mixer
       - name: Stems screen checks and card path
         working-directory: src/stems
         run: |
