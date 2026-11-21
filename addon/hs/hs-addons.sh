@@ -40,7 +40,9 @@ fi 2>/dev/null
 # Stems (only if "Add Stems" was ticked): browser SHIFT + hold B1 on a previewed file, Sample screen
 # SHIFT + hold B3 on a pad. The engine and model stay in autorun/stems; the hook loads last, after
 # SampQOL, so its screen copy sees every other drawing.
-if [ -n "$HS_PRELOAD" ] && [ -f "$DIR/stems/hs-stems-ui.so" ] && cp "$DIR/stems/hs-stems-ui.so" /tmp/hs-stems-ui.so; then
+# SampQOL 0.4.0 and later ship their own Stems Separation (autorun/split/) on the same SHIFT + B3 of the
+# Sample screen: there, HS Stems stays off so one press does not open two choosers.
+if [ -n "$HS_PRELOAD" ] && [ ! -e "$DIR/split/mpcsplit" ] && [ -f "$DIR/stems/hs-stems-ui.so" ] && cp "$DIR/stems/hs-stems-ui.so" /tmp/hs-stems-ui.so; then
     chmod 644 /tmp/hs-stems-ui.so
     export HS_STEMS_DIR="$DIR/stems"
     HS_POSTLOAD="$HS_POSTLOAD:/tmp/hs-stems-ui.so"
