@@ -77,7 +77,6 @@ static void preset_toggle(unsigned uid)
 {
     if (uid == HS_EQ2_ID) {
         __atomic_xor_fetch(&eq_preset, 1u, __ATOMIC_RELAXED);
-        if (refresh) refresh();
         return;
     }
     unsigned count, *s = paged(uid, &count);
@@ -85,7 +84,6 @@ static void preset_toggle(unsigned uid)
     unsigned at = __atomic_load_n(s, __ATOMIC_RELAXED);
     if (at >= count) __atomic_store_n(s, preset_return < count ? preset_return : 0, __ATOMIC_RELAXED);
     else { preset_return = at; __atomic_store_n(s, count, __ATOMIC_RELAXED); }
-    if (refresh) refresh();
 }
 
 static void *b2_hold(void *arg)
@@ -118,13 +116,11 @@ static void b2_paged(unsigned uid, int value, int shift)
         if (__atomic_load_n(&eq_preset, __ATOMIC_RELAXED)) { preset_toggle(uid); return; }
         unsigned sel = __atomic_load_n(&eq_selection, __ATOMIC_RELAXED), pages = sel/4 ? 4 : 2;
         __atomic_store_n(&eq_selection, sel/4*4 + (sel%4 + (shift ? pages - 1 : 1))%pages, __ATOMIC_RELAXED);
-        if (refresh) refresh();
         return;
     }
     unsigned at = __atomic_load_n(s, __ATOMIC_RELAXED);
     if (at >= count) { preset_toggle(uid); return; }
     __atomic_store_n(s, (at + (shift ? count - 1 : 1)) % count, __ATOMIC_RELAXED);
-    if (refresh) refresh();
 }
 
 static bool preset_open()
@@ -194,7 +190,6 @@ static void *load_thread(void *arg)
         set(job->slot, job->index[i], job->value[i]);
     }
     for (int w = 0; w < 200 && __atomic_load_n(pending, __ATOMIC_ACQUIRE); ++w) usleep(2000);
-    if (refresh) refresh();
     __atomic_store_n(&preset_busy, 0, __ATOMIC_RELEASE);
     return nullptr;
 }
@@ -287,7 +282,6 @@ static int preset_cc(int cc, int value)
     else if (cc == 100) { int d = value >= 64 ? value - 128 : value; int t = static_cast<int>(s) + d; s = t < 0 ? 0 : t > PRESET_SLOTS - 1 ? PRESET_SLOTS - 1 : static_cast<unsigned>(t); }
     else return cc == 17 || cc == 18;                        /* K2/K3 have nothing to move here */
     __atomic_store_n(&preset_slot, s, __ATOMIC_RELAXED);
-    if (refresh) refresh();
     return 1;
 }
 
@@ -300,7 +294,6 @@ static void *b3_hold(void *arg)
     unsigned expect = token;
     if (preset_open() && __atomic_compare_exchange_n(&b3_token, &expect, token & ~1u, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
         preset_save(__atomic_load_n(&preset_slot, __ATOMIC_RELAXED));
-        if (refresh) refresh();
     }
     return nullptr;
 }
@@ -309,7 +302,7 @@ static void *b3_hold(void *arg)
 static int preset_note(int note, int value, int shift)
 {
     if (note != 14) return 0;
-    if (value > 0 && shift) { preset_load(__atomic_load_n(&preset_slot, __ATOMIC_RELAXED)); if (refresh) refresh(); return 1; }
+    if (value > 0 && shift) { preset_load(__atomic_load_n(&preset_slot, __ATOMIC_RELAXED)); return 1; }
     if (value > 0) {
         unsigned token = (++b3_gen << 1) | 1;
         __atomic_store_n(&b3_token, token, __ATOMIC_RELEASE);
@@ -317,6 +310,6 @@ static int preset_note(int note, int value, int shift)
         if (!pthread_create(&t, nullptr, b3_hold, reinterpret_cast<void *>(static_cast<uintptr_t>(token)))) pthread_detach(t);
         return 1;
     }
-    if (__atomic_exchange_n(&b3_token, 0u, __ATOMIC_ACQ_REL) & 1) { say("HOLD TO SAVE", 0); if (refresh) refresh(); }
+    if (__atomic_exchange_n(&b3_token, 0u, __ATOMIC_ACQ_REL) & 1) { say("HOLD TO SAVE", 0); }
     return 1;
 }

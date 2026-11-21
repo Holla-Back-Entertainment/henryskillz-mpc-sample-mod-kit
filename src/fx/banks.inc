@@ -31,7 +31,6 @@ static const struct qol_map *qol;              /* NULL on an unknown SampQOL bui
 static int (*next_note)(int, int, int);
 static int (*next_map)(void *, int, void *);
 static int (*question_active)();
-static void (*refresh)();
 
 static int state(uintptr_t offset)
 {
@@ -245,10 +244,9 @@ __attribute__((constructor)) static void init_editor()
     next_note = reinterpret_cast<decltype(next_note)>(dlsym(RTLD_NEXT, "padmix_note"));
     next_map = reinterpret_cast<decltype(next_map)>(dlsym(RTLD_NEXT, "fxmap_get_row"));
     question_active = reinterpret_cast<decltype(question_active)>(dlsym(RTLD_NEXT, "context_question_active"));
-    refresh = reinterpret_cast<decltype(refresh)>(dlsym(RTLD_NEXT, "padmix_force"));
     uintptr_t base = 0;
     const struct qol_map *map = qol_map(&base);
-    if (map && next_note && next_map && question_active && qol_owns(reinterpret_cast<void *>(refresh), base)) {
+    if (map && next_note && next_map && question_active && qol_owns(reinterpret_cast<void *>(question_active), base)) {
         qol_base = base;
         qol = map;
     }
@@ -266,7 +264,6 @@ extern "C" int padmix_cc(int cc,int value)
             if (target!=static_cast<int>(sel/4)) {
                 unsigned page=target && sel/4 ? sel%4 : 0;
                 __atomic_store_n(&eq_selection,4*target+page,__ATOMIC_RELAXED);
-                refresh();
             }
         }
         return 1;
