@@ -1,6 +1,6 @@
 /* Where SampQOL keeps what the kit reads, per mpcqol.so build. The build is told apart by where
  * mpcqol.so exports overlay_update; an unknown build gets NULL and every hook stays off, untouched.
- * Each 0.3.0 value is matched to its 0.2.0 twin by code in docs/dev/SAMPQOL-0.3.0-MAP.md; the 0.4.0
+ * Each 0.3.0 value is matched to its 0.2.0 twin by code in docs/dev/SAMPQOL-0.3.0-MAP.md; the 0.4.0,
  * 0.4.1 and 0.4.2 values come from SampQOL's source and debug build (docs/dev/SAMPQOL-0.4.0-MAP.md).
  * Needs _GNU_SOURCE before the first include (dladdr, dl_iterate_phdr, RTLD_NOLOAD). */
 #ifndef HS_QOL_MAP_H
