@@ -114,3 +114,9 @@ comes from the same method (SampQOL `tools/hs-map.py`) on the 0.4.1 release buil
 `b0032a31a7e547d376508699622aae2c2d38a3faf28a15f2e7458a5996a49590`. The exported
 `overlay_update` is at `0x809bc`. `strip_bytes` (120), the layer ids and `struct fxrow` (36
 bytes) are the same as in 0.4.0. Not tested on hardware yet.
+
+The 0.4.2 entry comes from the same method on the 0.4.2 release build. Binary: the `mpcqol.so` of the
+public 0.4.2 zip (GitHub snarebes/SampQOL-OS, release v0.4.2), sha256
+`b0e1ae7fdc50450bac0199baac5bae9210c1ca322ba4d2f19ab0ddefe94da8e9`. The exported `overlay_update` is
+at `0x80dd0`. `strip_bytes` (120), the layer ids and `struct fxrow` (36 bytes) are the same as in
+0.4.1. Not tested on hardware yet.
