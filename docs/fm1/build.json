@@ -1,0 +1,1 @@
+{"id": "1795405875120209677", "wasm": true, "fwsc": true, "log": "emulator  build/web/firmware.wasm  133 KiB\nFM-1      build/dsb-0.3-lab.fwsc  identity FM-1_943  (code 137 of 567 KiB, RAM 10 of 96 KiB, pool 299 of 336 KiB)", "name": "DSB", "version": "0.3-lab", "identity": "FM-1_943", "ok": true}

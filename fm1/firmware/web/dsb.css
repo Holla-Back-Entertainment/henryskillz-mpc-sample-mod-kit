@@ -1,0 +1,109 @@
+:root {
+  color-scheme: dark;
+  --dsb-background: #090f1b;
+  --dsb-surface: #121d30;
+  --dsb-line: #30435a;
+  --dsb-red: #f53546;
+  --dsb-cyan: #39eaf0;
+  --bg: var(--dsb-background);
+  --fg: #edf5ff;
+  --dim: #a1b4cd;
+  --card: var(--dsb-surface);
+  --line: var(--dsb-line);
+  --accent: var(--dsb-cyan);
+  --lit: var(--dsb-cyan);
+}
+body {
+  background: var(--dsb-background);
+  color: #edf5ff;
+}
+body > header {
+  background: var(--dsb-red);
+  color: #ffffff;
+  border-bottom: 0;
+}
+header .brand strong, header .dim, header a, header a:hover {
+  color: #fff;
+}
+header .brand strong {
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+header nav a.on, header nav a:hover {
+  background: #101a2c;
+  color: var(--dsb-cyan);
+}
+.dsb-heading {
+  display: flex;
+  gap: 10px 20px;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+.dsb-heading h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(21px, 3vw, 33px);
+  letter-spacing: -.045em;
+}
+.dsb-heading p { margin: 0; color: #9eb2c9; font-size: .85rem; }
+.dsb-map {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  color: #b6c8da;
+  font: .78rem system-ui, sans-serif;
+  margin: 16px 0;
+}
+.dsb-map b {
+  color: var(--dsb-cyan);
+  font-family: monospace;
+  margin-right: 4px;
+}
+.device {
+  background: #111c2d;
+  border-color: var(--dsb-line);
+  box-shadow: 0 10px 45px #0007;
+}
+button.primary {
+  background: var(--dsb-cyan);
+  border-color: var(--dsb-cyan);
+  color: #09101e;
+  font-weight: 750;
+}
+button:focus-visible, a:focus-visible, select:focus-visible {
+  outline: 2px solid var(--dsb-cyan);
+  outline-offset: 2px;
+}
+
+/* Bench controls mirror the FM-1's panel, with raised caps and recessed trays. */
+.device {
+  background: linear-gradient(155deg, #243348 0%, #162233 32%, #101827 82%);
+  border: 1px solid #3c4d62;
+  box-shadow: inset 0 1px 0 #687c95, inset 0 -5px 0 #080d14, 0 22px 48px #0009;
+}
+.device canvas {
+  box-shadow: 0 0 0 4px #0b1019, 0 0 0 6px #465773, inset 0 1px 0 #ffffff45;
+}
+.device .knob {
+  background: radial-gradient(circle at 35% 26%, #526175, #233141 48%, #111923 76%);
+  box-shadow: inset 0 1px 0 #ffffff4d, 0 4px 5px #0008;
+}
+.device button:not(.primary) {
+  box-shadow: inset 0 1px 0 #ffffff22, 0 3px 0 #080c15, 0 4px 5px #0007;
+}
+.device button:active {
+  translate: 0 2px;
+}
+
+header .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dsb-logo {
+  display: block;
+  width: 92px;
+  height: auto;
+}

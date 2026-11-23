@@ -1,0 +1,12 @@
+{
+  "name": "DSB",
+  "version": "0.3-lab",
+  "identity": "FM-1_94",
+  "platform": "felucca",
+  "options": {
+    "usb_audio": false,
+    "trs_midi": true,
+    "midi_clock": false,
+    "bluetooth": false
+  }
+}
