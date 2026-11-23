@@ -108,5 +108,9 @@ size as in 0.3.0.
 ## 0.4.1
 
 0.4.1 changes none of the files behind this map (`padmix.c`, `mixview.c`, `mixmeter.*`,
-`overlay.*`, `eq.c`, `equi.c`). Only the addresses move. Its entry follows from the same method on
-the 0.4.1 release build, once that build is final.
+`overlay.*`, `eq.c`, `equi.c`, `fxlist`, `fxmap`, `context.c`). Only the addresses move. The entry
+comes from the same method (SampQOL `tools/hs-map.py`) on the 0.4.1 release build. Binary: the
+`mpcqol.so` of the public 0.4.1 zip (GitHub snarebes/SampQOL-OS, release v0.4.1), sha256
+`b0032a31a7e547d376508699622aae2c2d38a3faf28a15f2e7458a5996a49590`. The exported
+`overlay_update` is at `0x809bc`. `strip_bytes` (120), the layer ids and `struct fxrow` (36
+bytes) are the same as in 0.4.0. Not tested on hardware yet.
