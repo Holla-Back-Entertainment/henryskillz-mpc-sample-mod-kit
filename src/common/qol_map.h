@@ -1,6 +1,7 @@
 /* Where SampQOL keeps what the kit reads, per mpcqol.so build. The build is told apart by where
  * mpcqol.so exports overlay_update; an unknown build gets NULL and every hook stays off, untouched.
- * Each 0.3.0 value is matched to its 0.2.0 twin by code in docs/dev/SAMPQOL-0.3.0-MAP.md.
+ * Each 0.3.0 value is matched to its 0.2.0 twin by code in docs/dev/SAMPQOL-0.3.0-MAP.md; the 0.4.0,
+ * 0.4.1 and 0.4.2 values come from SampQOL's source and debug build (docs/dev/SAMPQOL-0.4.0-MAP.md).
  * Needs _GNU_SOURCE before the first include (dladdr, dl_iterate_phdr, RTLD_NOLOAD). */
 #ifndef HS_QOL_MAP_H
 #define HS_QOL_MAP_H
@@ -45,6 +46,36 @@ static const struct qol_map qol_maps[] = {
         0xc4b98, 0xc28b0, 0xc3558, 0xc43d8, 0xc4c80,
         0xc4434, 0xc48e8,
         0xc39fc, 0xc2df0, 0xc4b88,
+    },
+    {   /* SampQOL 0.4.0, mpcqol.so sha256 d16501b6... */
+        0x803c4,
+        0x18e2d40, 0x18e2d78, 0x18e2fe4, 0x18e2ff4, 0x18e7ce4, 0x18e8798,
+        0x1d88fd0, 0x1d88b08, 0x1d88af0, 120,
+        25, 26, 27, 32,
+        0xe0ed8, 0xe2df4, 0xe291c,
+        0xe2c44, 0xe0878, 0xe15cc, 0xe2450, 0xe2d1c,
+        0xe24b8, 0xe2978,
+        0xe1a60, 0xe0e08, 0xe2c2c,
+    },
+    {   /* SampQOL 0.4.1, mpcqol.so sha256 b0032a31... */
+        0x809bc,
+        0x18e3a40, 0x18e3a78, 0x18e3ce4, 0x18e3cf4, 0x18e89e4, 0x18e9498,
+        0x1d89cd0, 0x1d89808, 0x1d897f0, 120,
+        25, 26, 27, 32,
+        0xe12a8, 0xe31c4, 0xe2cec,
+        0xe3014, 0xe0c48, 0xe199c, 0xe2820, 0xe30ec,
+        0xe2888, 0xe2d48,
+        0xe1e30, 0xe11d8, 0xe2ffc,
+    },
+    {   /* SampQOL 0.4.2, mpcqol.so sha256 b0e1ae7f... */
+        0x80dd0,
+        0x18e4850, 0x18e4888, 0x18e4af4, 0x18e4b04, 0x18e97f4, 0x18ea2a8,
+        0x1d8aad0, 0x1d8a608, 0x1d8a5f0, 120,
+        25, 26, 27, 32,
+        0xe1ab0, 0xe39cc, 0xe34f4,
+        0xe381c, 0xe1450, 0xe21a4, 0xe3028, 0xe38f4,
+        0xe3090, 0xe3550,
+        0xe2638, 0xe19e0, 0xe3804,
     },
 };
 
