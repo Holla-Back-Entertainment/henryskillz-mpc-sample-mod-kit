@@ -28,15 +28,9 @@
 <main>
   <h1>HenrySkillz MPC Sample Installer</h1>
   <div class="bar"></div>
-  <p>Adds the HenrySkillz FX rack (with HS Crush, Bass Focus and Tube Strip), track chains, key and BPM tags in the browser, LUFS meters, the EQ display, the SEQ desk page, the splash and, if you tick it, Stems to <b>SampQOL OS __SAMPQOL_VERSION__</b> on an <b>MPC Sample (firmware 1.3.0)</b>.
-     Everything happens in this page. Nothing is uploaded anywhere.</p>
-  <ol>
-    <li>Download the <b>SampQOL OS</b> zip, version <b>__SAMPQOL_VERSION__</b>, from the official page:
-      <a href="https://github.com/snarebes/SampQOL-OS/releases" target="_blank" rel="noopener">github.com/snarebes/SampQOL-OS/releases</a></li>
-    <li>Drop that zip here (or, if your Mac already unzipped it, choose its <b>SampQOL-OS</b> folder).</li>
-    <li>Save the <b>autorun-hs.zip</b> this page gives you and unzip it. Already a folder called <b>autorun</b> on your SD card? Rename it to <b>autorun-old</b> (don't delete or replace it: it's your way back). Then copy the new <b>autorun</b> folder straight onto the card, not inside another folder. Switch on and press <b>B1</b> when the screen asks.</li>
-  </ol>
-  <p class="small">On SampQOL 0.3.0, seven of the nine HS effects fit the insert menu. To get HS Saturator and HS Tube Strip back, hide SampQOL's two AIR effects (AIR Lo-Fi and AIR Pitch Shifter) in its settings.</p>
+  <p>Choose an official SampQOL release ZIP or its extracted folder. The supported D.S.B Boot baseline is SampQOL 0.4.2 on Akai firmware 1.3.0.12. Other releases with the same autorun layout can be packaged. Check the firmware required by your release before booting.</p>
+  <p><a href="__SAMPQOL_RELEASE_URL__">Official SampQOL downloads</a></p>
+  <p>The installer keeps your files on this computer. For releases with a matching HS effects build, it installs the add-ons. Otherwise it packages your original SampQOL files with the boot picker. The options below apply to the effects build.</p>
   <p><label><input type="checkbox" id="stems"> <b>Add Stems</b>: split a sample into vocals, drums, bass and other on the MPC itself. Adds a 92 MB download, and needs this page online (not the saved copy).</label></p>
   <p><label><input type="checkbox" id="styling"> <b>SampQOL list styling (optional)</b>: restyles SampQOL's own list screens (red top bar, dark blue palette, cyan selection). Off unless you tick it. It changes how SampQOL's screens look, and SampQOL's author has not approved it.</label></p>
   <div class="drop" id="drop">
@@ -149,6 +143,34 @@ async function run(getEntries) {
   try {
     const files = rootAt(await getEntries());
     say(`Found SampQOL (${files.size} files).`);
+    const digest = await sha256hex(files.get("mpcqol.so"));
+    if (!SAMPQOL[digest]) {
+      for (const name of ["autorun.sh", "autorun.json", "autorun.check", "qol-run.sh"]) {
+        if (!files.has(name)) throw new Error("Incomplete SampQOL autorun folder: missing " + name);
+      }
+      const manifest = JSON.parse(dec.decode(files.get("autorun.json")));
+      if (!manifest.value0?.scripts?.some(script => script.path === "autorun.sh")) throw new Error("This release uses a different autorun entry point.");
+      const pins = [...dec.decode(files.get("autorun.sh")).matchAll(/([0-9a-f]{64})  ([^\n"]+)/g)];
+      for (const [, hash, name] of pins) {
+        if (!files.has(name) || await sha256hex(files.get(name)) !== hash) {
+          throw new Error("Missing or changed release file: " + name);
+        }
+      }
+      const current = digest === "b0e1ae7fdc50450bac0199baac5bae9210c1ca322ba4d2f19ab0ddefe94da8e9";
+      const folder = current ? "SampQOL-0.4.2" : "SampQOL";
+      const zip = await JSZip.loadAsync(b64("__BOOT_KIT__"));
+      zip.remove("SETUP.txt");
+      zip.remove("files.sha256");
+      for (const [path, bytes] of files) zip.file("autorun/os/" + folder + "/" + path, bytes);
+      const blob = await zip.generateAsync({ type: "blob", platform: "UNIX" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "DSB-Boot-" + folder + ".zip";
+      link.textContent = "Download " + link.download;
+      log.append(link);
+      say("Extract to a fresh exFAT card. Select " + folder + " in the boot picker. This package uses the uploaded release’s own effects and stems.");
+      return;
+    }
     const { out, version } = await patch(files);
     say(`SampQOL ${version} checked. Add-ons installed, autorun signed.`, "ok");
     if (document.getElementById("stems").checked) {
@@ -173,7 +195,7 @@ async function run(getEntries) {
     a.textContent = "Download autorun-hs.zip";
     a.className = "btn";
     const p = document.createElement("p"); p.append(a); log.append(p);
-    say("Next: unzip it. If the card already has an autorun folder, rename it to autorun-old (don't replace it). Copy the new autorun folder straight onto the card, put the card in the MPC, switch on and press B1.");
+    say("Next: unzip it. If the card already has an autorun folder, rename it to autorun-old (don't replace it). Copy the new autorun folder straight onto the card, put the card in the MPC, switch on and wait for SampQOL to start.");
   } catch (e) { say(e.message, "bad"); }
 }
 

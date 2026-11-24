@@ -44,9 +44,11 @@ def main() -> None:
     files = payload_files(ROOT)
     stems_dir = ROOT / "docs/install/stems"
     stems = {f"stems/{n}": hashlib.sha256((stems_dir / n).read_bytes()).hexdigest() for n in ("hs-stems", "hs-stems-ui.so", "spl4h.bin")}
+    release_url = "https://github.com/snarebes/SampQOL-OS/releases"
     html = (ROOT / "installer/template.html").read_text()
     html = (html.replace("__SAMPQOL_HASHES__", json.dumps(SAMPQOL))
-                .replace("__SAMPQOL_VERSION__", " or ".join(SAMPQOL.values()))
+                .replace("__BOOT_KIT__", base64.b64encode((ROOT / "installer/dsb-boot.zip").read_bytes()).decode())
+                .replace("__SAMPQOL_RELEASE_URL__", release_url)
                 .replace("__ADDON_FILES__", json.dumps(files))
                 .replace("__STEMS_FILES__", json.dumps(stems)))
     # dist/ = the release download; docs/install/ = the online installer (GitHub Pages)
