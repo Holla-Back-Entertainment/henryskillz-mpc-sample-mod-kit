@@ -799,7 +799,7 @@ static int tube_section(const char **name)
     int section = 0;
     const char *title = active_bank ? active_bank(&section) : NULL;
     if (name) *name = title ? title : "TUBE";
-    return section >= 0 && section < 7 ? section : 0;
+    return section >= 0 && section < 8 ? section : 0;
 }
 
 static float tube_lin(int v, float lo, float hi) { return lo + (hi - lo)*v/73.0f; }
@@ -848,6 +848,7 @@ static const char *tube_marking(int knob, int value)
     case 15: return tube_hz(o, 16, tube_log(value, 200, 20000));
     case 18: return treble[(value*3 + 36)/73];
     case 19: snprintf(o, 16, "%+.1f DB", tube_lin(value, -20, 20)); break;
+    case 21: x = tube_lin(value, 0, 100); if (x < .5f) return "OFF"; snprintf(o, 16, "%d", (int)lroundf(x)); break;
     default: return NULL;
     }
     return o;
