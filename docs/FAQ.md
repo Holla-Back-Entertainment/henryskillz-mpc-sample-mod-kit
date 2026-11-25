@@ -31,6 +31,9 @@ You gave it a folder it already patched. Start again from the original SampQOL z
 ### HS Saturator and HS Tube Strip aren't in the insert menu
 On SampQOL 0.3.0 the menu fits seven of the nine HS effects. Hide SampQOL's two AIR effects (AIR Lo-Fi and AIR Pitch Shifter) in its settings and they come back. Projects that already use them open as normal.
 
+### My Sample is on firmware 1.4. Can I use this?
+No. This kit and the D.S.B Boot card are for firmware 1.3.0 (1.3.0.12) only. On 1.4 the Sample may skip the card and start stock. A separate 1.4.0.7 build (D.S.B Performance) is in testing and not public yet: ask on the [issues page](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues).
+
 ### I have SampQOL 0.4.x (0.4.0, 0.4.1, 0.4.2). Do the HS effects work?
 **Not yet.** The HS effects hook into exact spots inside SampQOL, and those spots moved in 0.4.x. Support for them is still being built and has not been tested on a real MPC Sample.
 - **To use the HS effects today:** download SampQOL **0.3.0** from the [official page](https://github.com/snarebes/SampQOL-OS/releases/tag/v0.3.0) and use the installer with that.

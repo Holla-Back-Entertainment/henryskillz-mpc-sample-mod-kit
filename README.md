@@ -107,6 +107,8 @@ Every picture in this section is an emulator capture.
 - A **Mac or Windows** computer with a web browser
 - **SampQOL OS 0.3.0** (the latest), downloaded free from [Snare Bes's official page](https://github.com/snarebes/SampQOL-OS/releases). Older SampQOL versions are no longer accepted. 0.3.0 passed a power-off cold boot and the full feature checks on a real MPC Sample on 18 Nov 2026.
 
+**On firmware 1.4?** This kit is for firmware 1.3.0 (1.3.0.12) only. See the [FAQ](docs/FAQ.md#my-sample-is-on-firmware-14-can-i-use-this).
+
 **Already running another OS, or want more than one on the same card?** See the [multi-boot guide](docs/MULTI-BOOT-GUIDE.md).
 
 **On SampQOL 0.4.x?** The HS effects are not supported on it yet. Use SampQOL 0.3.0 for the effects (see the [FAQ](docs/FAQ.md#i-have-sampqol-04x-040-041-042-do-the-hs-effects-work)).
