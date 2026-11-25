@@ -38,6 +38,64 @@ Good to know:
 
 ---
 
+## What the card should look like
+
+**Right: the picker at the top, each OS in its own folder inside `autorun/os/`.**
+
+```text
+SD CARD (top level)
+├── autorun/                    <- the D.S.B Boot picker. The only autorun at the top.
+│   ├── autorun.json
+│   ├── autorun.sh
+│   ├── autorun.check
+│   ├── dsb-boot.conf
+│   ├── boot/                   <- picker files. Don't touch.
+│   ├── hs-fx/                  <- picker files. Don't touch.
+│   └── os/                     <- YOUR OSes go here, one folder each
+│       ├── README.txt
+│       ├── SampQOL-0.3.0/      <- a complete release "autorun" folder, renamed
+│       │   ├── autorun.json    <- must be here, directly inside
+│       │   ├── autorun.sh
+│       │   ├── autorun.check
+│       │   ├── qol-run.sh
+│       │   ├── mpcqol.so
+│       │   └── ...             <- the rest of that release, unchanged
+│       └── MPC-Simple/         <- another OS, same idea
+│           ├── autorun.json
+│           └── ...
+├── HS-OS/
+│   └── Templates/
+└── (your MPC projects and samples)
+```
+
+**Before and after (Case B: one OS already on the card).**
+
+```text
+BEFORE                          AFTER
+SD CARD                         SD CARD
+└── autorun/    <- old OS       ├── autorun/            <- new: the picker
+                                │   └── os/
+                                │       └── SampQOL-0.3.0/   <- a COPY of your old OS
+                                │           └── autorun.json ...
+                                └── autorun-old/        <- your old autorun, renamed. Backup.
+```
+
+**Wrong. These all fail:**
+
+```text
+X  autorun/os/SampQOL-0.3.0/autorun/autorun.json     one folder too deep.
+                                                     autorun.json must sit directly in SampQOL-0.3.0/.
+X  autorun/os/SampQOL-OS-v0.3.0/SampQOL-0.3.0/...    you copied the zip's outer folder, not the autorun folder inside it.
+X  os/SampQOL-0.3.0/                                 os/ at the card's top level. It must be inside autorun/.
+X  autorun/ (picker) + autorun/ (old OS) merged      two OSes mixed into one folder. Rename the old one to
+                                                     autorun-old first.
+X  autorun/os/stock/   or   autorun/os/hs-fx/        reserved names. Pick another folder name.
+```
+
+**Quick check before you eject the card:** open `autorun/os/<your folder>/` and make sure you can see `autorun.json` right there, without opening another folder.
+
+---
+
 ## Case A. Fresh card, one or more OSes
 
 1. Get a fresh **exFAT** SD card.
