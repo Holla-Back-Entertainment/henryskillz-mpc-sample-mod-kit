@@ -2,6 +2,8 @@
 
 Already installed the kit? You only need the new effect files. No SampQOL download, no reinstall, and your projects stay as they are.
 
+**Only for cards installed from the installer with SampQOL 0.3.0.** The HS effects do not work on SampQOL 0.4.x yet, and this update will not add them.
+
 ## What you need
 
 - Your SD card with the kit already on it (it has an `autorun/hs` folder).

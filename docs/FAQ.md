@@ -20,7 +20,7 @@ You download it from him, and the installer adds the HenrySkillz files to your c
 Please **don't** take HenrySkillz problems to the SampQOL author or to Akai. To check whether a problem is ours or SampQOL's, try plain SampQOL (from its official zip) without these add-ons.
 
 ### The installer says "This SampQOL build is not supported"
-You have a different version or a changed file. Download `SampQOL-OS-v0.3.0.zip` again from the [official page](https://github.com/snarebes/SampQOL-OS/releases) and use that.
+You have a different version or a changed file. For the HS effects you need SampQOL 0.3.0: download `SampQOL-OS-v0.3.0.zip` again from the [official page](https://github.com/snarebes/SampQOL-OS/releases/tag/v0.3.0) and use that. (Newer 0.4.x copies are only packaged with the boot picker, without HS effects.)
 
 ### The installer says a file "was changed"
 Something in that SampQOL copy was edited. Use a fresh download, not a folder that has been on an SD card.
@@ -31,10 +31,12 @@ You gave it a folder it already patched. Start again from the original SampQOL z
 ### HS Saturator and HS Tube Strip aren't in the insert menu
 On SampQOL 0.3.0 the menu fits seven of the nine HS effects. Hide SampQOL's two AIR effects (AIR Lo-Fi and AIR Pitch Shifter) in its settings and they come back. Projects that already use them open as normal.
 
-### SampQOL released a new version. Can I use it?
-Not until this kit is updated for it. Every new SampQOL version is checked and tested on a real MPC Sample before the installer accepts it.
-The installer accepts 0.3.0, the latest. 0.3.0 passed a power-off cold boot and the full feature checks on a real MPC Sample on 18 Nov 2026.
-Keep using 0.3.0 with the HS effects, or plain new SampQOL without them. Watch this repository (**Watch > Custom > Releases**) to hear when it's updated.
+### I have SampQOL 0.4.x (0.4.0, 0.4.1, 0.4.2). Do the HS effects work?
+**Not yet.** The HS effects hook into exact spots inside SampQOL, and those spots moved in 0.4.x. Support for them is still being built and has not been tested on a real MPC Sample.
+- **To use the HS effects today:** download SampQOL **0.3.0** from the [official page](https://github.com/snarebes/SampQOL-OS/releases/tag/v0.3.0) and use the installer with that.
+- **If you want to stay on 0.4.x:** the installer will still package your copy with the D.S.B Boot picker. That package has no HS effects, and it is not an effects install.
+- Already on 0.3.0 with the HS effects? Keep it there. Don't swap in a 0.4.x folder.
+Watch this repository (**Watch > Custom > Releases**) to hear when 0.4.x gets HS effects.
 
 ### The MPC starts normally, with no SampQOL and no HS screen
 The MPC skipped the card's `autorun` folder. Check:

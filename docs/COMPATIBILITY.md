@@ -11,7 +11,8 @@ This page separates what has been tested from what might work. “Tested” mean
 | Gridzilla | **Not tested** | Unknown | Do not claim co-loading. A launcher integration needs its developer's agreement and a real boot test. |
 | AM Mod, KAOSAMPLE, mpc-minimod | **Not tested** | HS Tools may be portable; full effects are unknown | Each project needs a separate integration and test. Open source does not by itself prove runtime compatibility. |
 | SXL or any replacement MPC application | **Not tested** | Unknown | These hooks target the stock MPC Sample application and exact SampQOL offsets. Treat replacement applications as unsupported until proven otherwise. |
-| New Akai firmware or a SampQOL version other than 0.3.0 | **Unsupported until retested** | Unknown | The installer rejects unknown SampQOL binaries. Never add a version hash without the checks in [How it works](HOW-IT-WORKS.md#supporting-a-new-sampqol-version). |
+| MPC Sample firmware 1.3.0.12 + SampQOL 0.4.x (0.4.0 to 0.4.2) | **HS effects NOT supported yet** | The installer only packages the uploaded release with the D.S.B Boot picker | No HS add-ons are installed. The 0.4.x address map is an unmerged draft and has not been run on hardware with the HS effects. |
+| New Akai firmware or a SampQOL version other than 0.3.0 or 0.4.x | **Unsupported until retested** | Unknown | The installer rejects unknown SampQOL binaries. Never add a version hash without the checks in [How it works](HOW-IT-WORKS.md#supporting-a-new-sampqol-version). |
 
 ## Language to use publicly
 

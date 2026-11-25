@@ -107,6 +107,10 @@ Every picture in this section is an emulator capture.
 - A **Mac or Windows** computer with a web browser
 - **SampQOL OS 0.3.0** (the latest), downloaded free from [Snare Bes's official page](https://github.com/snarebes/SampQOL-OS/releases). Older SampQOL versions are no longer accepted. 0.3.0 passed a power-off cold boot and the full feature checks on a real MPC Sample on 18 Nov 2026.
 
+**Already running another OS, or want more than one on the same card?** See the [multi-boot guide](docs/MULTI-BOOT-GUIDE.md).
+
+**On SampQOL 0.4.x?** The HS effects are not supported on it yet. Use SampQOL 0.3.0 for the effects (see the [FAQ](docs/FAQ.md#i-have-sampqol-04x-040-041-042-do-the-hs-effects-work)).
+
 **Not on SampQOL?** HS Tools runs on stock firmware 1.3.0: on-device stems, browser key and BPM tags, and the SEQ desk with LUFS meters. Download `henryskillz-mpc-sample-hs-tools.zip` from the [v0.6.1 release](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/releases/tag/v0.6.1), copy its `autorun` folder to an exFAT SD card and power on. The effects and track chains need SampQOL. A card runs one `autorun` at a time: rename any existing one to `autorun-old` first, and SampQOL won't start while HS Tools is on the card.
 
 **Using [Boot Thingy](https://github.com/garrettjwilke/mpc-boot-thingy)?** Copy `henryskillz-mpc-sample-hs-tools-boot-thingy.zip` (on the release page once it is attached) into `autorun/apps/` on your Boot Thingy card and power on; Boot Thingy installs it and it shows as **HS Tools Boot Thingy** in its menu. It has the SEQ desk, LUFS meters and browser key/BPM tags, but **no Stems**: Boot Thingy's app installer takes at most 32 MB per file and the stems model is 79 MB. For Stems, use the HS Tools card above. Tested with Boot Thingy v1.1.6 on firmware 1.3.0.12.

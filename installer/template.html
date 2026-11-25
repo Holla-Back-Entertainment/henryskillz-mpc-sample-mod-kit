@@ -28,10 +28,16 @@
 <main>
   <h1>HenrySkillz MPC Sample Installer</h1>
   <div class="bar"></div>
-  <p>Choose an official SampQOL release ZIP or its extracted folder. The supported D.S.B Boot baseline is SampQOL 0.4.2 on Akai firmware 1.3.0.12. Other releases with the same autorun layout can be packaged. Check the firmware required by your release before booting.</p>
-  <p><a href="__SAMPQOL_RELEASE_URL__">Official SampQOL downloads</a></p>
-  <p>The installer keeps your files on this computer. For releases with a matching HS effects build, it installs the add-ons. Otherwise it packages your original SampQOL files with the boot picker. The options below apply to the effects build.</p>
-  <p><label><input type="checkbox" id="stems"> <b>Add Stems</b>: split a sample into vocals, drums, bass and other on the MPC itself. Adds a 92 MB download, and needs this page online (not the saved copy).</label></p>
+  <p>Needs an <b>MPC Sample on firmware 1.3.0 (1.3.0.12)</b> and an SD card. Everything stays on your computer. Back up your SD card first.</p>
+  <h2>Which one are you?</h2>
+  <ol>
+    <li><b>I want the HS effects.</b> Use <b>SampQOL 0.3.0</b> (<a href="https://github.com/snarebes/SampQOL-OS/releases/tag/v0.3.0">download SampQOL-OS-v0.3.0.zip</a>). Drop that zip in the box below. The HS effects only work on 0.3.0 right now.</li>
+    <li><b>I already installed the HS effects from this page.</b> You only need new effect files: scroll to <a href="#update">Update just the effects</a>.</li>
+    <li><b>I downloaded a newer SampQOL (0.4.x).</b> The HS effects are <b>not</b> supported on it yet. This page will still package your copy with the D.S.B Boot picker (no HS effects, no HS add-ons), or you can download 0.3.0 above to get the effects.</li>
+  </ol>
+  <p class="small"><b>Already running another OS, or want more than one on the card?</b> Read the <a href="https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/blob/main/docs/MULTI-BOOT-GUIDE.md" target="_blank" rel="noopener">multi-boot guide</a>.</p>
+  <p class="small"><a href="__SAMPQOL_RELEASE_URL__">All official SampQOL downloads</a></p>
+  <p><label><input type="checkbox" id="stems"> <b>Add Stems</b>: split a sample into vocals, drums, bass and other on the MPC itself. Adds a 92 MB download, and needs this page online (not the saved copy). Only applies to SampQOL 0.3.0.</label></p>
   <p><label><input type="checkbox" id="styling"> <b>SampQOL list styling (optional)</b>: restyles SampQOL's own list screens (red top bar, dark blue palette, cyan selection). Off unless you tick it. It changes how SampQOL's screens look, and SampQOL's author has not approved it.</label></p>
   <div class="drop" id="drop">
     <p>Drop the SampQOL zip here</p>
@@ -39,8 +45,8 @@
     <label class="btn">Choose folder<input type="file" id="dir" webkitdirectory></label>
   </div>
   <div id="log">Waiting for SampQOL…</div>
-  <h2>Already installed? Update just the effects</h2>
-  <p>Your card already has an <b>autorun/hs</b> folder from this page. You only need the new effect files, and you do not need SampQOL again.</p>
+  <h2 id="update">Already installed? Update just the effects</h2>
+  <p>Use this only if your card already has an <b>autorun/hs</b> folder from this page (SampQOL 0.3.0). You only need the new effect files, and you do not need SampQOL again.</p>
   <ol>
     <li>Switch the MPC off, put the SD card in your computer and copy <b>autorun/hs</b> somewhere safe as a backup.</li>
     <li><button id="fx">Download hs-effects-update.zip</button></li>
@@ -168,7 +174,7 @@ async function run(getEntries) {
       link.download = "DSB-Boot-" + folder + ".zip";
       link.textContent = "Download " + link.download;
       log.append(link);
-      say("Extract to a fresh exFAT card. Select " + folder + " in the boot picker. This package uses the uploaded release’s own effects and stems.");
+      say("Extract to a fresh exFAT card. Select " + folder + " in the boot picker. HS effects are NOT included for this SampQOL version (they work on SampQOL 0.3.0 only). This package is your SampQOL with the boot picker and its own effects and stems.");
       return;
     }
     const { out, version } = await patch(files);
