@@ -4,6 +4,12 @@ Use this if your card already runs another OS, or you want several on one card. 
 
 **Before you start:** back up the whole SD card. Firmware must be 1.3.0 (1.3.0.12). Card must be exFAT.
 
+## On firmware 1.4? Stop here
+
+This guide and the D.S.B Boot card are for firmware **1.3.0 (1.3.0.12)** only. On 1.4 they don't work: the Sample may skip the card and start stock. A separate build for 1.4.0.7 (D.S.B Performance) is in testing and is not public yet: ask on the [issues page](https://github.com/Holla-Back-Entertainment/henryskillz-mpc-sample-mod-kit/issues).
+
+Not sure which firmware you have? Check the Sample's settings under About.
+
 ## What the card should look like
 
 **Right:**
