@@ -13,6 +13,8 @@ It takes about 15 minutes.
 
 ---
 
+> Already have another OS on your card, or want several? Read the [multi-boot guide](MULTI-BOOT-GUIDE.md) first.
+
 ## Step 1. Check your MPC's firmware
 
 This kit, and SampQOL itself, only run on firmware **1.3.0** (1.3.0.12). Not sure which version you have? Install 1.3.0 with Akai's official MPC Sample updater, and you're sure.
